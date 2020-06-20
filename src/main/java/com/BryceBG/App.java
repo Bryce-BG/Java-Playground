@@ -1,5 +1,9 @@
-package app;
+package com.BryceBG;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 
@@ -25,12 +29,28 @@ public class App {
         //Add the ubiquitous "Hello World" label.
         JLabel label = new JLabel("Hello World");
         frame.getContentPane().add(label);
+        JButton exit = new JButton("exit");
+        frame.getContentPane().add(exit);
+
+        exit.addActionListener(new ActionListener() {
+        	public void actionPerformed(ActionEvent ae){
+        		System.exit(0);
+        	}
+        });
+   
 
         //Display the window.
         frame.pack();
         frame.setVisible(true);
+        
     }
 
+    /**
+     * mvn clean compile
+     * mvn clean install		#can also just be mvn install
+     * mvn test
+     * mvn clean compile
+     */
 
 
 	
