@@ -1,8 +1,12 @@
 package com.BryceBG.DatabaseTools;
 import java.sql.*;
 
-
-public class DatabaseTools {
+/**
+ * 
+ * @author Bryce Bodley-Gomes
+ * This class is for interfacing with the postgres library database and allowing programmatic access.
+ */
+public class LibraryDB {
 	
 	/*https://www.postgresql.org/docs/7.4/jdbc-use.html*/
 	String databaseHost = "localHost";
@@ -12,12 +16,38 @@ public class DatabaseTools {
 	String databaseUsername = "postgres"; 
 	Connection db;
 	
+	//CONSTRUCTORS. basically the same thing that "connectToDB()" does
+	LibraryDB(){
+		try {
+			boolean rv = connectToDB(); //TODO check return val and throw exception or not
+		} catch (ClassNotFoundException e) {
+			// TODO INSTANTIATE DB OR THROW EXCEPTION
+			e.printStackTrace();
+		} catch (SQLException e) {
+			// TODO INSTANTIATE DB OR THROW EXCEPTION
+			e.printStackTrace();
+		}
+	}
+	LibraryDB(String host, String port, String username, String password, String dbname){
+		try {
+			connectToDB(host, port, username, password, dbname);
+		} catch (ClassNotFoundException e) {
+			// TODO INSTANTIATE DB OR THROW EXCEPTION
+			e.printStackTrace();
+		} catch (SQLException e) {
+			// TODO INSTANTIATE DB OR THROW EXCEPTION
+			e.printStackTrace();
+		}
+	}
+	
+	
+	
 	/**
 	 * Connect to a postgresql database (librarydatabase) with default parameters
 	 * @throws ClassNotFoundException: if no postgres driver was able to be used
 	 * @throws SQLException: if the connection failed due to invalid parameters
 	 */
-	public void connectToDB() throws ClassNotFoundException, SQLException{
+	private boolean connectToDB() throws ClassNotFoundException, SQLException{
 		Class.forName("org.postgresql.Driver"); //load the driver
 		String url = String.format("jdbc:postgresql://%s:%s/%s", databaseHost, databasePort, databaseName);
 		
@@ -25,7 +55,9 @@ public class DatabaseTools {
 		//get username and password for database
 		try {
 			db = DriverManager.getConnection(url, databaseUsername, databasePass);
+			return true;
 		} catch (SQLException e) {
+			System.out.println("Error in connecting to the database with the supplied parameters" + url); 
 			throw e;
 		}
 	}
@@ -40,7 +72,7 @@ public class DatabaseTools {
 	 * @throws ClassNotFoundException: if no postgres driver was able to be used
 	 * @throws SQLException: if the connection failed due to invalid parameters
 	 */
-	public void connectToDB(String host, String port, String username, String password, String dbname) throws ClassNotFoundException, SQLException{
+	public boolean connectToDB(String host, String port, String username, String password, String dbname) throws ClassNotFoundException, SQLException{
 		databaseHost = host;
 		databasePort = port;
 		databaseName = username;
@@ -55,7 +87,9 @@ public class DatabaseTools {
 		//get username and password for database
 		try {
 			db = DriverManager.getConnection(url, databaseUsername, databasePass);
+			return true;
 		} catch (SQLException e) {
+			System.out.println("Error in connecting to the database with the supplied parameters" + url); 
 			throw e;
 		}
 	}
@@ -79,7 +113,7 @@ public class DatabaseTools {
 	}
 
 	
-	/*The more useful queries available */
+	/*The more useful queries available (searches)*/
 	public String[] getByAuthor(String author) {
 		return null;
 		//TODO implement me
@@ -118,7 +152,7 @@ public class DatabaseTools {
 		
 	}
 	
-	/*setters that allow adding to the database only allowed by admin users*/
+	/*Setters that allow adding to the database only allowed by admin users*/
 	
 	//add book
 	
@@ -126,12 +160,30 @@ public class DatabaseTools {
 	public boolean addBook(String Title, int rating, String series, float number_in_series, String authors[], Date publicationDate,  String genres[]) {
 		return false;
 	}
-	//remove book
+	
+	public boolean removeBook(int book_id) {
+		//TODO implement me
+		return false;
+		
+	}
+
 	//edit book (change metadata)
 	
-	//add series
-	//remove series
 	
+	//add series (helper function for addBook)
+	private boolean addSeries(String series_name) {
+		//TODO implement me
+		return false;
+	}
+	
+	//remove series. (helper series for removeBook)
+	private boolean removeSeries(String series_name) {
+		//TODO implement me
+		return false;
+	}
+	
+	
+	//list genres
 	//add genre
 	//remove genre
 	//relabel-genre
@@ -152,9 +204,16 @@ public class DatabaseTools {
 		return 0;
 		//TODO implement me
 	}
+	private void closeDB() {
+		try {
+			db.close();
+		} catch (SQLException e) {
+			//DO nothing to do if it fails as it likely means DB is null.
+		}
+	}
 	
 	
-	
+//finalize? close db connection
 	
 	
 
