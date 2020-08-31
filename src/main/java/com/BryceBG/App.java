@@ -8,6 +8,11 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 
 public class App {
+	/**
+	 * TODO*
+	 * add testing system (create mock DB and entries to work on)
+	 * 
+	 */
 
 
 
@@ -45,12 +50,7 @@ public class App {
         
     }
 
-    /**
-     * mvn clean compile
-     * mvn clean install		#can also just be mvn install
-     * mvn test
-     * mvn clean compile
-     */
+
 
 
 	

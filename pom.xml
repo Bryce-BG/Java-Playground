@@ -1,37 +1,44 @@
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  
   <modelVersion>4.0.0</modelVersion>
+      
+  <!-- project coordinates - values which uniquely identify this project -->
   <groupId>com.BryceBG</groupId>
   <artifactId>LibraryTools</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>1.0</version>
+  
   <properties><!-- use Java 1.8 for compile -->
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
   
-  
-
-  <!-- <packaging>jar</packaging>-->
-  
-  <!-- #################### -->
 
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <junit.version>4.12</junit.version>
   </properties>
   
-  <!-- #################### -->
+<!-- library dependencies -->
   <dependencies> 
+  <!-- DB driver connection -->
 	<dependency>
 	  <groupId>org.postgresql</groupId>
 	  <artifactId>postgresql</artifactId>
 	  <version>42.2.9.jre7</version>
 	</dependency>
 	
+	<!-- Testing framework for system -->
 	<dependency>
 	    <groupId>junit</groupId>
 	    <artifactId>junit</artifactId>
 	    <version>4.12</version>
 	    <scope>test</scope>
 	</dependency>
+	<!-- Web request handling -->
+	<dependency>
+        <groupId>com.sparkjava</groupId>
+        <artifactId>spark-core</artifactId>
+        <version>2.5</version>
+    </dependency>
   </dependencies>
   
   
@@ -39,10 +46,9 @@
    
   
   
-  	<!-- this <build> part below packages all our dependancies INTO the actual jar file so that they are not manually 
+  	<!-- this <build> part below packages all our dependencies INTO the actual jar file so that they are not manually 
   	required to be located in the same location on the PC running the app as where the they were when the program was created -->
 	<build>
-
 		<plugins>
 			<plugin>
 			    <groupId>org.apache.maven.plugins</groupId>
