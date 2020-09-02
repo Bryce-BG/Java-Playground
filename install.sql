@@ -1,25 +1,46 @@
 /*CREATE DB ?*/
-
+--postgres=# create database librarydatabase; --run if db doesn't exist
+-- CREATE DATABASE librarydatabase
+--     WITH
+--     OWNER = postgres
+--     ENCODING = 'UTF8'
+--     LC_COLLATE = 'English_United States.1252'
+--     LC_CTYPE = 'English_United States.1252'
+--     TABLESPACE = pg_default
+--     CONNECTION LIMIT = -1;
 /*
-TODO:
- -- manually specify PRIMARY KEY for each table
+--TODO:
+-- 1. create DB if not exists (instead of manual creation being required like above)
  --use assertion/CHECK in authors to ensure each alias refers to valid authorID
 
 */
 
-
 DROP TABLE IF EXISTS books, authors, series CASCADE;
-DROP TYPE series_status;
+DROP TYPE IF EXISTS series_status;
 
+-- #####USER RELATED
+CREATE TABLE IF NOT EXISTS users (
+    user_id SERIAL UNIQUE, --must be unique otherwise we can't reference
+	username VARCHAR(40) PRIMARY KEY,
+	password VARCHAR(40),
+	first_name VARCHAR(30),
+	last_name VARCHAR(30),
+	is_admin BOOLEAN
+
+    /*TODO add much in this table*/
+--	its bad practice to store password in plain form. Replace this with hashed password once we implement hashing for the app (with salt possibly)
+--     custom_genres VARCHAR(30)[] /*genres that are not commonly used and so not accepted into DB default genres*/
+
+);
 
 CREATE TABLE IF NOT EXISTS authors (
-    author_id serial,
-    alias_id int[], /*would be nice if we can ensure that this links to existing author_id*/
+    author_id SERIAL,
+    alias_id INT[], /*would be nice if we can ensure that this links to existing author_id*/
     fname VARCHAR(100), /*authors first name*/
     lname VARCHAR(100), /*authors last name*/
-    series_ids int[], -- /*ids of series the author has written*/ TODO: this should be forign KEY list
+    series_ids INT[], -- /*ids of series the author has written*/ TODO: this should be forign KEY list
 	author_bib VARCHAR(300),
-	alias_ids int[], /*alternative names the author may go by (needs to be updated manually)*/
+	alias_ids INT[], /*alternative names the author may go by (needs to be updated manually)*/
 	PRIMARY KEY (author_id)
 --     TODO BELOW
 -- 	CHECK EACH element OF alias_id REFERENCES authors.author_id
@@ -31,16 +52,14 @@ CREATE TABLE IF NOT EXISTS authors (
 CREATE TYPE series_status AS ENUM ('COMPLETED', 'ONGOING', 'NA', 'UNDETERMINED');
 
 CREATE TABLE IF NOT EXISTS series (
-    series_id serial,
+    series_id SERIAL,
     series_name VARCHAR(40) NOT NULL, /*name of the series*/
-    author_id int, /*author series belongs to*/
-    number_books_in_series int, /*THIS SHOULD BE DYNAMICALLY updated when new books are added to the series?*/
+    author_id INT, /*author series belongs to*/
+    number_books_in_series INT, /*THIS SHOULD BE DYNAMICALLY updated when new books are added to the series?*/
     series_status series_status, /*has the series been finished or is it ongoing (presumably the check is implied)*/
     PRIMARY KEY (series_id),
     FOREIGN KEY (author_id) REFERENCES authors(author_id)
      /*books_ids*/
-    /*my series rating*/
-    /*my series genres*/
 
 
 );
@@ -48,9 +67,9 @@ CREATE TABLE IF NOT EXISTS series (
 CREATE TABLE IF NOT EXISTS books (
     book_id SERIAL,
     title VARCHAR(100) NOT NULL,
-    rating_overall numeric(2,2), /*2 places before decimal and 2 after the decimal (need to set range (FLOAT 0-10))*/
+    rating_overall NUMERIC(2,2), /*2 places before decimal and 2 after the decimal (need to set range (FLOAT 0-10))*/
     series_id INT REFERENCES series(series_id),
-    number_in_series numeric(2,2),
+    number_in_series NUMERIC(2,2),
     edition INT,
     author_ids INT[ ] /*REFERENCES authors(author_id)*/, /*may be more than 1 author for a book so a list is required*/
     publish_date DATE,
@@ -92,7 +111,6 @@ CREATE TABLE IF NOT EXISTS genres (
 -- #####COMMENTS TABLES
 CREATE TABLE IF NOT EXISTS comments (
     --this table is for comments for a specific book
---     comment_id serial,
     user_id int,
 	book_id int,
 	comment VARCHAR(1000),
@@ -152,20 +170,7 @@ CREATE TABLE IF NOT EXISTS recommendation_book_to_book (
     FOREIGN KEY (book2_id) references books(book_id)
 );
 
--- #####USER RELATED
-CREATE TABLE IF NOT EXISTS users (
---    user_id serial PRIMARY KEY,
-	username VARCHAR(40) PRIMARY KEY,
-	password VARCHAR(40),
-	first_name VARCHAR(30),
-	last_name VARCHAR(30),
-	is_admin BOOLEAN
-	
-    /*TODO add much in this table*/
---	its bad practice to store password in plain form. Replace this with hashed password once we implement hashing for the app (with salt possibly)
---     custom_genres VARCHAR(30)[] /*genres that are not commonly used and so not accepted into DB default genres*/
 
-);
 
 CREATE TABLE IF NOT EXISTS user_book_rating (
     --this table is for users rating for books

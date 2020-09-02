@@ -36,7 +36,7 @@ public class Credentials {
 	 * @return
 	 */
 	public boolean is_valid_credentials() {
-		return (username==null || password == null);
+		return (username!=null && password != null);
 	}
 		
 

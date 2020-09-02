@@ -1,0 +1,5 @@
+##in LibraryDB.java
+	1. replace login function with library calls using real authentication library
+
+#Database changes
+	1. Replace plain stored passwords with salted/hashed passwords for the DB Users table (after changing over to external library for authentication likely)
