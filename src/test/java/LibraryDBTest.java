@@ -17,14 +17,15 @@ public class LibraryDBTest {
 	public static void onlyOnce() 
 	{
 		//1. get username and password to use for the test.
-		
+		ReadConfig cf = new ReadConfig();
+		if(cf.is_valid())//ensure config loaded successfully
+		{
 		//2. call setters (to ensure database is initialized)
-		library = new LibraryDB("localHost", "5432", "librarydatabase", "", "postgres");//TODO remove password at every attempt
+		library = new LibraryDB(cf.get_host(), cf.get_port(), cf.get_name(), cf.get_pass(), cf.get_user());
+
+		}
 
 
-		//3 createMockDB
-		
-		//4 add Mock entries 
 	}
 	//after test delete db
 	

@@ -3,3 +3,7 @@
 
 #Database changes
 	1. Replace plain stored passwords with salted/hashed passwords for the DB Users table (after changing over to external library for authentication likely)
+	
+##LibraryDBTest.java
+	1.createMockDB for testing instead of using real DB (though	
+	2. add Mock entries to mockDB for testing
