@@ -375,9 +375,85 @@ public class LibraryDB {
 		
 	}
 
-	public int delete_user(Credentials yourAdmin) {
-		//TODO implement me (more parameters needed)
-		return -1;
+	/**
+	 * Function to allow an admin user to delete another user.
+	 * @param yourAdmin
+	 * @param username
+	 * @param email
+	 * @return
+	 * -1 = unable to connect to the database
+	 * -2 = user doesn't exist in database with provided email/username combo
+	 * -3 = error occured during the deletion of user
+	 * -4 = invalid user to preform delete action
+	 */
+	public int delete_user(Credentials yourAdmin, String username, String email) {
+		if(yourAdmin.is_valid_credentials() && validate_credentials(yourAdmin) && yourAdmin.get_permissions()) {
+			Connection conn = null;
+			PreparedStatement stmt = null;
+			email = email.toLowerCase();
+			
+			try {
+				conn = connectToDB();
+				username = username.toLowerCase(); 
+				if(conn.isValid(0)) {
+					
+					//1. check username is unique (not in database already)
+			            String sql =
+			                    "SELECT * " +
+			                    "FROM USERS " + 
+			                    "WHERE username=? AND email=?"; 		            
+			            
+			            stmt = conn.prepareStatement(sql);
+			            stmt.setString(1, username);
+			            stmt.setString(2, email);
+			            ResultSet rs = stmt.executeQuery();
+			            if (rs.next()) {  //user DOES exist so delete it
+			            	sql =
+			                    "DELETE " +
+			                    "FROM USERS " + 
+			                    "WHERE username=? AND email=?"; 
+				            stmt = conn.prepareStatement(sql);
+				            stmt.setString(1, username);
+				            stmt.setString(2, email);
+				            int rv = stmt.executeUpdate();
+				            if(rv == 1)
+				            	return 0;
+				            else
+				            	return -3; //error occured during the deletion of user
+		            	
+			            }
+			            	
+			            else {
+			            	return -2; //user doesn't exist in db (so can't perform delete)
+			            }
+				}
+				else
+					return -1;
+				
+				
+			} catch (ClassNotFoundException | SQLException e) {
+				e.printStackTrace();
+				return -1;
+			}
+			finally{ //finally block used to close resources
+
+			      try{
+			         if(stmt!=null)
+			            conn.close();
+			      }catch(SQLException se){
+			      }// do nothing
+			      try{
+			         if(conn!=null)
+			            conn.close();
+			      }catch(SQLException se){
+			         se.printStackTrace();
+			      }//end finally try
+			   }//end finally
+		}
+		else {
+			return -4; //invalid admin credentials
+		}
+		
 	}
 	public boolean edit_user(Credentials yourAdmin) {
 		//TODO implement me (more parameters needed)

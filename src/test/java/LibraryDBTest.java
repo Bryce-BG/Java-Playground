@@ -33,8 +33,9 @@ public class LibraryDBTest {
 	@Before
 	public void initialize() {
 		//do stuff we need to do before tests (just verify db is still there probbaly)
-		
-		
+		Credentials yourAdmin = library.login("admin", "admin"); //just a dummy admin inserted for start of the system into DB
+		int rv = library.delete_user(yourAdmin, "thief_lord", "testemail@yahoo.com");
+
 	       
 	}
 	
@@ -42,9 +43,9 @@ public class LibraryDBTest {
 
 	@Test
 	public void test_add_user() {
+		//can create a normal user
 		int rv = library.create_new_user("thief_lord", "Password1", "Bodley-Gomes", "Bryce", "testemail@yahoo.com");
 		assertEquals(0, rv);
-		//TODO remove the user??
 	}
 	
 	// test adding existing user (should fail)
@@ -70,7 +71,7 @@ public class LibraryDBTest {
 		
 	}
 
-	//2. test login fails for users not already in DB
+	//2. test login fails for users not in DB
 	@Test
 	public void test_invalid_login_via_invalid_username() {
 		Credentials creds = library.login("nouser", "");
@@ -78,8 +79,24 @@ public class LibraryDBTest {
 
 	}
 	
-	//2. test login fails for user's with invalid password
-	
+	//Test login fails for user's with invalid password
+	//1. test login works for users in db
+	@Test
+	public void test_login_invalid_user_password() {
+		//TODO implement me
+		int rv = library.create_new_user("thief_lord", "Password1", "Bodley-Gomes", "Bryce", "testemail@yahoo.com");
+		if(rv == -2 || rv == 0)
+		{
+		Credentials crv = library.login("thief_lord", "Password");
+		assertFalse(crv.is_valid_credentials());
+		}
+		else
+		{
+			assertFalse("failed to create a user in the database", true);
+		}
+		
+		
+	}
 	
 	
 	//3. test adding admin users to DB

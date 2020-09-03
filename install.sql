@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS users (
 --     custom_genres VARCHAR(30)[] /*genres that are not commonly used and so not accepted into DB default genres*/
 
 );
-
+INSERT INTO users (username, password, first_name, last_name, email, is_admin) VALUES ('admin', 'admin', 'admin', 'admin', 'admin@email.com', true);
 CREATE TABLE IF NOT EXISTS authors (
     author_id SERIAL,
     alias_id INT[], /*would be nice if we can ensure that this links to existing author_id*/
