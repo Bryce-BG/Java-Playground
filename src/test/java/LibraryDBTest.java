@@ -38,21 +38,51 @@ public class LibraryDBTest {
 	       
 	}
 	
+	/**USER RELATED TESTS**/
+
+	@Test
+	public void test_add_user() {
+		int rv = library.create_new_user("thief_lord", "Password1", "Bodley-Gomes", "Bryce", "testemail@yahoo.com");
+		assertEquals(0, rv);
+		//TODO remove the user??
+	}
 	
-	//1. test login fails for users not already in DB
+	// test adding existing user (should fail)
+		//TODO implement me after remove_user
+	// test failure from various reasons (invalid email, invalid username, etc)
+	
+	
+	//1. test login works for users in db
+	@Test
+	public void test_login_valid_user() {
+		//TODO implement me
+		int rv = library.create_new_user("thief_lord", "Password1", "Bodley-Gomes", "Bryce", "testemail@yahoo.com");
+		if(rv == -2 || rv == 0)
+		{
+		Credentials crv = library.login("thief_lord", "Password1");
+		assertTrue(crv.is_valid_credentials());
+		}
+		else
+		{
+			assertFalse("failed to create a user in the database", true);
+		}
+		
+		
+	}
+
+	//2. test login fails for users not already in DB
 	@Test
 	public void test_invalid_login_via_invalid_username() {
 		Credentials creds = library.login("nouser", "");
-		assertEquals(false, creds.is_valid_credentials()); //user should not exist
-		
+		assertFalse(creds.is_valid_credentials()); //user should not exist and thus is invalid
 
 	}
+	
 	//2. test login fails for user's with invalid password
 	
 	
 	
-	//1. test login works for users in db
-	//3. test adding users to DB
+	//3. test adding admin users to DB
 	//4. test removing user from DB
 	
 	

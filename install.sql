@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS users (
 	password VARCHAR(40),
 	first_name VARCHAR(30),
 	last_name VARCHAR(30),
+  	email TEXT NOT NULL UNIQUE, --further constraints required see: https://hashrocket.com/blog/posts/working-with-email-addresses-in-postgresql
 	is_admin BOOLEAN
 
     /*TODO add much in this table*/
