@@ -98,12 +98,12 @@ public class LibraryDB {
 	
 	/**
 	 * Function to allow the creation of additional users (non administive ones) for standard users in our library system.
-	 * @param username: username user wants for their account.
-	 * @param Password: password the user wants to initially set for their account.
-	 * @param lName: Last name of user.
-	 * @param fName: First name of user.
-	 * @param email: email address linked to the user account.
-	 * @return:
+	 * @param username username user wants for their account.
+	 * @param Password password the user wants to initially set for their account.
+	 * @param lName Last name of user.
+	 * @param fName First name of user.
+	 * @param email email address linked to the user account.
+	 * @return
 	 * 0 = successful creation of user.
 	 * "-" values indicate failure:
 	 * -1 = failure to connect to the library database.

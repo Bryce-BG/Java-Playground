@@ -41,16 +41,46 @@ public class LibraryDBTest {
 	
 	/**USER RELATED TESTS**/
 
+	/**TESTING USER CREATION AND DELETION**/
 	@Test
 	public void test_add_user() {
 		//can create a normal user
 		int rv = library.create_new_user("thief_lord", "Password1", "Bodley-Gomes", "Bryce", "testemail@yahoo.com");
-		assertEquals(0, rv);
+		assertEquals("failed to create user for test", 0, rv);
 	}
 	
 	// test adding existing user (should fail)
 		//TODO implement me after remove_user
+	/**TESTING USER CREATION AND DELETION**/
+	@Test
+	public void test_add_preexisting_user() {
+		//can create a test user
+		int rv = library.create_new_user("thief_lord", "Password1", "Bodley-Gomes", "Bryce", "testemail@yahoo.com");
+		assertEquals("Creating the initial user for the tes failed", 0, rv); //should be successful
+		
+		//Test1. create user with same: username as an existing account (should fail), 
+		rv = library.create_new_user("thief_lord", "Password1", "Bodley-Gomes", "Bryce", "test2email@yahoo.com");
+		assertEquals("Creating the duplicate user for the test did not return -3 like expected", -2, rv); //-2 indicates same username in system
+
+		//Test2. Account with same email already in system than in db (should fail)
+		rv = library.create_new_user("hellocat", "Password1", "Bodley-Gomes", "Bryce", "testemail@yahoo.com");
+		assertEquals("Creating the duplicate user for the test did not return -6 like expected", -6, rv); //-6 indicates email is already in system
+
+
+		//Test3. Create account with different capitalization for email (should fail)
+		rv = library.create_new_user("thief_lordd", "Password1", "Bodley-Gomes", "Bryce", "TestEmail@yahoo.com");
+		assertEquals("Creating the duplicate user for the test did not return -6 like expected", -6, rv); //-6 indicates email is already in system
+
+		//Test4 different capitalization for pre-existing username  (should fail)
+		rv = library.create_new_user("Thief_Lord", "Password1", "Bodley-Gomes", "Bryce", "test2email@yahoo.com");
+		assertEquals("Creating the duplicate user for the test did not return -3 like expected", -2, rv); //-2 indicates same username in system
+
+
+	}
+	
 	// test failure from various reasons (invalid email, invalid username, etc)
+	//TODO
+	
 	
 	
 	//1. test login works for users in db
@@ -79,10 +109,10 @@ public class LibraryDBTest {
 
 	}
 	
-	//Test login fails for user's with invalid password
+	//Test login with invalid password
 	//1. test login works for users in db
 	@Test
-	public void test_login_invalid_user_password() {
+	public void test_login_invalid_password() {
 		//TODO implement me
 		int rv = library.create_new_user("thief_lord", "Password1", "Bodley-Gomes", "Bryce", "testemail@yahoo.com");
 		if(rv == -2 || rv == 0)
