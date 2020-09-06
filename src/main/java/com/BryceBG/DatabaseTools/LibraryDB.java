@@ -30,17 +30,16 @@ public class LibraryDB {
 	/** ############# USER RELATED DATABASE FUNCTIONS ############# **/
 	
 	 /** Function to create Credentials object which is used to authenticate user access to the database.
-	 * @param username: Username as it should be in the DB.User table 
-	 * @param password: Password corresponding to the Username passed in.
-	 * @return: if user exists return valid credentials.
+	 * @param username Username as it should be in the DB.User table 
+	 * @param password Password corresponding to the Username passed in.
+	 * @return If user exists, return valid credentials. Otherwise return empty credentials. Verifiable by credentials.is_valid_credentials()
 	 */
 	public Credentials login(String username, String password) {
 		Connection conn = null;
 		PreparedStatement stmt = null; 
 		try {
 			//1. connect to DB
-			conn = connectToDB();
-			
+			conn = connectToDB();		
 			if( conn.isValid(0)) {
 				//2. verify user exists in database (through query of DB.Users table)
 		            String sql =
@@ -52,9 +51,7 @@ public class LibraryDB {
 		            stmt.setString(1, username);
 		            stmt.setString(2, password);
 		            ResultSet rs = stmt.executeQuery();
-		            
-		            
-		            
+		                       
 		            if (rs.next()) { //make sure there WAS an entry	returned (otherwise no match was found	            
 		            ResultSetMetaData rsmd = rs.getMetaData();
 		            
@@ -65,8 +62,6 @@ public class LibraryDB {
 	            	
 					//4. create credentials object for the user
 	            	return new Credentials(un, pw, admin);
-		            
-
 		            }
 		            else {
 		            	return new Credentials(); //user was invalid 
@@ -93,16 +88,15 @@ public class LibraryDB {
 	      }//end finally try
 	   }//end finally
 		return new Credentials();
-
 	}
 	
 	/**
-	 * Function to allow the creation of additional users (non administive ones) for standard users in our library system.
-	 * @param username username user wants for their account.
-	 * @param Password password the user wants to initially set for their account.
-	 * @param lName Last name of user.
-	 * @param fName First name of user.
-	 * @param email email address linked to the user account.
+	 * Function to allow the creation of additional users (non administrative ones) for standard users in our library system.
+	 * @param username The desired username for the new account
+	 * @param Password The new password for the useraccount
+	 * @param lName Last name of the new user.
+	 * @param fName First name of the new user.
+	 * @param email Email address linked to the user account (for ensuring passwords can be reset).
 	 * @return
 	 * 0 = successful creation of user.
 	 * "-" values indicate failure:
@@ -226,19 +220,17 @@ public class LibraryDB {
 		         se.printStackTrace();
 		      }//end finally try
 		   }//end finally
-
-		
 	}
 
 	/**
 	 * Function to allow the creation of additional admin users admin users in our library system.
-	 * @param Credentials: the credentials of the admin required to create a new admin
-	 * @param username: username user wants for their account.
-	 * @param Password: password the user wants to initially set for their account.
-	 * @param lName: Last name of user.
-	 * @param fName: First name of user.
-	 * @param email: email address linked to the user account.
-	 * @return:
+	 * @param Credentials Token created for the admin who is performing the create_admin action
+	 * @param username username for the new admint account
+	 * @param Password password for the new account.
+	 * @param lName Last name of the new user.
+	 * @param fName First name of the new user.
+	 * @param email The email address linked to the new account.
+	 * @return
 	 * 0 = successful creation of user.
 	 * "-" values indicate failure:
 	 * -1 = failure to connect to the library database.
@@ -256,7 +248,7 @@ public class LibraryDB {
 			Connection conn = null;
 			PreparedStatement stmt = null;
 			email = email.toLowerCase();
-			
+
 			try {
 				conn = connectToDB();
 				username = username.toLowerCase(); 
@@ -347,9 +339,7 @@ public class LibraryDB {
 			            }
 				}
 				else
-					return -1;
-				
-				
+					return -1;	
 			} catch (ClassNotFoundException | SQLException e) {
 				e.printStackTrace();
 				return -1;
@@ -372,19 +362,18 @@ public class LibraryDB {
 		else {
 			return -8;
 		}
-		
 	}
 
 	/**
-	 * Function to allow an admin user to delete another user.
-	 * @param yourAdmin
-	 * @param username
-	 * @param email
+	 * Function to allow an admin user to delete a user account from the system
+	 * @param yourAdmin Credentials token of the admin performing the deletion function
+	 * @param username username of the account we want to delete
+	 * @param email secondary variable to ensure deletion of the correct account.
 	 * @return
 	 * -1 = unable to connect to the database
 	 * -2 = user doesn't exist in database with provided email/username combo
-	 * -3 = error occured during the deletion of user
-	 * -4 = invalid user to preform delete action
+	 * -3 = error occurred during the deletion of user
+	 * -4 = invalid admin credentials
 	 */
 	public int delete_user(Credentials yourAdmin, String username, String email) {
 		if(yourAdmin.is_valid_credentials() && validate_credentials(yourAdmin) && yourAdmin.get_permissions()) {
@@ -419,24 +408,19 @@ public class LibraryDB {
 				            if(rv == 1)
 				            	return 0;
 				            else
-				            	return -3; //error occured during the deletion of user
-		            	
-			            }
-			            	
+				            	return -3; //error occured during the deletion of user          	
+			            }         	
 			            else {
 			            	return -2; //user doesn't exist in db (so can't perform delete)
 			            }
 				}
 				else
 					return -1;
-				
-				
 			} catch (ClassNotFoundException | SQLException e) {
 				e.printStackTrace();
 				return -1;
 			}
 			finally{ //finally block used to close resources
-
 			      try{
 			         if(stmt!=null)
 			            conn.close();
@@ -453,7 +437,6 @@ public class LibraryDB {
 		else {
 			return -4; //invalid admin credentials
 		}
-		
 	}
 	public boolean edit_user(Credentials yourAdmin) {
 		//TODO implement me (more parameters needed)
@@ -465,7 +448,7 @@ public class LibraryDB {
 	
 	
 	
-	
+	/**#############FUNCTIONS TO PERFORM QUERYING OF NON-USER RELATED DATA FROM DATABASE#############**/
 	
 	
 	
