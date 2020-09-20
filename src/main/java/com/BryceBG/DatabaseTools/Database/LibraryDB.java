@@ -1,4 +1,4 @@
-package com.BryceBG.DatabaseTools;
+package com.BryceBG.DatabaseTools.Database;
 import java.sql.*;
 import java.util.ArrayList;
 
@@ -53,7 +53,6 @@ public class LibraryDB {
 		            ResultSet rs = stmt.executeQuery();
 		                       
 		            if (rs.next()) { //make sure there WAS an entry	returned (otherwise no match was found	            
-		            ResultSetMetaData rsmd = rs.getMetaData();
 		            
 		           	//3. extract results from result set needed to create credentials object
 	            	String un = rs.getString("USERNAME"); 
@@ -621,9 +620,12 @@ public class LibraryDB {
 	
 	public String[] getByGenres(String genres[]) {
 		return null;
-//		assert(genres in allGenres)
+//		for each genre in genres
+		//assert(genres in allGenres)
+		
 		//TODO implement me
 	}
+	//public String[] getByCustomGenre
 	
 
 	public String[] getBooksAdvancedQuery(String fields[], String searchValues[]){
@@ -637,10 +639,11 @@ public class LibraryDB {
 	
 	/*Setters that allow adding to the database only allowed by admin users*/
 	
-	//add book
 	
-	//INT edition
-	public boolean addBook(String Title, int rating, String series, float number_in_series, String authors[], Date publicationDate,  String genres[]) {
+	public boolean addBook(String Title, String series, float number_in_series, int edition, String authors[], Date publicationDate, String publisher, String genres[]) {
+	    //take series string and identify the series_id associated with the series.
+		//take strings of author ids and convert into author id's for DB store
+		//TODO implement me
 		return false;
 	}
 	

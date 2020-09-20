@@ -3,7 +3,28 @@
 
 #Database changes
 	1. Replace plain stored passwords with salted/hashed passwords for the DB Users table (after changing over to external library for authentication likely)
+	2. implement search functions for keyword, title, and author (maybe genre search as well)
+	
 	
 ##LibraryDBTest.java
-	1.createMockDB for testing instead of using real DB (though	
+	1.createMockDB for testing instead of using real DB	
 	2. add Mock entries to mockDB for testing
+	
+##pom.xml
+revise to include a compile option to build our EpubScraper jar
+
+#######
+Create Genre inheritance tree and create SQL script to automatically generate them from our existing genre-types (like our install sql script)
+
+
+	
+
+
+##project size tasks
+1. Create Scraper to recursively scan our file directory and extract required metadata from the epub .opf file as well as extracting cover image for our view of the book.
+2. Make a tool to create/locate a a nested file directory structure for the cover images in our database system.
+3. Create QTJambi interface to allow GUI access to the library_database project in an app form
+4. create Spark app interface to allow access to system via webpages.
+
+
+

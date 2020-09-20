@@ -1,4 +1,4 @@
-package com.BryceBG.DatabaseTools;
+package com.BryceBG.DatabaseTools.Database;
 
 /**
  * Helper class that stores a user's information relating to database access.

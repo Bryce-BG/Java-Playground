@@ -5,8 +5,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.BryceBG.DatabaseTools.Credentials;
-import com.BryceBG.DatabaseTools.LibraryDB;
+import com.BryceBG.DatabaseTools.Database.Credentials;
+import com.BryceBG.DatabaseTools.Database.LibraryDB;
 
 public class LibraryDBTest {
 	

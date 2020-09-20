@@ -74,10 +74,12 @@ CREATE TABLE IF NOT EXISTS books (
     edition INT,
     author_ids INT[ ] /*REFERENCES authors(author_id)*/, /*may be more than 1 author for a book so a list is required*/
     publish_date DATE,
+    publisher VARCHAR(70),
     genres int[],
+    cover_location VARCHAR, --TODO make this in a nested file directory structure (and keep img name short)
     PRIMARY KEY (book_id),
     CHECK (rating_overall>0 AND rating_overall<10)
-
+    --TODO add list of pair type for identifiers. Example: ((ISBN: 1012-123-123), (MOBI-ASN: SHDA4N))
     /*future: comment_stream_id: if I ever allow OTHER people to add comments */
 );
 
@@ -86,7 +88,6 @@ CREATE TABLE IF NOT EXISTS books (
 
 
 
-/**//**//**//**//**//**//**//**//**//**//**//**/
 
 
 
