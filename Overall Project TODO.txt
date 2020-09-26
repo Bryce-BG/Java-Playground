@@ -17,7 +17,7 @@ revise to include a compile option to build our EpubScraper jar
 Create Genre inheritance tree and create SQL script to automatically generate them from our existing genre-types (like our install sql script)
 
 
-	
+fix Utils.getThisJarVersion()  as it currently is not returning the correct jar version
 
 
 ##project size tasks

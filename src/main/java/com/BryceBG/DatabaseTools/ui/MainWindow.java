@@ -1,10 +1,11 @@
 package com.BryceBG.DatabaseTools.ui;
 
-import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -66,7 +67,14 @@ public final class MainWindow implements Runnable {
         searchPanel.setPreferredSize(new Dimension(300, 250));
         contentPane.add(searchPanel);
         
-        searchPanel.add(new JButton("Click me!"));
+        JButton tempBtn = new JButton("Click me!");
+        tempBtn.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                System.exit(0); //exit when button is clicked
+             }
+          });
+        
+        searchPanel.add(tempBtn);
         
 		
 	}

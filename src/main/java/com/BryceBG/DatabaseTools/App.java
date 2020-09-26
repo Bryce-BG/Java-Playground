@@ -1,11 +1,7 @@
-package com.BryceBG;
+package com.BryceBG.DatabaseTools;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import org.apache.commons.cli.CommandLine;
@@ -26,7 +22,6 @@ import com.BryceBG.DatabaseTools.utils.Utils;
  * As the "controller" to all other classes, it parses command line parameters.
  */
 public class App {
-	private static String root_Dir_Location;
 
 	/**
 	 * Where everything starts. Takes in, and tries to parse as many commandline
@@ -39,7 +34,9 @@ public class App {
 		// creating and showing this application's GUI.
 
 		parseCmdArgs(args);
-
+		System.out.println("Version DEBUG: " + Utils.getThisJarVersion()); //TODO DEBUG
+		JOptionPane.showMessageDialog(null, Utils.getThisJarVersion());
+		
 		MainWindow mw = new MainWindow();
 		SwingUtilities.invokeLater(mw);
 
