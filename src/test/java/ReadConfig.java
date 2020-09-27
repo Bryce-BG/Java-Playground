@@ -40,6 +40,7 @@ private boolean load_config() {
 			dbName = prop.getProperty("app.dbname");
 			dbPass = prop.getProperty("app.dbpass");
 			dbUser = prop.getProperty("app.dbuser");
+
 			
 		
 			return true;

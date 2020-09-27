@@ -11,6 +11,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.logging.log4j.Logger;
 
 import com.BryceBG.DatabaseTools.ui.MainWindow;
 import com.BryceBG.DatabaseTools.utils.Utils;
@@ -23,6 +24,8 @@ import com.BryceBG.DatabaseTools.utils.Utils;
  */
 public class App {
 
+	private static final Logger logger = org.apache.logging.log4j.LogManager.getLogger(App.class);
+
 	/**
 	 * Where everything starts. Takes in, and tries to parse as many commandline
 	 * arguments as possible. Otherwise, it launches a GUI.
@@ -34,9 +37,11 @@ public class App {
 		// creating and showing this application's GUI.
 
 		parseCmdArgs(args);
-		System.out.println("Version DEBUG: " + Utils.getThisJarVersion()); //TODO DEBUG
-		JOptionPane.showMessageDialog(null, Utils.getThisJarVersion());
-		
+//		System.out.println("Version DEBUG: " + Utils.getThisJarVersion()); //TODO DEBUG
+//		JOptionPane.showMessageDialog(null, Utils.getThisJarVersion());
+
+		System.out.println("DEBUG FROM APP: " + Utils.getConfigString("app.dbpass", null));
+
 		MainWindow mw = new MainWindow();
 		SwingUtilities.invokeLater(mw);
 
@@ -66,6 +71,8 @@ public class App {
             formatter.printHelp("utility-name", options);
             System.exit(1);
         }
+
+        
 
         
         if (args.length > 0 && cmd.hasOption('v')){
