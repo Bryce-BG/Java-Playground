@@ -11,6 +11,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.BryceBG.DatabaseTools.ui.MainWindow;
@@ -24,7 +25,7 @@ import com.BryceBG.DatabaseTools.utils.Utils;
  */
 public class App {
 
-	private static final Logger logger = org.apache.logging.log4j.LogManager.getLogger(App.class);
+	private static final Logger logger = LogManager.getLogger(App.class.getName());
 
 	/**
 	 * Where everything starts. Takes in, and tries to parse as many commandline
@@ -33,14 +34,15 @@ public class App {
 	 * @param args Array of command line arguments.
 	 */
 	public static void main(String[] args) {
+        Utils.initializeAppLogger("app.log","%d %p %c [%t] %m%n"); 
+		logger.info("Loaded app version: " + Utils.getThisJarVersion());
+
 		// Schedule a job for the event-dispatching thread:
 		// creating and showing this application's GUI.
-
 		parseCmdArgs(args);
-//		System.out.println("Version DEBUG: " + Utils.getThisJarVersion()); //TODO DEBUG
-//		JOptionPane.showMessageDialog(null, Utils.getThisJarVersion());
 
-		System.out.println("DEBUG FROM APP: " + Utils.getConfigString("app.dbpass", null));
+//        Utils.configureLogger(); 
+        logger.info("App Log4j2 system initialized");
 
 		MainWindow mw = new MainWindow();
 		SwingUtilities.invokeLater(mw);
@@ -67,14 +69,11 @@ public class App {
         try {
             cmd = parser.parse(options, args);
         } catch (ParseException e) {
-            System.out.println(e.getMessage());
+        	logger.fatal("system crashed due to invalid input options: " + e.getMessage());
             formatter.printHelp("utility-name", options);
             System.exit(1);
         }
 
-        
-
-        
         if (args.length > 0 && cmd.hasOption('v')){
             System.out.println(Utils.getThisJarVersion());
             System.exit(0);

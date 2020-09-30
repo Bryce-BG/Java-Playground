@@ -2,13 +2,19 @@ package com.BryceBG.DatabaseTools.Database;
 import java.sql.*;
 import java.util.ArrayList;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import com.BryceBG.DatabaseTools.App;
+
 /**
  * 
  * @author Bryce Bodley-Gomes
  * This class is for interfacing with the postgres library database and allowing programmatic access.
  */
 public class LibraryDB {
-	
+	private static final Logger logger = LogManager.getLogger(App.class.getName());
+
 	//DEFAULT parameters for DB access (can be overridden via constructor)
 	String DB_HOST = "localHost";
 	String DB_PORT = "5432";
@@ -68,9 +74,9 @@ public class LibraryDB {
 			}
 
 		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
+			logger.error("Exception occured during connectToDB: " + e.getMessage());
 		} catch (SQLException e) {
-			e.printStackTrace();
+			logger.error("Exception occured during executing SQL statement: " + e.getMessage());
 		}
 		finally{
 	      //finally block used to close resources
@@ -83,7 +89,7 @@ public class LibraryDB {
 	         if(conn!=null)
 	            conn.close();
 	      }catch(SQLException se){
-	         se.printStackTrace();
+				logger.error("Exception occured during attempt to close connection to the database: " + se.getMessage());
 	      }//end finally try
 	   }//end finally
 		return new Credentials();
@@ -202,6 +208,8 @@ public class LibraryDB {
 				return -1;
 					
 		} catch (ClassNotFoundException | SQLException e) {
+			logger.error("Exception occured during connectToDB or during running the sql statment: " + e.getMessage());
+
 			e.printStackTrace();
 			return -1;
 		}

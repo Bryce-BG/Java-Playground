@@ -9,7 +9,10 @@ import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.JTextPane;
 import javax.swing.SwingUtilities;
 
 import com.BryceBG.DatabaseTools.utils.Utils;
@@ -67,14 +70,52 @@ public final class MainWindow implements Runnable {
         searchPanel.setPreferredSize(new Dimension(300, 250));
         contentPane.add(searchPanel);
         
+        
+        //search field
+        JTextField searchFld = new JTextField(30);
+        searchPanel.add(searchFld);
+        
+        
+        //result pane
+        JTextPane resultPane = new JTextPane();
+        resultPane.setPreferredSize(new Dimension(200, 200));
+        contentPane.add(resultPane);
+
+
+        
+        
+        //1 way of doing action listener
+        ActionListener tempBtnActLstn = new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				String resourceToSearch = searchFld.getText();
+				String result = Utils.readResourceToString(resourceToSearch);
+				
+				resultPane.setText(result);
+				
+//				System.exit(0); //exit when button is clicked				
+			}
+        };
+        
+        
+        
+        
+        
         JButton tempBtn = new JButton("Click me!");
-        tempBtn.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                System.exit(0); //exit when button is clicked
-             }
-          });
+        //another way of adding action listener
+//        tempBtn.addActionListener(new ActionListener() {
+//            public void actionPerformed(ActionEvent e) {
+//            	System.exit(0); //exit when button is clicked
+//             }
+//          });
+        tempBtn.addActionListener(tempBtnActLstn);
         
         searchPanel.add(tempBtn);
+        
+        
+        
+        //DEBUG
+//        JOptionPane.showMessageDialog(mainFrame, Utils.getConfigString("app.dbpass", null));
         
 		
 	}

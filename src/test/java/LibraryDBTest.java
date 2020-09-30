@@ -7,6 +7,7 @@ import org.junit.Test;
 
 import com.BryceBG.DatabaseTools.Database.Credentials;
 import com.BryceBG.DatabaseTools.Database.LibraryDB;
+import com.BryceBG.DatabaseTools.utils.Utils;
 
 public class LibraryDBTest {
 	
@@ -16,14 +17,8 @@ public class LibraryDBTest {
 	@BeforeClass
 	public static void onlyOnce() 
 	{
-		//1. get username and password to use for the test.
-		ReadConfig cf = new ReadConfig();
-		if(cf.is_valid())//ensure config loaded successfully
-		{
-		//2. call setters (to ensure database is initialized)
-		library = new LibraryDB(cf.get_host(), cf.get_port(), cf.get_name(), cf.get_pass(), cf.get_user());
-
-		}
+		//initilize library with parameters obtained from  our configuration file.
+			library = new LibraryDB(Utils.getConfigString("app.dbhost", null), Utils.getConfigString("app.dbport", null), Utils.getConfigString("app.dbname", null),Utils.getConfigString("app.dbpass", null) , Utils.getConfigString("app.dbuser", null));
 	}
 	
 	
@@ -153,6 +148,13 @@ public class LibraryDBTest {
 	//TODO implement this
 	//3. test adding admin users to DB (create
 	
+	
+	@Test
+	public void test_get_version() {
+		//Skeleton test
+		assertEquals("0.0.5-SNAPSHOT(not_a_jar)",Utils.getThisJarVersion());
+	}
+
 	
 
 
