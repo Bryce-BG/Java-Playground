@@ -673,6 +673,10 @@ public class LibraryDB {
 	//remove series. (helper series for removeBook)
 	private boolean removeSeries(String series_name) {
 		//TODO implement me
+		//prompt for confirm delete
+		//for each book in db cascade delete
+		//remove series from series.list
+		//remove from authors
 		return false;
 	}
 	

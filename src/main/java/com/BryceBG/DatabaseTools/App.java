@@ -1,7 +1,6 @@
 package com.BryceBG.DatabaseTools;
 
 
-import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import org.apache.commons.cli.CommandLine;
