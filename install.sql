@@ -65,6 +65,13 @@ CREATE TABLE IF NOT EXISTS series (
 
 );
 
+/*used as a tuple for book identifiers like: (ISBN: isbn_value) or: (MOBI-ASN: SHDA4N)*/
+CREATE TYPE identifier AS (
+    name            text,
+    id_val		    text,
+);
+
+
 CREATE TABLE IF NOT EXISTS books (
     book_id SERIAL,
     title VARCHAR(100) NOT NULL,
@@ -77,9 +84,9 @@ CREATE TABLE IF NOT EXISTS books (
     publisher VARCHAR(70),
     genres int[],
     cover_location VARCHAR, --TODO make this in a nested file directory structure (and keep img name short)
+    identifiers identifier[], --all the identifiers associated with a book.
     PRIMARY KEY (book_id),
     CHECK (rating_overall>0 AND rating_overall<10)
-    --TODO add list of pair type for identifiers. Example: ((ISBN: 1012-123-123), (MOBI-ASN: SHDA4N))
     /*future: comment_stream_id: if I ever allow OTHER people to add comments */
 );
 
