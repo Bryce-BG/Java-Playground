@@ -61,6 +61,14 @@
 			<artifactId>commons-configuration</artifactId>
 			<version>1.7</version>
 		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/org.javatuples/javatuples (for tuples as Java lacks the built in type)-->
+		<dependency>
+			<groupId>org.javatuples</groupId>
+			<artifactId>javatuples</artifactId>
+			<version>1.2</version>
+		</dependency>
+
 	</dependencies>
 
 

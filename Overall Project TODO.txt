@@ -11,7 +11,16 @@
 	2. add Mock entries to mockDB for testing
 	
 ##pom.xml
-revise to include a compile option to build our EpubScraper jar
+
+
+
+Book.java
+1. Decide if we want to do something special for author aliases
+2. add comment/review stream field to this structure later.
+3. potentially overload constructor so personal fields can be set with a single call.
+
+
+
 
 #######
 Create Genre inheritance tree and create SQL script to automatically generate them from our existing genre-types (like our install sql script)
@@ -25,11 +34,3 @@ Create Genre inheritance tree and create SQL script to automatically generate th
 3. Create QTJambi interface to allow GUI access to the library_database project in an app form
 4. create Spark app interface to allow access to system via webpages.
 
-
-
-<classpathentry excluding="**" kind="src" output="target/test-classes" path="src/test/resources">
-		<attributes>
-			<attribute name="maven.pomderived" value="true"/>
-			<attribute name="test" value="true"/>
-		</attributes>
-	</classpathentry>
