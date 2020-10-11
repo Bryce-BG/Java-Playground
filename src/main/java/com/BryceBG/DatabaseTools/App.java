@@ -13,6 +13,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.BryceBG.DatabaseTools.Database.LibraryDB;
 import com.BryceBG.DatabaseTools.ui.MainWindow;
 import com.BryceBG.DatabaseTools.utils.Utils;
 
@@ -33,18 +34,18 @@ public class App {
 	 * @param args Array of command line arguments.
 	 */
 	public static void main(String[] args) {
-        Utils.initializeAppLogger("app.log","%d %p %c [%t] %m%n"); 
+        Utils.initializeAppLogger("app.log","%d %p %c [%t] %m%n"); //sets up our logger instance for the program
 		logger.info("Loaded app version: " + Utils.getThisJarVersion());
 
 		// Schedule a job for the event-dispatching thread:
 		// creating and showing this application's GUI.
 		parseCmdArgs(args);
 
-//        Utils.configureLogger(); 
         logger.info("App Log4j2 system initialized");
 
-		MainWindow mw = new MainWindow();
-		SwingUtilities.invokeLater(mw);
+        
+//		MainWindow mw = new MainWindow();
+//		SwingUtilities.invokeLater(mw);
 
 	}
 
@@ -56,10 +57,13 @@ public class App {
 		Options options = new Options();
 
         Option version = new Option("v", "version", false, "Version of the program");
-
+        Option initialize = new Option("c", "initilize_database", true, "create the postgresql database for our system");
 
         version.setRequired(false);
         options.addOption(version);
+        
+        initialize.setRequired(false);
+        options.addOption(initialize);
         
         CommandLineParser parser = new DefaultParser();
         HelpFormatter formatter = new HelpFormatter();
@@ -74,16 +78,23 @@ public class App {
         }
 
         if (args.length > 0 && cmd.hasOption('v')){
-            System.out.println(Utils.getThisJarVersion());
+            logger.info("The app version is: " + Utils.getThisJarVersion());//print to our log (and also usually to stdout
             System.exit(0);
         }
 
-        
-        
+        if (args.length > 0 && cmd.hasOption('c')){
+        	String newLibraryName = cmd.getOptionValue("c");
+        	System.out.println(String.format("Our library name parsed is %s", newLibraryName));
 
+            if(LibraryDB.createDB(newLibraryName))
+            	System.out.println("Database creation was successful");
+            else
+            	System.out.println("Database creation was un-successful");
+            System.exit(0);
+        }
         
-        	
 	}
+	
 
 
 

@@ -1,26 +1,28 @@
 package com.BryceBG.DatabaseTools.Database;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.BryceBG.DatabaseTools.App;
+import com.BryceBG.DatabaseTools.utils.Utils;
 
 /**
  * 
- * @author Bryce Bodley-Gomes
+ * @author Bryce-BG
  * This class is for interfacing with the postgres library database and allowing programmatic access.
  */
 public class LibraryDB {
 	private static final Logger logger = LogManager.getLogger(App.class.getName());
 
 	//DEFAULT parameters for DB access (can be overridden via constructor)
-	String DB_HOST = "localHost";
-	String DB_PORT = "5432";
-	String DB_NAME = "librarydatabase";
-	String DB_PASSWORD = "postgres"; 
-	String DB_USER = "postgres"; 
+	private String DB_HOST = "localHost";
+	private String DB_PORT = "5432";
+	private String DB_NAME = "librarydatabase";
+	private String DB_PASSWORD = "postgres"; 
+	private String DB_USER = "postgres"; 
 	
 
 	
@@ -40,6 +42,7 @@ public class LibraryDB {
 	 * @param password Password corresponding to the Username passed in.
 	 * @return If user exists, return valid credentials. Otherwise return empty credentials. Verifiable by credentials.is_valid_credentials()
 	 */
+	@Deprecated //REPLACED with UserController.authenticate()
 	public Credentials login(String username, String password) {
 		Connection conn = null;
 		PreparedStatement stmt = null; 
@@ -710,7 +713,7 @@ public class LibraryDB {
 	 * @throws ClassNotFoundException: if no postgres driver was able to be used
 	 * @throws SQLException: if the connection failed due to invalid parameters
 	 */
-	private Connection connectToDB() throws SQLException, ClassNotFoundException{
+	public Connection connectToDB() throws SQLException, ClassNotFoundException{
 		Connection conn = null;
 		Class.forName("org.postgresql.Driver"); //register the driver
 		String url = String.format("jdbc:postgresql://%s:%s/%s", DB_HOST, DB_PORT, DB_NAME);
@@ -765,6 +768,7 @@ public class LibraryDB {
 	 * @param user: user to check if it exists in the database.
 	 * @return: True if the credentials check out.
 	 */
+	@Deprecated
 	private boolean validate_credentials(Credentials user) {
 		Connection conn = null;
 		PreparedStatement stmt = null; 
@@ -815,5 +819,95 @@ public class LibraryDB {
 		return false;
 		
 	}
+
+	
+	/**
+	 * This function is intended to be run once to initialize the database for future use.
+	 * WARNING This WILL drop existing database if a database with same name exists in system
+	 * @param libraryName the name for the postgresql database to create
+	 */
+	public static boolean createDB(String libraryName) {
+		//TODO rewrite this function as at this time it is vulnerable to sql injection
+		if(libraryName == null || libraryName.isEmpty() || libraryName.isBlank()) {
+			libraryName = "librarydatabase";
+            logger.warn(String.format("The name passed into CreateDB for the database was invalid so it was changed to: %s.", libraryName));
+		}
+	    try {
+	    	
+	    		List<String> dbNames = listDownAllDatabases();
+	    		
+	    		for(String x: dbNames) 
+	    		{
+	    			if(libraryName.equals(x));
+		            	logger.warn(String.format("Existing database was found with name %s. (and then dropped).", libraryName));
+	    		}
+	    	
+	    		Connection connection = connectToPostGres();
+	            Statement stmt = connection.createStatement();
+	            //Drop database if it pre-exists to reset the complete database
+	            String sql = String.format("DROP DATABASE %s", libraryName);
+	            stmt.executeUpdate(sql);
+	              
+	              
+	          
+	        
+	          stmt = connection.createStatement();
+	           
+	          sql = String.format("CREATE DATABASE %s", libraryName); //Create Database
+	          stmt.executeUpdate(sql); 
+	          
+	          logger.info(String.format("Successfully created database: %s", libraryName));
+	    return true;
+	    }
+	     catch (Exception ex) {
+	    	 logger.error("error occured during createDB + \n" + ex.getMessage());
+//	         ex.printStackTrace();
+	}
+	    return false;
+	}
+	
+	/**
+	 * Helper function for createDB() that connects to postgres and not our library db (so we can delete it with createDB())
+	 * @return
+	 * @throws SQLException
+	 * @throws ClassNotFoundException
+	 */
+	private static Connection connectToPostGres() throws SQLException, ClassNotFoundException {
+		Connection conn = null;
+		Class.forName("org.postgresql.Driver"); //register the driver
+		String host = Utils.getConfigString("app.dbhost", null);
+		String port = Utils.getConfigString("app.dbport", null);
+		String url = String.format("jdbc:postgresql://%s:%s/?", host, port);
+		
+		//establish connection to db at the provided url
+		try {
+			conn = DriverManager.getConnection(url, Utils.getConfigString("app.dbuser", null), Utils.getConfigString("app.dbpass", null));
+			return conn; 
+		} catch (SQLException e) {
+			logger.fatal("failed to connect to database" + e.getMessage());
+			throw e;
+		}
+	}
+	private static List<String> listDownAllDatabases() {
+		List<String> names = new ArrayList<String>();
+        try {
+        	Connection connection = connectToPostGres();
+            PreparedStatement ps = connection
+                    .prepareStatement("SELECT datname FROM pg_database WHERE datistemplate = false;");
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+            	String name = rs.getString(1);
+            	names.add(name);
+                System.out.println(name);//TODO remove debugging
+            }
+            rs.close();
+            ps.close();
+            return names;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+		return names;
+    }
 
 }

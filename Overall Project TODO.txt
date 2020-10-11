@@ -1,5 +1,11 @@
 ##in LibraryDB.java
 	1. replace login function with library calls using real authentication library
+	2. (IMPORTANT) ensure that the class parameters are set before userDao or BookDao call connectToDB();
+	3. rewrite createDB() as:
+		It is currently vulnerable to SQL injection.
+		Also doesn't close connections correctly (though default timeout should theoretically close them eventually). 
+		Also it doens't save settings for connecting to the new db in config file.
+		Also it only creates the database and doesn't run install.sql script.
 
 #Database changes
 	1. Replace plain stored passwords with salted/hashed passwords for the DB Users table (after changing over to external library for authentication likely)
@@ -14,16 +20,29 @@
 
 
 
-Book.java
+##Book.java
 1. Decide if we want to do something special for author aliases
 2. add comment/review stream field to this structure later.
 3. potentially overload constructor so personal fields can be set with a single call.
 
+##RequestUtil.java
+1. add additional getparam methods for extracting data from or http requests (for more advanced queries and queries by values other than id for instance)
+2. finish commenting existing getParam functions.
+
+
+##BookDao.java (skeleton functions at this time)
+1. (IMPORTANT) Take sql query functions from LibraryDB.java and inject them into this file.
+
+
+##UserDao.java 
+(skeleton functions at this time)
+1. (IMPORTANT) Take sql query functions from LibraryDB.java and inject them into this file (create and delete user functions).
+2. implement changePassword() 
 
 
 
 #######
-Create Genre inheritance tree and create SQL script to automatically generate them from our existing genre-types (like our install sql script)
+(IMPORTANT) Create Genre inheritance tree and create SQL script to automatically generate them from our existing genre-types (like our install sql script)
 
 
 

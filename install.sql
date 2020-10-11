@@ -15,14 +15,15 @@
 
 */
 
-DROP TABLE IF EXISTS books, authors, series CASCADE;
+DROP TABLE IF EXISTS books, authors, series, users CASCADE;
 DROP TYPE IF EXISTS series_status;
 
 -- #####USER RELATED
 CREATE TABLE IF NOT EXISTS users (
     user_id SERIAL UNIQUE, --must be unique otherwise we can't reference
 	username VARCHAR(40) PRIMARY KEY,
-	password VARCHAR(40),
+	hashedPassword VARCHAR,
+	salt VARCHAR,
 	first_name VARCHAR(30),
 	last_name VARCHAR(30),
   	email TEXT NOT NULL UNIQUE, --further constraints required see: https://hashrocket.com/blog/posts/working-with-email-addresses-in-postgresql
@@ -33,7 +34,8 @@ CREATE TABLE IF NOT EXISTS users (
 --     custom_genres VARCHAR(30)[] /*genres that are not commonly used and so not accepted into DB default genres*/
 
 );
-INSERT INTO users (username, password, first_name, last_name, email, is_admin) VALUES ('admin', 'admin', 'admin', 'admin', 'admin@email.com', true);
+
+INSERT INTO users (username, hashedPassword, salt, first_name, last_name, email, is_admin) VALUES ('admin', '$2a$10$h.dl5J86rGH7I8bD9bZeZeci0pDt0.VwFTGujlnEaZXPf/q7vM5wO','$2a$10$h.dl5J86rGH7I8bD9bZeZe', 'admin', 'admin', 'admin@email.com', true);
 CREATE TABLE IF NOT EXISTS authors (
     author_id SERIAL,
     alias_id INT[], /*would be nice if we can ensure that this links to existing author_id*/
@@ -68,7 +70,7 @@ CREATE TABLE IF NOT EXISTS series (
 /*used as a tuple for book identifiers like: (ISBN: isbn_value) or: (MOBI-ASN: SHDA4N)*/
 CREATE TYPE identifier AS (
     name            text,
-    id_val		    text,
+    id_val		    text
 );
 
 
