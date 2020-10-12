@@ -5,6 +5,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -79,7 +80,40 @@ public class UserDao {
         return rtVal;
     	}
     	
+    /**
+     * This function gets all usernames in the system and returns them.
+     * @return
+     */
+    public Iterable<String> getAllUserNames() {
+    	ArrayList<String> userNames = new ArrayList<String>();
+
+    	String sql =
+                "SELECT * " +
+                "FROM USERS ";	
+    	//Use of try with resources to auto close connection examples:
+    	//https://stackoverflow.com/questions/38545507/postgresql-close-connection-after-method-has-finished
+    	//https://stackoverflow.com/questions/8066501/how-should-i-use-try-with-resources-with-jdbc
     	
+    	//1. establish connection to our database
+    	try (Connection conn = library.connectToDB();        
+	            PreparedStatement pstmt = conn.prepareStatement(sql);
+	            ) {
+    		//2. execute our query for user.
+            try (ResultSet rs = pstmt.executeQuery()) {
+	            while(rs.next()) { //3. loop through results and get usernames.
+	            	String userName = rs.getString("USERNAME"); 
+	            	userNames.add(userName);
+	            }
+            } //end of try-with-resources: result set
+        } //end of try-with-resources: connection 
+    	//catch blocks for try-with-resources: connection
+    	catch (ClassNotFoundException e) {
+			logger.error("Exception occured during connectToDB: " + e.getMessage());
+		}catch (SQLException e) { 
+			logger.error("Exception occured during executing SQL statement: " + e.getMessage());
+        }
+        return userNames;
+    }
     	
     	
 
@@ -98,19 +132,16 @@ public class UserDao {
 	    		pstmt.setString(2, newHashedPassword);
 	    		pstmt.setString(3, username);
 
-	    		
-
 	    		//3. execute our query for user.
 	            int rtUp = pstmt.executeUpdate();
 	            
-	            //4. check if sql update preformed operation and updated only one row.
+	            //4. check if sql update performed operation and updated only one row.
 		            if (rtUp==1) {
 		            	rtVal = true; 
 		            }
 		            else {
 						logger.warn(String.format("Updating a user's password has incorrectly updated %s rows", rtUp));
-		            }
-		            
+		            }     
 	        } //end of try-with-resources: connection 
 	    	//catch blocks for try-with-resources: connection
 	    	catch (ClassNotFoundException e) {
@@ -126,5 +157,47 @@ public class UserDao {
 		return rtVal;
 		
 	}
-
+	
+	public static boolean createNewUser(String username, String password, String fName, String lName, String email, boolean is_admin) {
+		//TODO implement me
+		return false;
+		
+	}
+	
+	////Helper functions
+	/**
+	 * Helper function that ensures (currently) that an email is valid using regex. 
+	 * TODO: revise so that it sends an email that requires confirmation before continuing.
+	 * @param email: email to check
+	 * @return
+	 */
+	private boolean is_valid_email(String email) {
+		   String regex = "^[\\w-_\\.+]*[\\w-_\\.]\\@([\\w]+\\.)+[\\w]+[\\w]$";
+		   return email.matches(regex);
+		}
+	
+	/**
+	 * Helper function that is used to ensure password meets specifications.
+	 * length>=8, 
+	 * contains a capital letter
+	 * Contains alpha and numeric characters
+	 * 
+	 * @param password: password to check
+	 * @return: true if password meets all requirements. false otherwise
+	 */
+	private boolean check_password_meets_requirements(String password) {
+		if (password == null) 
+			return false;
+		if(password.length()<8) //length requirement
+			return false;
+		if (password.toLowerCase().equals(password) || password.toUpperCase().equals(password)) //was all uppercase or all lowercase
+			return false;
+		
+	    String n = ".*[0-9].*"; //numeric regex
+	    String a = ".*[A-Z].*"; //alpha regex
+	    if(!(password.matches(n) && password.matches(a)))//does NOT contain both letters and numbers
+	    	return false;
+	
+		return true;
+	}
 }

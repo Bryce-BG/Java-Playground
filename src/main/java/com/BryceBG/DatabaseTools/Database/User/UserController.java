@@ -8,6 +8,12 @@ public class UserController {
 
     // Authenticate the user by hashing the inputted password using the stored salt,
     // then comparing the generated hashed password to the stored hashed password
+	/**
+	 * This function authenticates the user by hashing the inputted password using the stored salt and then comparing the generated hashed password to the stored hashed password
+	 * @param username The username for the user trying to login
+	 * @param password The plaintext password of the user trying to login
+	 * @return true if user exists and the password hashes to the correct value. False otherwise.
+	 */
     public static boolean authenticate(String username, String password) {
         if (username == null || password == null) {
             return false;
@@ -33,5 +39,7 @@ public class UserController {
             UserDao.changePassword(username, newSalt, newHashedPassword); //
         }
     }
+    
+
 }
 

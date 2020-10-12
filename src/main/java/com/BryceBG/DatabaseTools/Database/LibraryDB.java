@@ -37,71 +37,11 @@ public class LibraryDB {
 
 	/** ############# USER RELATED DATABASE FUNCTIONS ############# **/
 	
-	 /** Function to create Credentials object which is used to authenticate user access to the database.
-	 * @param username Username as it should be in the DB.User table 
-	 * @param password Password corresponding to the Username passed in.
-	 * @return If user exists, return valid credentials. Otherwise return empty credentials. Verifiable by credentials.is_valid_credentials()
-	 */
-	@Deprecated //REPLACED with UserController.authenticate()
-	public Credentials login(String username, String password) {
-		Connection conn = null;
-		PreparedStatement stmt = null; 
-		try {
-			//1. connect to DB
-			conn = connectToDB();		
-			if( conn.isValid(0)) {
-				//2. verify user exists in database (through query of DB.Users table)
-		            String sql =
-		                    "SELECT * " +
-		                    "FROM USERS " + 
-		                    "WHERE username=? AND password=?";		            
-		            
-		            stmt = conn.prepareStatement(sql);
-		            stmt.setString(1, username);
-		            stmt.setString(2, password);
-		            ResultSet rs = stmt.executeQuery();
-		                       
-		            if (rs.next()) { //make sure there WAS an entry	returned (otherwise no match was found	            
-		            
-		           	//3. extract results from result set needed to create credentials object
-	            	String un = rs.getString("USERNAME"); 
-	            	String pw = rs.getString("PASSWORD");
-	            	boolean admin = rs.getBoolean("IS_ADMIN");
-	            	
-					//4. create credentials object for the user
-	            	return new Credentials(un, pw, admin);
-		            }
-		            else {
-		            	return new Credentials(); //user was invalid 
-		            }
-			}
-
-		} catch (ClassNotFoundException e) {
-			logger.error("Exception occured during connectToDB: " + e.getMessage());
-		} catch (SQLException e) {
-			logger.error("Exception occured during executing SQL statement: " + e.getMessage());
-		}
-		finally{
-	      //finally block used to close resources
-	      try{
-	         if(stmt!=null)
-	            conn.close();
-	      }catch(SQLException se){
-	      }// do nothing
-	      try{
-	         if(conn!=null)
-	            conn.close();
-	      }catch(SQLException se){
-				logger.error("Exception occured during attempt to close connection to the database: " + se.getMessage());
-	      }//end finally try
-	   }//end finally
-		return new Credentials();
-	}
 	
 	/**
 	 * Function to allow the creation of additional users (non administrative ones) for standard users in our library system.
 	 * @param username The desired username for the new account
-	 * @param Password The new password for the useraccount
+	 * @param Password The new password for the user account
 	 * @param lName Last name of the new user.
 	 * @param fName First name of the new user.
 	 * @param email Email address linked to the user account (for ensuring passwords can be reset).
@@ -252,9 +192,11 @@ public class LibraryDB {
 	 * -7 Unexpected error adding user to database
 	 * -8 invalid credentials
 	 */
-	public int create_new_admin_user(Credentials yourAdmin, String username, String password, String lName, String fName, String email) {
+	@Deprecated
+	public int create_new_admin_user(/*Credentials yourAdmin,*/ String username, String password, String lName, String fName, String email) {
 		
-		if(yourAdmin.is_valid_credentials() && validate_credentials(yourAdmin) && yourAdmin.get_permissions()) {
+		if(true) //yourAdmin.is_valid_credentials() && validate_credentials(yourAdmin) && yourAdmin.get_permissions())
+		{
 			Connection conn = null;
 			PreparedStatement stmt = null;
 			email = email.toLowerCase();
@@ -385,8 +327,10 @@ public class LibraryDB {
 	 * -3 = error occurred during the deletion of user
 	 * -4 = invalid admin credentials
 	 */
-	public int delete_user(Credentials yourAdmin, String username, String email) {
-		if(yourAdmin.is_valid_credentials() && validate_credentials(yourAdmin) && yourAdmin.get_permissions()) {
+	@Deprecated
+	public int delete_user(/*Credentials yourAdmin,*/ String username, String email) {
+		if(true) //yourAdmin.is_valid_credentials() && validate_credentials(yourAdmin) && yourAdmin.get_permissions()) 
+			{
 			Connection conn = null;
 			PreparedStatement stmt = null;
 			email = email.toLowerCase();
@@ -448,11 +392,7 @@ public class LibraryDB {
 			return -4; //invalid admin credentials
 		}
 	}
-	public boolean edit_user(Credentials yourAdmin) {
-		//TODO implement me (more parameters needed)
-		//can only edit user if: is_admin=true OR your acount == the account being edited.
-		return false;
-	}
+
 	
 	
 	
@@ -723,102 +663,14 @@ public class LibraryDB {
 			conn = DriverManager.getConnection(url, DB_USER, DB_PASSWORD);
 			return conn; 
 		} catch (SQLException e) {
-			System.out.println("Error in connecting to the database with the supplied parameters" + url); 
+			logger.error("Error in connecting to the database with the supplied parameters" + url); 
 			throw e;
 		}
 	}
 	
-	/**
-	 * Helper function that is used to ensure password meets specifications.
-	 * length>=8, 
-	 * contains a capital letter
-	 * Contains alpha and numeric characters
-	 * 
-	 * @param password: password to check
-	 * @return: true if password meets all requirements. false otherwise
-	 */
-	private boolean check_password_meets_requirements(String password) {
-		if (password == null) 
-			return false;
-		if(password.length()<8) //length requirement
-			return false;
-		if (password.toLowerCase().equals(password) || password.toUpperCase().equals(password)) //was all uppercase or all lowercase
-			return false;
-		
-	    String n = ".*[0-9].*"; //numeric regex
-	    String a = ".*[A-Z].*"; //alpha regex
-	    if(!(password.matches(n) && password.matches(a)))//does NOT contain both letters and numbers
-	    	return false;
-	
-		return true;
-	}
-	/**
-	 * Helper function that ensures (currently) that an email is valid using regex. 
-	 * TODO: revise so that it sends an email that requires confirmation before continuing.
-	 * @param email: email to check
-	 * @return
-	 */
-	private boolean is_valid_email(String email) {
-		   String regex = "^[\\w-_\\.+]*[\\w-_\\.]\\@([\\w]+\\.)+[\\w]+[\\w]$";
-		   return email.matches(regex);
-		}
-	
-	/**
-	 * Helper function to validate that credentials passed into a function actually exist in the database and are not completly fabricated
-	 * @param user: user to check if it exists in the database.
-	 * @return: True if the credentials check out.
-	 */
-	@Deprecated
-	private boolean validate_credentials(Credentials user) {
-		Connection conn = null;
-		PreparedStatement stmt = null; 
-		try {
-			//1. connect to DB
-			conn = connectToDB();
-			
-			if( conn.isValid(0)) {
-				//2. verify user exists in database (through query of DB.Users table)
-		            String sql =
-		                    "SELECT * " +
-		                    "FROM USERS " + 
-		                    "WHERE username=? AND password=? AND is_admin=?";		            
-		            
-		            stmt = conn.prepareStatement(sql);
-		            stmt.setString(1, user.get_username());
-		            stmt.setString(2, user.get_password());
-		            stmt.setBoolean(3, true);
-		            
-		            ResultSet rs = stmt.executeQuery();
-		            if (rs.next()) { //make sure there WAS an entry	returned (otherwise no match was found	            
-		            	return true;
-		            }
-		            else {
-		            	return false;  
-		            }
-			}
 
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		finally{
-	      //finally block used to close resources
-	      try{
-	         if(stmt!=null)
-	            conn.close();
-	      }catch(SQLException se){
-	      }// do nothing
-	      try{
-	         if(conn!=null)
-	            conn.close();
-	      }catch(SQLException se){
-	         se.printStackTrace();
-	      }//end finally try
-	   }//end finally
-		return false;
-		
-	}
+
+	
 
 	
 	/**
@@ -834,23 +686,21 @@ public class LibraryDB {
 		}
 	    try {
 	    	
-	    		List<String> dbNames = listDownAllDatabases();
-	    		
+	    		List<String> dbNames = listDownAllDatabases(); //get names of current databases
 	    		for(String x: dbNames) 
 	    		{
-	    			if(libraryName.equals(x));
+	    			if(libraryName.equals(x)) {
 		            	logger.warn(String.format("Existing database was found with name %s. (and then dropped).", libraryName));
+		            	break;
+	    			}
 	    		}
 	    	
 	    		Connection connection = connectToPostGres();
 	            Statement stmt = connection.createStatement();
-	            //Drop database if it pre-exists to reset the complete database
+	            //Drop database if it already exists  (reset the complete database)
 	            String sql = String.format("DROP DATABASE %s", libraryName);
 	            stmt.executeUpdate(sql);
 	              
-	              
-	          
-	        
 	          stmt = connection.createStatement();
 	           
 	          sql = String.format("CREATE DATABASE %s", libraryName); //Create Database
@@ -861,14 +711,13 @@ public class LibraryDB {
 	    }
 	     catch (Exception ex) {
 	    	 logger.error("error occured during createDB + \n" + ex.getMessage());
-//	         ex.printStackTrace();
 	}
 	    return false;
 	}
 	
 	/**
 	 * Helper function for createDB() that connects to postgres and not our library db (so we can delete it with createDB())
-	 * @return
+	 * @return connection to default postgres database.
 	 * @throws SQLException
 	 * @throws ClassNotFoundException
 	 */
@@ -888,6 +737,10 @@ public class LibraryDB {
 			throw e;
 		}
 	}
+	/**
+	 * Helper function for connectToPostGres(). Queries postgresql to get database names in system.
+	 * @return returns a list of names for all currently existing databases
+	 */
 	private static List<String> listDownAllDatabases() {
 		List<String> names = new ArrayList<String>();
         try {
@@ -898,7 +751,6 @@ public class LibraryDB {
             while (rs.next()) {
             	String name = rs.getString(1);
             	names.add(name);
-                System.out.println(name);//TODO remove debugging
             }
             rs.close();
             ps.close();
@@ -910,4 +762,43 @@ public class LibraryDB {
 		return names;
     }
 
+	
+////Helper functions
+/**
+ * Helper function that ensures (currently) that an email is valid using regex. 
+ * TODO: revise so that it sends an email that requires confirmation before continuing.
+ * @param email: email to check
+ * @return
+ */
+private boolean is_valid_email(String email) {
+	   String regex = "^[\\w-_\\.+]*[\\w-_\\.]\\@([\\w]+\\.)+[\\w]+[\\w]$";
+	   return email.matches(regex);
+	}
+
+/**
+ * Helper function that is used to ensure password meets specifications.
+ * length>=8, 
+ * contains a capital letter
+ * Contains alpha and numeric characters
+ * 
+ * @param password: password to check
+ * @return: true if password meets all requirements. false otherwise
+ */
+private boolean check_password_meets_requirements(String password) {
+	if (password == null) 
+		return false;
+	if(password.length()<8) //length requirement
+		return false;
+	if (password.toLowerCase().equals(password) || password.toUpperCase().equals(password)) //was all uppercase or all lowercase
+		return false;
+	
+    String n = ".*[0-9].*"; //numeric regex
+    String a = ".*[A-Z].*"; //alpha regex
+    if(!(password.matches(n) && password.matches(a)))//does NOT contain both letters and numbers
+    	return false;
+
+	return true;
 }
+}
+
+

@@ -5,7 +5,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.BryceBG.DatabaseTools.Database.Credentials;
 import com.BryceBG.DatabaseTools.Database.LibraryDB;
 import com.BryceBG.DatabaseTools.utils.Utils;
 
@@ -25,8 +24,8 @@ public class LibraryDBTest {
 	@Before
 	public void initialize() {
 		//do stuff we need to do before tests (just verify db is still there probbaly)
-		Credentials yourAdmin = library.login("admin", "admin"); //just a dummy admin inserted for start of the system into DB
-		library.delete_user(yourAdmin, "thief_lord", "testemail@yahoo.com");
+//		Credentials yourAdmin = library.login("admin", "admin"); //just a dummy admin inserted for start of the system into DB
+		library.delete_user("thief_lord", "testemail@yahoo.com");
 
 	       
 	}
@@ -86,58 +85,34 @@ public class LibraryDBTest {
 	
 	
 	
-	@Test
-	public void test_login_function() {
-		int rv = library.create_new_user("thief_lord", "Password1", "Bodley-Gomes", "Bryce", "testemail@yahoo.com");
-		if(rv == -2 || rv == 0)
-		{
-		//Test1. test if login works with valid username and password.
-		Credentials crv = library.login("thief_lord", "Password1");
-		assertTrue(crv.is_valid_credentials());
-		
-		//Test2. ensure login fails with invalid password
-		crv = library.login("thief_lord", "Password3");
-		assertFalse(crv.is_valid_credentials());
-		
-		//Test3. Ensure login fails for a user not in database.
-		Credentials creds = library.login("nouser", "Password1");
-		assertFalse(creds.is_valid_credentials()); //user should not exist and thus is invalid
-		}
-		else
-		{
-			assertFalse("failed to create a user in the database", true);
-		}
-	}
+
 
 
 	@Test
 	public void test_delete_user() {
 		
-		Credentials yourAdmin = library.login("admin", "admin"); //just a dummy admin inserted for start of the system into DB
 		
 		int rv = library.create_new_user("thief_lord", "Password1", "Bodley-Gomes", "Bryce", "testemail@yahoo.com");
 		assertEquals("Failed to create user for test", 0, rv);
 		
 		//Test1. Ensure you can delete an email that is in the system
-		rv = library.delete_user(yourAdmin, "thief_lord", "testemail@yahoo.com");
+		rv = library.delete_user("thief_lord", "testemail@yahoo.com");
 		assertEquals("Deleting account should have been successful and it was not", 0, rv);
 		
 		//Test2. Ensure you can't delete accounts where the user is not present 
-		rv = library.delete_user(yourAdmin, "thief_lord", "testemail@yahoo.com"); //already deleted by Test1.
+		rv = library.delete_user("thief_lord", "testemail@yahoo.com"); //already deleted by Test1.
 		assertEquals("Deleting account should failed and it didn't or failed in a different way", -2, rv);
 		
 		//Test3. Ensure you can't delete accounts if the admin credentials are fake.
-		rv = library.create_new_user("thief_lord", "Password1", "Bodley-Gomes", "Bryce", "testemail@yahoo.com");
-		rv = library.delete_user(library.login("admin", "admin2"), "thief_lord", "testemail@yahoo.com");
-		assertEquals("Deleting account should failed and it didn't or failed in a different way", -4, rv);
+
 		
 		//Test4. Ensure you can't delete users where the email and username don't match up.
 		rv = library.create_new_user("thief_lord", "Password1", "Bodley-Gomes", "Bryce", "testemail@yahoo.com");
 		//incorrect email.
-		rv = library.delete_user(yourAdmin, "thief_lord", "test2email@yahoo.com"); //already deleted by Test1.
+		rv = library.delete_user("thief_lord", "test2email@yahoo.com"); //already deleted by Test1.
 		assertEquals("Deleting account should failed and it didn't or failed in a different way", -2, rv);
 		//Incorrect username
-		rv = library.delete_user(yourAdmin, "thief_lord1", "testemail@yahoo.com"); //already deleted by Test1.
+		rv = library.delete_user("thief_lord1", "testemail@yahoo.com"); //already deleted by Test1.
 		assertEquals("Deleting account should failed and it didn't or failed in a different way", -2, rv);
 		
 		
