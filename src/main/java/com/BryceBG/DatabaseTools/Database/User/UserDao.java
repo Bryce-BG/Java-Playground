@@ -10,29 +10,25 @@ import java.util.ArrayList;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.BryceBG.DatabaseTools.App;
-import com.BryceBG.DatabaseTools.Database.LibraryDB;
-import com.BryceBG.DatabaseTools.utils.Utils;
-
+import com.BryceBG.DatabaseTools.Database.InstantiatedDaos; //for our instantiated objects
 /**
  * This class is our Data Access object for querying the database for user related information.
  * @author Bryce-BG
  */
 public class UserDao {
 	private static final Logger logger = LogManager.getLogger(UserDao.class.getName());
-	private static LibraryDB library;
-	static {
-		//need to run our config for library instance before any calls are made our the 
-		library = new LibraryDB(Utils.getConfigString("app.dbhost", null), Utils.getConfigString("app.dbport", null), Utils.getConfigString("app.dbname", null),Utils.getConfigString("app.dbpass", null) , Utils.getConfigString("app.dbuser", null));
+	
+
+
+	public UserDao() {
+		
 	}
-
-
 	/**
 	 * Get a user from the database
 	 * @param username the username of the user to lookup
 	 * @return returns null if no user was found. Otherwise a User object containing data from the database is returned
 	 */
-    public static User getUserByUsername(String username) {
+	public User getUserByUsername(String username) {
     	User rtVal = null;
     	String sql =
                 "SELECT * " +
@@ -43,7 +39,7 @@ public class UserDao {
     	//https://stackoverflow.com/questions/8066501/how-should-i-use-try-with-resources-with-jdbc
     	
     	//1. establish connection to our database
-    	try (Connection conn = library.connectToDB();        
+    	try (Connection conn = InstantiatedDaos.library.connectToDB();        
 	            PreparedStatement pstmt = conn.prepareStatement(sql);
 	            ) {
     		pstmt.setString(1, username);
@@ -95,7 +91,7 @@ public class UserDao {
     	//https://stackoverflow.com/questions/8066501/how-should-i-use-try-with-resources-with-jdbc
     	
     	//1. establish connection to our database
-    	try (Connection conn = library.connectToDB();        
+    	try (Connection conn = InstantiatedDaos.library.connectToDB();        
 	            PreparedStatement pstmt = conn.prepareStatement(sql);
 	            ) {
     		//2. execute our query for user.
@@ -118,13 +114,13 @@ public class UserDao {
     	
 
 
-	public static boolean changePassword(String username, String newSalt, String newHashedPassword) {
+	public boolean changePassword(String username, String newSalt, String newHashedPassword) {
 		boolean rtVal = false;
 		if(getUserByUsername(username) != null) {			
 			String sql = "UPDATE users SET salt=?, hashedPassword=? WHERE username=?";
 					
 			//1. establish connection to our database
-	    	try (Connection conn = library.connectToDB();        
+	    	try (Connection conn = InstantiatedDaos.library.connectToDB();        
 		            PreparedStatement pstmt = conn.prepareStatement(sql);
 		            ) {
 	    		//2. set parameters in the prepared statement
@@ -158,46 +154,12 @@ public class UserDao {
 		
 	}
 	
-	public static boolean createNewUser(String username, String password, String fName, String lName, String email, boolean is_admin) {
-		//TODO implement me
-		return false;
-		
-	}
 	
-	////Helper functions
-	/**
-	 * Helper function that ensures (currently) that an email is valid using regex. 
-	 * TODO: revise so that it sends an email that requires confirmation before continuing.
-	 * @param email: email to check
-	 * @return
-	 */
-	private boolean is_valid_email(String email) {
-		   String regex = "^[\\w-_\\.+]*[\\w-_\\.]\\@([\\w]+\\.)+[\\w]+[\\w]$";
-		   return email.matches(regex);
-		}
+//	public static boolean createNewUser(String username, String password, String fName, String lName, String email, boolean is_admin) {
+//		//TODO implement me
+//		return false;
+//		
+//	}
 	
-	/**
-	 * Helper function that is used to ensure password meets specifications.
-	 * length>=8, 
-	 * contains a capital letter
-	 * Contains alpha and numeric characters
-	 * 
-	 * @param password: password to check
-	 * @return: true if password meets all requirements. false otherwise
-	 */
-	private boolean check_password_meets_requirements(String password) {
-		if (password == null) 
-			return false;
-		if(password.length()<8) //length requirement
-			return false;
-		if (password.toLowerCase().equals(password) || password.toUpperCase().equals(password)) //was all uppercase or all lowercase
-			return false;
-		
-	    String n = ".*[0-9].*"; //numeric regex
-	    String a = ".*[A-Z].*"; //alpha regex
-	    if(!(password.matches(n) && password.matches(a)))//does NOT contain both letters and numbers
-	    	return false;
-	
-		return true;
-	}
+
 }

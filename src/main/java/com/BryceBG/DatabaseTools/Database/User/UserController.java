@@ -3,6 +3,7 @@ package com.BryceBG.DatabaseTools.Database.User;
 
 import org.mindrot.jbcrypt.BCrypt;
 
+import com.BryceBG.DatabaseTools.Database.InstantiatedDaos;
 
 public class UserController {
 
@@ -18,7 +19,7 @@ public class UserController {
         if (username == null || password == null) {
             return false;
         }
-        User user = UserDao.getUserByUsername(username);
+        User user = InstantiatedDaos.userDao.getUserByUsername(username);
         if (user == null) {
             return false;
         }
@@ -36,7 +37,7 @@ public class UserController {
         if (authenticate(username, oldPassword)) {
             String newSalt = BCrypt.gensalt();
             String newHashedPassword = BCrypt.hashpw(newPassword, newSalt);
-            UserDao.changePassword(username, newSalt, newHashedPassword); //
+            InstantiatedDaos.userDao.changePassword(username, newSalt, newHashedPassword); 
         }
     }
     

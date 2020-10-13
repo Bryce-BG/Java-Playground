@@ -1,14 +1,12 @@
 import static org.junit.Assert.*;
 
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.BryceBG.DatabaseTools.Database.LibraryDB;
 import com.BryceBG.DatabaseTools.Database.User.User;
 import com.BryceBG.DatabaseTools.Database.User.UserController;
-import com.BryceBG.DatabaseTools.Database.User.UserDao;
-
+import com.BryceBG.DatabaseTools.Database.InstantiatedDaos;
 
 public class TestUser {
 	
@@ -28,7 +26,7 @@ public class TestUser {
 	public void testGetUserByUsername() {
 		
 		//Test 1: ensure existing admin user is found by the getUserByUsername() function.
-		User theAdmin = UserDao.getUserByUsername("admin");
+		User theAdmin = InstantiatedDaos.userDao.getUserByUsername("admin");
 		//username
 		assertEquals("admin", theAdmin.getUsername());
 
@@ -52,7 +50,7 @@ public class TestUser {
 		assertTrue(theAdmin.isAdmin());
 		
 		//Test 2: ensure user not in db returns null but does not crash the program
-		User notAUser = UserDao.getUserByUsername("NOTAUSER");
+		User notAUser = InstantiatedDaos.userDao.getUserByUsername("NOTAUSER");
 		assertNull(notAUser); 
 
 
@@ -81,7 +79,7 @@ public class TestUser {
 		String username = "admin";
 		String password = "password";
 		
-		User theAdminBefore = UserDao.getUserByUsername("admin"); 
+		User theAdminBefore = InstantiatedDaos.userDao.getUserByUsername("admin"); 
 
 		//sanity check
 		assertTrue(UserController.authenticate(username, password)); //should work with old password
@@ -89,7 +87,7 @@ public class TestUser {
 		//Test 1: check that password change works if old password matches (with admin account)
 		String newPassword = "admin";
 		UserController.setPassword(username, password, newPassword);
-		User theAdminAfter = UserDao.getUserByUsername("admin");
+		User theAdminAfter = InstantiatedDaos.userDao.getUserByUsername("admin");
 		
 		assertTrue(UserController.authenticate(username, newPassword)); //should be able to log in with new password
 		assertNotEquals("The password hashes are the same which was not expected after a password change", theAdminBefore.getHashedPassword(), theAdminAfter.getHashedPassword());

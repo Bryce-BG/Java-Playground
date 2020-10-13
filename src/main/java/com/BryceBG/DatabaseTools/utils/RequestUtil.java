@@ -56,6 +56,7 @@ public class RequestUtil {
         return (String) ctx.sessionAttribute("currentUser");
     }
 
+    //actions that actually effect the model
     public static boolean removeSessionAttrLoggedOut(Context ctx) {
         String loggedOut = ctx.sessionAttribute("loggedOut");
         ctx.sessionAttribute("loggedOut", null);

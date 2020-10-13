@@ -5,7 +5,7 @@ import java.util.Locale;
 import java.util.ResourceBundle;
 
 /**
- * This class is used to get text from our resources/localization/messages_<language> files so that the website can be used by multple languages.
+ * This class is used to get text from our resources/localization/messages_<language> files so that the website can be used by multiple languages.
  * At this time we only have one language but we could add future message_<language> to support diverse use of the app. Until that time this is 
  * just a placeholder.
  * @author Bryce-BG
