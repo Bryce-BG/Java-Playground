@@ -26,6 +26,7 @@ public class User {
         this.setAdmin(isAdmin);
     }
 
+
 	public int getUserId() {
 		return userId;
 	}

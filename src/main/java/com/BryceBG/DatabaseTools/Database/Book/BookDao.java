@@ -5,7 +5,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.javatuples.Pair;
 
-import com.BryceBG.DatabaseTools.Database.LibraryDB;
 
 
 /**

@@ -1,14 +1,4 @@
-/*CREATE DB ?*/
---postgres=# create database librarydatabase; --run if db doesn't exist
--- CREATE DATABASE librarydatabase
---     WITH
---     OWNER = postgres
---     ENCODING = 'UTF8'
---     LC_COLLATE = 'English_United States.1252'
---     LC_CTYPE = 'English_United States.1252'
---     TABLESPACE = pg_default
---     CONNECTION LIMIT = -1;
-/*
+
 --TODO:
 -- 1. create DB if not exists (instead of manual creation being required like above)
  --use assertion/CHECK in authors to ensure each alias refers to valid authorID
@@ -34,8 +24,8 @@ CREATE TABLE IF NOT EXISTS users (
 --     custom_genres VARCHAR(30)[] /*genres that are not commonly used and so not accepted into DB default genres*/
 
 );
-
-INSERT INTO users (username, hashedPassword, salt, first_name, last_name, email, is_admin) VALUES ('admin', '$2a$10$h.dl5J86rGH7I8bD9bZeZeci0pDt0.VwFTGujlnEaZXPf/q7vM5wO','$2a$10$h.dl5J86rGH7I8bD9bZeZe', 'admin', 'admin', 'admin@email.com', true);
+ --password: Password1 for this user
+INSERT INTO users (username, hashedPassword, salt, first_name, last_name, email, is_admin) VALUES ('admin', '$2a$10$D0uvz6/IgaKHVjV7zdlXAe8L92nEexa4gkNV7zyLtCRUTIyJEVKxy','$2a$10$D0uvz6/IgaKHVjV7zdlXAe', 'admin', 'admin', 'admin@email.com', true);
 CREATE TABLE IF NOT EXISTS authors (
     author_id SERIAL,
     alias_id INT[], /*would be nice if we can ensure that this links to existing author_id*/

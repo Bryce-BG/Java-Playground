@@ -29,12 +29,14 @@
 		</dependency>
 
 		<!-- Testing framework for system -->
+		<!-- https://mvnrepository.com/artifact/junit/junit -->
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.12</version>
+			<version>4.13.1</version>
 			<scope>test</scope>
 		</dependency>
+
 
 		<!-- apache commons library (for handling arg parsing with the EpubScraper 
 			tool -->
@@ -72,13 +74,13 @@
 			<artifactId>javalin</artifactId>
 			<version>3.11.0</version>
 		</dependency>
-		
-		<!-- (for handling user password hashing)-->
-        <dependency>
-            <groupId>org.mindrot</groupId>
-            <artifactId>jbcrypt</artifactId>
-            <version>0.4</version>
-        </dependency>
+
+		<!-- (for handling user password hashing) -->
+		<dependency>
+			<groupId>org.mindrot</groupId>
+			<artifactId>jbcrypt</artifactId>
+			<version>0.4</version>
+		</dependency>
 
 	</dependencies>
 

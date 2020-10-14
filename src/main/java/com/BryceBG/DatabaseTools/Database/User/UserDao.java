@@ -162,7 +162,13 @@ public class UserDao extends DAORoot{
     	
     	
 
-
+    /**
+     * Function to change the password on a new user's account. given the new salt and password hash.
+     * @param username The username for account we are modifying
+     * @param newSalt The salt used to generate new password hash
+     * @param newHashedPassword The hash of salt+password
+     * @return true if successfully updated password in database. False otherwise
+     */
 	public boolean changeUserPassword(String username, String newSalt, String newHashedPassword) {
 		boolean rtVal = false;
 		if(getUserByUsername(username) != null) {			
@@ -273,7 +279,7 @@ public class UserDao extends DAORoot{
             	rtVal = true;
             }
             else {
-            	logger.info(String.format("The addUser failed: the execute update returned: %i", rs));
+            	logger.info(String.format("The addUser failed: the execute update returned: %d", rs));
             	rtVal = false;
             }  
         } //end of try-with-resources: connection 
