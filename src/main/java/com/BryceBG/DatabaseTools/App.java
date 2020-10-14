@@ -13,16 +13,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.BryceBG.DatabaseTools.Database.LibraryDB;
-import com.BryceBG.DatabaseTools.Database.Book.BookController;
-import com.BryceBG.DatabaseTools.Database.Index.IndexController;
-import com.BryceBG.DatabaseTools.Database.Login.LoginController;
-import com.BryceBG.DatabaseTools.utils.Filters;
-import com.BryceBG.DatabaseTools.utils.Path;
 import com.BryceBG.DatabaseTools.utils.Utils;
-import com.BryceBG.DatabaseTools.utils.ViewUtil;
 
-import io.javalin.Javalin;
-import io.javalin.core.util.RouteOverviewPlugin;
 
 /**
  * Entry point to application. Decides to display UI or to run silently via
@@ -57,24 +49,7 @@ public class App {
         
         
         
-        Javalin app = Javalin.create(config -> {
-            config.addStaticFiles("/public");
-            config.registerPlugin(new RouteOverviewPlugin("/routes"));
-        }).start(7000);
 
-        app.routes(() -> {
-            app.before(Filters.stripTrailingSlashes);
-            app.before(Filters.handleLocaleChange);
-            app.before(LoginController.ensureLoginBeforeViewingBooks);
-            app.get(Path.Web.INDEX, IndexController.serveIndexPage);
-            app.get(Path.Web.BOOKS, BookController.fetchAllBooks);
-            app.get(Path.Web.ONE_BOOK, BookController.fetchOneBook);
-            app.get(Path.Web.LOGIN, LoginController.serveLoginPage);
-            app.post(Path.Web.LOGIN, LoginController.handleLoginPost);
-            app.post(Path.Web.LOGOUT, LoginController.handleLogoutPost);
-        });
-
-        app.error(404, ViewUtil.notFound);
         
 //		MainWindow mw = new MainWindow();
 //		SwingUtilities.invokeLater(mw);
