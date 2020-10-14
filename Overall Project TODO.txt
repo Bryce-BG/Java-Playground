@@ -1,11 +1,8 @@
 ##in LibraryDB.java
-	1. replace login function with library calls using real authentication library
 	2. (IMPORTANT) ensure that the class parameters are set before userDao or BookDao call connectToDB();
 	3. rewrite createDB() as:
-		It is currently vulnerable to SQL injection.
-		Also doesn't close connections correctly (though default timeout should theoretically close them eventually). 
-		Also it doens't save settings for connecting to the new db in config file.
-		Also it only creates the database and doesn't run install.sql script.
+		Also it does not save settings for connecting to the new db in config file.
+		Also it only creates the database and doesn't run install.sql script to initilze tables.
 
 #Database changes
 	1. Replace plain stored passwords with salted/hashed passwords for the DB Users table (after changing over to external library for authentication likely)

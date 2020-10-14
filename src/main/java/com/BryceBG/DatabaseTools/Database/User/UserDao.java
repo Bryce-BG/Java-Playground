@@ -10,19 +10,15 @@ import java.util.ArrayList;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.BryceBG.DatabaseTools.Database.InstantiatedDaos; //for our instantiated objects
+import com.BryceBG.DatabaseTools.Database.DAORoot; //for our instantiated objects inheritence
 /**
  * This class is our Data Access object for querying the database for user related information.
  * @author Bryce-BG
  */
-public class UserDao {
+public class UserDao extends DAORoot{
 	private static final Logger logger = LogManager.getLogger(UserDao.class.getName());
 	
 
-
-	public UserDao() {
-		
-	}
 	/**
 	 * Get a user from the database
 	 * @param username the username of the user to lookup
@@ -39,7 +35,7 @@ public class UserDao {
     	//https://stackoverflow.com/questions/8066501/how-should-i-use-try-with-resources-with-jdbc
     	
     	//1. establish connection to our database
-    	try (Connection conn = InstantiatedDaos.library.connectToDB();        
+    	try (Connection conn = library.connectToDB();        
 	            PreparedStatement pstmt = conn.prepareStatement(sql);
 	            ) {
     		pstmt.setString(1, username);
@@ -91,7 +87,7 @@ public class UserDao {
     	//https://stackoverflow.com/questions/8066501/how-should-i-use-try-with-resources-with-jdbc
     	
     	//1. establish connection to our database
-    	try (Connection conn = InstantiatedDaos.library.connectToDB();        
+    	try (Connection conn = DAORoot.library.connectToDB();        
 	            PreparedStatement pstmt = conn.prepareStatement(sql);
 	            ) {
     		//2. execute our query for user.
@@ -114,13 +110,13 @@ public class UserDao {
     	
 
 
-	public boolean changePassword(String username, String newSalt, String newHashedPassword) {
+	public boolean changeUserPassword(String username, String newSalt, String newHashedPassword) {
 		boolean rtVal = false;
 		if(getUserByUsername(username) != null) {			
 			String sql = "UPDATE users SET salt=?, hashedPassword=? WHERE username=?";
 					
 			//1. establish connection to our database
-	    	try (Connection conn = InstantiatedDaos.library.connectToDB();        
+	    	try (Connection conn = library.connectToDB();        
 		            PreparedStatement pstmt = conn.prepareStatement(sql);
 		            ) {
 	    		//2. set parameters in the prepared statement
@@ -155,11 +151,44 @@ public class UserDao {
 	}
 	
 	
-//	public static boolean createNewUser(String username, String password, String fName, String lName, String email, boolean is_admin) {
-//		//TODO implement me
-//		return false;
-//		
-//	}
+	public boolean addUser(String username, String hashedPassword, String salt, String fName, String lName, String email, boolean is_admin) {
+		boolean rtVal = false;
+		String sql = "INSERT INTO USERS(username, hashedPassword, salt, first_name, last_name, email, is_admin) VALUES (?, ?, ?, ?, ?, ?, ?);";
+		//1. establish connection to our database
+    	try (Connection conn = library.connectToDB();        
+	            PreparedStatement pstmt = conn.prepareStatement(sql);
+	            ) {
+    		pstmt.setString(1, username);
+    		pstmt.setString(2, hashedPassword);
+    		pstmt.setString(3, salt);
+    		pstmt.setString(4, fName);
+    		pstmt.setString(5, lName);
+    		pstmt.setString(6, email);
+    		pstmt.setBoolean(7, is_admin);
+
+    		//2. execute our update for adding user.
+            int rs = pstmt.executeUpdate();
+          //3. check if sql query for user returned correct answer.
+            if (rs == 1) { 
+	           	//update was successful
+            	rtVal = true;
+            }
+            else {
+            	logger.info(String.format("The addUser failed: the execute update returned: %i", rs));
+            	rtVal = false;
+            }  
+        } //end of try-with-resources: connection 
+    	//catch blocks for try-with-resources: connection
+    	catch (ClassNotFoundException e) {
+			logger.error("Exception occured during connectToDB: " + e.getMessage());
+		}catch (SQLException e) { 
+			logger.error("Exception occured during executing SQL statement: " + e.getMessage());
+        }
+        return rtVal;
+    	
+	}
+	
+
 	
 
 }

@@ -4,11 +4,12 @@ import com.BryceBG.DatabaseTools.Database.Book.BookDao;
 import com.BryceBG.DatabaseTools.Database.User.UserDao;
 import com.BryceBG.DatabaseTools.utils.Utils;
 /**
- * This class just adds a bunch of static variables that various parts of the app require. 
+ * This class just adds and instantiates a bunch of static variables that various parts of the app require.
+ * This permits access to functions in the other Daos in a static context 
  * @author Bryce-BG
  *
  */
-public class InstantiatedDaos {
+public class DAORoot {
 	public static BookDao bookDao; 
     public static UserDao userDao;
     public static LibraryDB library;

@@ -22,12 +22,12 @@ DROP TYPE IF EXISTS series_status;
 CREATE TABLE IF NOT EXISTS users (
     user_id SERIAL UNIQUE, --must be unique otherwise we can't reference
 	username VARCHAR(40) PRIMARY KEY,
-	hashedPassword VARCHAR,
-	salt VARCHAR,
-	first_name VARCHAR(30),
-	last_name VARCHAR(30),
+	hashedPassword VARCHAR NOT NULL,
+	salt VARCHAR NOT NULL,
+	first_name VARCHAR(30) NOT NULL,
+	last_name VARCHAR(30) NOT NULL,
   	email TEXT NOT NULL UNIQUE, --further constraints required see: https://hashrocket.com/blog/posts/working-with-email-addresses-in-postgresql
-	is_admin BOOLEAN
+	is_admin BOOLEAN NOT NULL
 
     /*TODO add much in this table*/
 --	its bad practice to store password in plain form. Replace this with hashed password once we implement hashing for the app (with salt possibly)

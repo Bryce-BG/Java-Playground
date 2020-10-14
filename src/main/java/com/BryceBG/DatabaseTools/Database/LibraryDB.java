@@ -38,283 +38,7 @@ public class LibraryDB {
 	/** ############# USER RELATED DATABASE FUNCTIONS ############# **/
 	
 	
-	/**
-	 * Function to allow the creation of additional users (non administrative ones) for standard users in our library system.
-	 * @param username The desired username for the new account
-	 * @param Password The new password for the user account
-	 * @param lName Last name of the new user.
-	 * @param fName First name of the new user.
-	 * @param email Email address linked to the user account (for ensuring passwords can be reset).
-	 * @return
-	 * 0 = successful creation of user.
-	 * "-" values indicate failure:
-	 * -1 = failure to connect to the library database.
-	 * -2 = username is taken
-	 * -3 = invalid password (try again, with the required specifications)
-	 * -4 = first name is invalid
-	 * -5 = last name is invalid
-	 * -6 = invalid email
-	 * -7 Unexpected error adding user to database
-	 */
-	public int create_new_user(String username, String password, String lName, String fName, String email) {
-		Connection conn = null;
-		PreparedStatement stmt = null;
-		email = email.toLowerCase();
-		
-		try {
-			conn = connectToDB();
-			username = username.toLowerCase(); 
-			if(conn.isValid(0)) {
-				//1. check username is unique (not in database already)
-		            String sql =
-		                    "SELECT * " +
-		                    "FROM USERS " + 
-		                    "WHERE username=?"; 		              
-		            stmt = conn.prepareStatement(sql);
-		            stmt.setString(1, username);
-		            ResultSet rs = stmt.executeQuery();
-    
-		            if (rs.next()) { 
-		            	return -2; //username is taken
-		            }
-		            else {
-	         			//2. check password meets requirements.
-		            	if(check_password_meets_requirements(password))
-		            	{
-			    			//3. check fName and lName are valid (a-z only)
-		            		fName = fName.strip();
-		            		lName = lName.strip();
-		            	    String fNameExpression = "^[a-zA-Z]+"; 
-		            	    if(fName.matches(fNameExpression)) {
-		            	    	String lNameExpression = "^[a-zA-Z \\-\\.\\']*$";//regular expression allowing: alpha chars, hyphens, periods, apostrophes and spaces
-		            	    	if(lName.matches(lNameExpression))
-		            	    	{
-					    			//4. a. check email is "valid"
-		            	    		if(is_valid_email(email))
-		            	    		{
-		            	    			//4.b check if email is already associated with account
-		            	    			if(!stmt.isClosed()) {//close query based on username
-		            	    				stmt.close();
-		            	    			}
-		            	    			sql =
-		            		                    "SELECT * " +
-		            		                    "FROM USERS " + 
-		            		                    "WHERE email=?"; 
-		            		            stmt = conn.prepareStatement(sql);
-		            		            stmt.setString(1, email);
-		            		            rs = stmt.executeQuery();
-		            		            
-		            		            if (rs.next()) { 
-		            		            	return -6; //email is already used with some account.
-		            		            }
-		            		            else {
-							    			//5. add user to database.
-		            		            	if(!stmt.isClosed()) {//close query based on username
-			            	    				stmt.close();
-			            	    			}
-			            	    			sql =
-			            	    					"INSERT INTO USERS(username, password, first_name, last_name, is_admin, email) "
-			            	    					+ "VALUES(?,?,?,?,?, ?)";
-			            	    						            	    	          
-			            		            stmt = conn.prepareStatement(sql);
-			            		            stmt.setString(1, username);
-			            		            stmt.setString(2, password);
-			            		            stmt.setString(3, fName);
-			            		            stmt.setString(4, lName);
-			            		            stmt.setBoolean(5, false);
-			            		            stmt.setString(6, email);
 
-			            		             int rowsUpdated = stmt.executeUpdate();
-			            		             if(rowsUpdated !=1)
-			            		            	 return -7; //error occurred inserting new user into DB
-			            		             else
-			 		            	    		return 0; //successfully created new user
-		            		            }      
-		            	    		}
-		            	    		else {
-		            	    			return -6; //invalid email (via regex)
-		            	    		}
-		            	    	}
-		            	    	else {
-		            	    		return -5;
-		            	    	}	
-		            	    }
-		            	    else {
-		            	    	return -4;
-		            	    	}
-		            	}
-		            	else {
-		            		return -3; }//password was not of sufficent strength
-		            }
-			}
-			else
-				return -1;
-					
-		} catch (ClassNotFoundException | SQLException e) {
-			logger.error("Exception occured during connectToDB or during running the sql statment: " + e.getMessage());
-
-			e.printStackTrace();
-			return -1;
-		}
-		finally{ //finally block used to close resources
-
-		      try{
-		         if(stmt!=null)
-		            conn.close();
-		      }catch(SQLException se){
-		      }// do nothing
-		      try{
-		         if(conn!=null)
-		            conn.close();
-		      }catch(SQLException se){
-		         se.printStackTrace();
-		      }//end finally try
-		   }//end finally
-	}
-
-	/**
-	 * Function to allow the creation of additional admin users admin users in our library system.
-	 * @param Credentials Token created for the admin who is performing the create_admin action
-	 * @param username username for the new admint account
-	 * @param Password password for the new account.
-	 * @param lName Last name of the new user.
-	 * @param fName First name of the new user.
-	 * @param email The email address linked to the new account.
-	 * @return
-	 * 0 = successful creation of user.
-	 * "-" values indicate failure:
-	 * -1 = failure to connect to the library database.
-	 * -2 = username is taken
-	 * -3 = invalid password (try again, with the required specifications)
-	 * -4 = first name is invalid
-	 * -5 = last name is invalid
-	 * -6 = invalid email
-	 * -7 Unexpected error adding user to database
-	 * -8 invalid credentials
-	 */
-	@Deprecated
-	public int create_new_admin_user(/*Credentials yourAdmin,*/ String username, String password, String lName, String fName, String email) {
-		
-		if(true) //yourAdmin.is_valid_credentials() && validate_credentials(yourAdmin) && yourAdmin.get_permissions())
-		{
-			Connection conn = null;
-			PreparedStatement stmt = null;
-			email = email.toLowerCase();
-
-			try {
-				conn = connectToDB();
-				username = username.toLowerCase(); 
-				if(conn.isValid(0)) {
-					
-					//1. check username is unique (not in database already)
-			            String sql =
-			                    "SELECT * " +
-			                    "FROM USERS " + 
-			                    "WHERE username=?"; 		            
-			            
-			            stmt = conn.prepareStatement(sql);
-			            stmt.setString(1, username);
-			            ResultSet rs = stmt.executeQuery();
-	    
-			            if (rs.next()) { 
-			            	return -2; //username is taken
-			            }
-			            else {
-		         			//2. check password meets requirements.
-			            	if(check_password_meets_requirements(password))
-			            	{
-				    			//3. check fName and lName are valid (a-z only)
-			            		fName = fName.strip();
-			            		lName = lName.strip();
-			            	    String fNameExpression = "^[a-zA-Z]+"; 
-			            	    if(fName.matches(fNameExpression)) {
-			            	    	String lNameExpression = "^[a-zA-Z \\-\\.\\']*$";//regular expression allowing: alpha chars, hyphens, periods, apostrophes and spaces
-			            	    	if(lName.matches(lNameExpression))
-			            	    	{
-						    			//4. a. check email is "valid"
-			            	    		if(is_valid_email(email))
-			            	    		{
-			            	    			//4.b check if email is already associated with account
-			            	    			if(!stmt.isClosed()) {//close query based on username
-			            	    				stmt.close();
-			            	    			}
-			            	    			sql =
-			            		                    "SELECT * " +
-			            		                    "FROM USERS " + 
-			            		                    "WHERE email=?"; 
-			            		            stmt = conn.prepareStatement(sql);
-			            		            stmt.setString(1, email);
-			            		            rs = stmt.executeQuery();
-			            		            
-			            		            if (rs.next()) { 
-			            		            	return -6; //email is already used with some account.
-			            		            }
-			            		            else {
-								    			//5. add user to database.
-			            		            	if(!stmt.isClosed()) {//close query based on username
-				            	    				stmt.close();
-				            	    			}
-				            	    			sql =
-				            	    					"INSERT INTO USERS(username, password, first_name, last_name, is_admin, email) "
-				            	    					+ "VALUES(?,?,?,?,?, ?)";
-				            	    						            	    	          
-				            		            stmt = conn.prepareStatement(sql);
-				            		            stmt.setString(1, username);
-				            		            stmt.setString(2, password);
-				            		            stmt.setString(3, fName);
-				            		            stmt.setString(4, lName);
-				            		            stmt.setBoolean(5, true);
-				            		            stmt.setString(6, email);
-
-				            		             int rowsUpdated = stmt.executeUpdate();
-				            		             if(rowsUpdated !=1)
-				            		            	 return -7; //error occured inserting new user into DB
-				            		             else
-				 		            	    		return 0; //successfully created new user
-			            		            }
-			            	    		}
-			            	    		else {
-			            	    			return -6; //invalid email (via regex)
-			            	    		}
-			            	    	}
-			            	    	else {
-			            	    		return -5;
-			            	    	}	
-			            	    }
-			            	    else {
-			            	    	return -4;
-			            	    	}
-			            	}
-			            	else {
-			            		return -3; 
-			            		}//password was not of sufficent strength
-			            }
-				}
-				else
-					return -1;	
-			} catch (ClassNotFoundException | SQLException e) {
-				e.printStackTrace();
-				return -1;
-			}
-			finally{ //finally block used to close resources
-
-			      try{
-			         if(stmt!=null)
-			            conn.close();
-			      }catch(SQLException se){
-			      }// do nothing
-			      try{
-			         if(conn!=null)
-			            conn.close();
-			      }catch(SQLException se){
-			         se.printStackTrace();
-			      }//end finally try
-			   }//end finally
-		}//end if"credentials"
-		else {
-			return -8;
-		}
-	}
 
 	/**
 	 * Function to allow an admin user to delete a user account from the system
@@ -686,7 +410,7 @@ public class LibraryDB {
 		}
 	    try {
 	    	
-	    		List<String> dbNames = listDownAllDatabases(); //get names of current databases
+	    		List<String> dbNames = listAllDatabases(); //get names of current databases
 	    		for(String x: dbNames) 
 	    		{
 	    			if(libraryName.equals(x)) {
@@ -707,7 +431,7 @@ public class LibraryDB {
 	          stmt.executeUpdate(sql); 
 	          
 	          logger.info(String.format("Successfully created database: %s", libraryName));
-	    return true;
+	          return true;
 	    }
 	     catch (Exception ex) {
 	    	 logger.error("error occured during createDB + \n" + ex.getMessage());
@@ -716,7 +440,7 @@ public class LibraryDB {
 	}
 	
 	/**
-	 * Helper function for createDB() that connects to postgres and not our library db (so we can delete it with createDB())
+	 * Helper function that connects to postgres and not our library db (so we can delete it with createDB())
 	 * @return connection to default postgres database.
 	 * @throws SQLException
 	 * @throws ClassNotFoundException
@@ -738,67 +462,32 @@ public class LibraryDB {
 		}
 	}
 	/**
-	 * Helper function for connectToPostGres(). Queries postgresql to get database names in system.
+	 * Helper function for createDB(). Queries postgresql to get database names in system.
 	 * @return returns a list of names for all currently existing databases
 	 */
-	private static List<String> listDownAllDatabases() {
+	private static List<String> listAllDatabases() {
 		List<String> names = new ArrayList<String>();
-        try {
-        	Connection connection = connectToPostGres();
-            PreparedStatement ps = connection
-                    .prepareStatement("SELECT datname FROM pg_database WHERE datistemplate = false;");
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-            	String name = rs.getString(1);
-            	names.add(name);
-            }
-            rs.close();
-            ps.close();
-            return names;
-
-        } catch (Exception e) {
-            e.printStackTrace();
+        try(Connection connection = connectToPostGres();)
+        {
+        	String sql = "SELECT datname FROM pg_database WHERE datistemplate = false;";
+            PreparedStatement ps = connection.prepareStatement(sql);
+            try(ResultSet rs = ps.executeQuery();){
+	            while (rs.next()) {
+	            	String name = rs.getString(1);
+	            	names.add(name);
+	            }
+            } //end try-with-resource: ResultSet
+        } 
+        catch (Exception e) {
+        	logger.error("An error occured trying to list all databases\n" + e.getMessage());
         }
 		return names;
     }
 
 	
-////Helper functions
-/**
- * Helper function that ensures (currently) that an email is valid using regex. 
- * TODO: revise so that it sends an email that requires confirmation before continuing.
- * @param email: email to check
- * @return
- */
-private boolean is_valid_email(String email) {
-	   String regex = "^[\\w-_\\.+]*[\\w-_\\.]\\@([\\w]+\\.)+[\\w]+[\\w]$";
-	   return email.matches(regex);
-	}
 
-/**
- * Helper function that is used to ensure password meets specifications.
- * length>=8, 
- * contains a capital letter
- * Contains alpha and numeric characters
- * 
- * @param password: password to check
- * @return: true if password meets all requirements. false otherwise
- */
-private boolean check_password_meets_requirements(String password) {
-	if (password == null) 
-		return false;
-	if(password.length()<8) //length requirement
-		return false;
-	if (password.toLowerCase().equals(password) || password.toUpperCase().equals(password)) //was all uppercase or all lowercase
-		return false;
-	
-    String n = ".*[0-9].*"; //numeric regex
-    String a = ".*[A-Z].*"; //alpha regex
-    if(!(password.matches(n) && password.matches(a)))//does NOT contain both letters and numbers
-    	return false;
 
-	return true;
-}
+
 }
 
 
