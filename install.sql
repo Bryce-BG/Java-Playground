@@ -21,7 +21,7 @@ DROP TYPE IF EXISTS series_status;
 -- #####USER RELATED
 CREATE TABLE IF NOT EXISTS users (
     user_id SERIAL UNIQUE, --must be unique otherwise we can't reference
-	username VARCHAR(40) PRIMARY KEY,
+	username VARCHAR(30) PRIMARY KEY, --always lowercase alphanumeric and 5-30 characters
 	hashedPassword VARCHAR NOT NULL,
 	salt VARCHAR NOT NULL,
 	first_name VARCHAR(30) NOT NULL,

@@ -130,7 +130,7 @@ public class UserDao extends DAORoot{
      * This function gets all usernames in the system and returns them.
      * @return
      */
-    public Iterable<String> getAllUserNames() {
+    public ArrayList<String> getAllUserNames() {
     	ArrayList<String> userNames = new ArrayList<String>();
     	String sql =
                 "SELECT * " +
@@ -222,7 +222,7 @@ public class UserDao extends DAORoot{
     	try (Connection conn = library.connectToDB();        
 	            PreparedStatement pstmt = conn.prepareStatement(sql);
 	            ) {
-    		pstmt.setString(1, username);
+    		pstmt.setString(1, username.trim());
     		pstmt.setString(2, hashedPassword);
     		pstmt.setString(3, salt);
     		pstmt.setString(4, fName);

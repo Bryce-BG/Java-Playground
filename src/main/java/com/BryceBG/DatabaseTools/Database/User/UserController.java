@@ -1,9 +1,9 @@
 package com.BryceBG.DatabaseTools.Database.User;
 
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.javatuples.Pair;
-import org.javatuples.Tuple;
 import org.mindrot.jbcrypt.BCrypt;
 
 import com.BryceBG.DatabaseTools.Database.DAORoot;
@@ -89,7 +89,11 @@ public class UserController {
 			return new Pair<Boolean, String>(Boolean.FALSE,
 					"Invalid user performing Create User action (no account creation permission)");
 		}
-		// 3. validate all required fields for new user meet specifications
+		// 3.a. trim potential whitespace tabs and other such characters off from fields where it may matter
+		username = username.strip().toLowerCase(); 
+		email = email.strip().toLowerCase(); //email ignores casing
+
+		//3.b. validate all required fields for new user meet specifications
 		if (!validateUserFields(username, password, fName, lName, email).getValue0().booleanValue()) {
 			return validateUserFields(username, password, fName, lName, email);
 		}
@@ -165,8 +169,8 @@ public class UserController {
 	 */
 	private static Pair<Boolean, String> validateUserFields(String username, String password, String fName,
 			String lName, String email) {
-		if (username == null || username.isBlank() || username.isEmpty()) {
-			return new Pair<Boolean, String>(Boolean.FALSE, "Invalid: Username");
+		if (username == null || username.isBlank() || username.isEmpty() || !is_valid_username(username)) {
+			return new Pair<Boolean, String>(Boolean.FALSE, "Invalid: Username.");
 		}
 		if (DAORoot.userDao.getUserByUsername(username) != null) {
 			return new Pair<Boolean, String>(Boolean.FALSE, "Username is taken");
@@ -178,9 +182,12 @@ public class UserController {
 		}
 		if (fName == null || fName.isBlank() || fName.isEmpty()) {
 			// TODO Add additional constraints here. Only alpha characters, etc.
+			//also ensure length is in valid range for our database 30 chars
 			return new Pair<Boolean, String>(Boolean.FALSE, "Invalid: First name");
 		}
 		if (lName == null || lName.isBlank() || lName.isEmpty()) {
+			// TODO Add additional constraints here. Only alpha characters, etc.
+			//also ensure length is in valid range for our database 30 chars
 			return new Pair<Boolean, String>(Boolean.FALSE, "Invalid: Last name");
 		}
 		if (email == null || email.isBlank() || email.isEmpty() || !is_valid_email(email)) {
@@ -203,6 +210,19 @@ public class UserController {
 	private static boolean is_valid_email(String email) {
 		String regex = "^[\\w-_\\.+]*[\\w-_\\.]\\@([\\w]+\\.)+[\\w]+[\\w]$";
 		return email.matches(regex);
+	}
+	
+	/**
+	 * Our helper function is used to ensure our username meets the requirements
+	 * 1. username is 5-30 characters long
+	 * 2. first character is lowercase a-z
+	 * 3. username contains only a-z, 0-9 and _ - chars
+	 * @param username user to check
+	 * @return true if it matches the above constraints
+	 */
+	private static boolean is_valid_username(String username) {
+		String regex = "^[a-z][a-z0-9_-]{4,29}$";
+        return username.matches(regex);
 	}
 
 	/**
