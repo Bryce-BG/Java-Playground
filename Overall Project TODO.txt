@@ -22,9 +22,7 @@
 2. add comment/review stream field to this structure later.
 3. potentially overload constructor so personal fields can be set with a single call.
 
-##RequestUtil.java
-1. add additional getparam methods for extracting data from or http requests (for more advanced queries and queries by values other than id for instance)
-2. finish commenting existing getParam functions.
+
 
 
 ##BookDao.java (skeleton functions at this time)
@@ -32,9 +30,6 @@
 
 
 ##UserDao.java 
-(skeleton functions at this time)
-1. (IMPORTANT) Take sql query functions from LibraryDB.java and inject them into this file (create and delete user functions).
-2. implement changePassword() 
 
 
 

@@ -35,95 +35,11 @@ public class LibraryDB {
 		DB_USER = dbUsername; 
 	}
 
-	/** ############# USER RELATED DATABASE FUNCTIONS ############# **/
 	
 	
 
-
-	/**
-	 * Function to allow an admin user to delete a user account from the system
-	 * @param yourAdmin Credentials token of the admin performing the deletion function
-	 * @param username username of the account we want to delete
-	 * @param email secondary variable to ensure deletion of the correct account.
-	 * @return
-	 * -1 = unable to connect to the database
-	 * -2 = user doesn't exist in database with provided email/username combo
-	 * -3 = error occurred during the deletion of user
-	 * -4 = invalid admin credentials
-	 */
-	@Deprecated
-	public int delete_user(/*Credentials yourAdmin,*/ String username, String email) {
-		if(true) //yourAdmin.is_valid_credentials() && validate_credentials(yourAdmin) && yourAdmin.get_permissions()) 
-			{
-			Connection conn = null;
-			PreparedStatement stmt = null;
-			email = email.toLowerCase();
-			
-			try {
-				conn = connectToDB();
-				username = username.toLowerCase(); 
-				if(conn.isValid(0)) {
-					
-					//1. check username is unique (not in database already)
-			            String sql =
-			                    "SELECT * " +
-			                    "FROM USERS " + 
-			                    "WHERE username=? AND email=?"; 		            
-			            
-			            stmt = conn.prepareStatement(sql);
-			            stmt.setString(1, username);
-			            stmt.setString(2, email);
-			            ResultSet rs = stmt.executeQuery();
-			            if (rs.next()) {  //user DOES exist so delete it
-			            	sql =
-			                    "DELETE " +
-			                    "FROM USERS " + 
-			                    "WHERE username=? AND email=?"; 
-				            stmt = conn.prepareStatement(sql);
-				            stmt.setString(1, username);
-				            stmt.setString(2, email);
-				            int rv = stmt.executeUpdate();
-				            if(rv == 1)
-				            	return 0;
-				            else
-				            	return -3; //error occured during the deletion of user          	
-			            }         	
-			            else {
-			            	return -2; //user doesn't exist in db (so can't perform delete)
-			            }
-				}
-				else
-					return -1;
-			} catch (ClassNotFoundException | SQLException e) {
-				e.printStackTrace();
-				return -1;
-			}
-			finally{ //finally block used to close resources
-			      try{
-			         if(stmt!=null)
-			            conn.close();
-			      }catch(SQLException se){
-			      }// do nothing
-			      try{
-			         if(conn!=null)
-			            conn.close();
-			      }catch(SQLException se){
-			         se.printStackTrace();
-			      }//end finally try
-			   }//end finally
-		}
-		else {
-			return -4; //invalid admin credentials
-		}
-	}
-
 	
-	
-	
-	
-	
-	/**#############FUNCTIONS TO PERFORM QUERYING OF NON-USER RELATED DATA FROM DATABASE#############**/
-	
+		
 	
 	
 

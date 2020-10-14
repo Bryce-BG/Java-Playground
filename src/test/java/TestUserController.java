@@ -8,55 +8,13 @@ import com.BryceBG.DatabaseTools.Database.User.User;
 import com.BryceBG.DatabaseTools.Database.User.UserController;
 import com.BryceBG.DatabaseTools.Database.DAORoot;
 
-public class TestUser {
+public class TestUserController {
 	
-	static LibraryDB library;	
 
 	
-	@BeforeClass
-	public static void onlyOnce() 
-	{
-		//initilize library with parameters obtained from  our configuration file.
-		//it should auto do this now
-//			library = new LibraryDB(Utils.getConfigString("app.dbhost", null), Utils.getConfigString("app.dbport", null), Utils.getConfigString("app.dbname", null),Utils.getConfigString("app.dbpass", null) , Utils.getConfigString("app.dbuser", null));
-	}
+
 	
-	//###############TEST UserDao
-	@Test
-	public void testGetUserByUsername() {
-		
-		//Test 1: ensure existing admin user is found by the getUserByUsername() function.
-		User theAdmin = DAORoot.userDao.getUserByUsername("admin");
-		//username
-		assertEquals("admin", theAdmin.getUsername());
-
-		//these two tests only work the first test run as future test runs dynamically create salt and so the hashedPassword is different
-		//hashedPassword
-//		assertEquals("$2a$10$h.dl5J86rGH7I8bD9bZeZeci0pDt0.VwFTGujlnEaZXPf/q7vM5wO", theAdmin.getHashedPassword()); //issue currently
-
-		//salt
-//		assertEquals("$2a$10$h.dl5J86rGH7I8bD9bZeZe", theAdmin.getSalt());
-
-		//first_name
-		assertEquals("admin", theAdmin.getFirstName());
-
-		//last_name
-		assertEquals("admin", theAdmin.getLastName());
-
-		//email
-		assertEquals("admin@email.com", theAdmin.getEmail());
-
-		//is_admin
-		assertTrue(theAdmin.isAdmin());
-		
-		//Test 2: ensure user not in db returns null but does not crash the program
-		User notAUser = DAORoot.userDao.getUserByUsername("NOTAUSER");
-		assertNull(notAUser); 
-
-
-	}
-
-
+	
 	//###############TEST UserController
 	@Test
 	public void testLogin() {
