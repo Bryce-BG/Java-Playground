@@ -3,7 +3,6 @@ package com.BryceBG.DatabaseTools.Database.Book;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.javatuples.Pair;
 
 
 
@@ -18,20 +17,20 @@ public class BookDao {
 
 	
 
-	public Iterable<Book> getAllBooks() {
+	public Book[] getAllBooks() {
     	logger.info("Call to getAllBooks() was made but this is a STUB");
         return null; //TODO implement me.
     }
 
     public Book getBookByIdentifier(String identifier_name, String identifier) {
-    	Pair<String, String> id_pair = Pair.with(identifier_name, identifier);
+//    	Pair<String, String> id_pair = Pair.with(identifier_name, identifier);
 		//TODO implement me. Query DB for book with id type: identifier_name and value: identifier
     	logger.info("Call to getBookByIdentifier() was made but this is a STUB");
 
         return null;
     }
     
-    public Book getBookByAuthor(String Author) {
+    public Book[] getBooskByAuthor(String Author) {
     	logger.info("Call to getBookByAuthor() was made but this is a STUB");
 
     	//TODO implement me

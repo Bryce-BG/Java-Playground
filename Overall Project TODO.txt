@@ -39,3 +39,12 @@ UserController.java
 3. Create QTJambi interface to allow GUI access to the library_database project in an app form
 4. create Spark app interface to allow access to system via webpages.
 
+
+#######README
+##for db
+delete(series) -> should cascade delete(books_in_series)
+delete(author) -> should cascade delete(books) AND cascade delete(series)
+delete(book) -> should update(series.books_in_series) + update(series.number_books_in_series) + update(author)
+
+
+

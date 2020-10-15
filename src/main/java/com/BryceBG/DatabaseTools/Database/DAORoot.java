@@ -1,6 +1,7 @@
 package com.BryceBG.DatabaseTools.Database;
 
 import com.BryceBG.DatabaseTools.Database.Book.BookDao;
+import com.BryceBG.DatabaseTools.Database.Series.SeriesDao;
 import com.BryceBG.DatabaseTools.Database.User.UserDao;
 import com.BryceBG.DatabaseTools.utils.Utils;
 /**
@@ -12,12 +13,14 @@ import com.BryceBG.DatabaseTools.utils.Utils;
 public class DAORoot {
 	public static BookDao bookDao; 
     public static UserDao userDao;
+    public static SeriesDao seriesDao;
     public static LibraryDB library;
     
 	static {
 	      library = new LibraryDB(Utils.getConfigString("app.dbhost", null), Utils.getConfigString("app.dbport", null), Utils.getConfigString("app.dbname", null),Utils.getConfigString("app.dbpass", null) , Utils.getConfigString("app.dbuser", null));
 	      bookDao = new BookDao();
 	      userDao = new UserDao();
+	      seriesDao = new SeriesDao();
 
 	}
 	

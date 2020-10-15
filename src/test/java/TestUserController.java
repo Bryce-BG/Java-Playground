@@ -67,7 +67,7 @@ public class TestUserController {
 		// Test 1: check that password change works if old password matches (with admin
 		// account)
 		String newPassword = "adminN0gh";
-		Pair<Boolean, String> result = UserController.setPassword(username, password, newPassword);
+		UserController.setPassword(username, password, newPassword);
 
 		User theAdminAfter = DAORoot.userDao.getUserByUsername("admin");
 

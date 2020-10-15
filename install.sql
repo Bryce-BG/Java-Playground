@@ -42,15 +42,15 @@ CREATE TABLE IF NOT EXISTS authors (
 	/*books_id can be computed by scanning the DB, but might we may want to just link for speed */
 );
 
-CREATE TYPE series_status AS ENUM ('COMPLETED', 'ONGOING', 'NA', 'UNDETERMINED');
+CREATE TYPE series_status_enum AS ENUM ('COMPLETED', 'ONGOING', 'UNDETERMINED');
 
 CREATE TABLE IF NOT EXISTS series (
-    series_id SERIAL,
+    series_id SERIAL UNIQUE, --TODO might remove this
     series_name VARCHAR(40) NOT NULL, /*name of the series*/
     author_id INT, /*author series belongs to*/
     number_books_in_series INT, /*THIS SHOULD BE DYNAMICALLY updated when new books are added to the series?*/
-    series_status series_status, /*has the series been finished or is it ongoing (presumably the check is implied)*/
-    PRIMARY KEY (series_id),
+    series_status series_status_enum, /*has the series been finished or is it ongoing (presumably the check is implied)*/
+    PRIMARY KEY (series_name, author_id),
     FOREIGN KEY (author_id) REFERENCES authors(author_id)
      /*books_ids*/
 
@@ -66,8 +66,9 @@ CREATE TYPE identifier AS (
 
 CREATE TABLE IF NOT EXISTS books (
     book_id SERIAL,
-    title VARCHAR(100) NOT NULL,
+    title VARCHAR NOT NULL,
     rating_overall NUMERIC(2,2), /*2 places before decimal and 2 after the decimal (need to set range (FLOAT 0-10))*/
+    rating_count INT, -- number of votes taken for rating
     series_id INT REFERENCES series(series_id),
     number_in_series NUMERIC(2,2),
     edition INT,

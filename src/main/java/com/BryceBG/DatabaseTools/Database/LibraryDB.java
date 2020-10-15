@@ -247,21 +247,7 @@ public class LibraryDB {
 	//edit book (change metadata)
 	
 	
-	//add series (helper function for addBook)
-	private boolean addSeries(String series_name) {
-		//TODO implement me
-		return false;
-	}
-	
-	//remove series. (helper series for removeBook)
-	private boolean removeSeries(String series_name) {
-		//TODO implement me
-		//prompt for confirm delete
-		//for each book in db cascade delete
-		//remove series from series.list
-		//remove from authors
-		return false;
-	}
+
 	
 	
 	//list genres
@@ -277,14 +263,8 @@ public class LibraryDB {
 	
 	/*helper functions*/
 	
-	private int getSeriesID(String seriesName) {
-		return 0;
-		//TODO implement me
-	}
-	private int getBookID(String bookName) {
-		return 0;
-		//TODO implement me
-	}
+	
+	
 
 	
 

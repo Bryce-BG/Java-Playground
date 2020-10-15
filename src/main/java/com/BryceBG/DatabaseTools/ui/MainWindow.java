@@ -43,7 +43,7 @@ public final class MainWindow implements Runnable {
         Thread shutdownThread = new Thread();
         Runtime.getRuntime().addShutdownHook(shutdownThread);
 
-
+        
 
     }
 
@@ -140,30 +140,7 @@ public final class MainWindow implements Runnable {
         return (!searchPanel.isVisible());
     }
     
-    private void shutdownCleanup() {
-    	//TODO implement me
-//        Utils.setConfigBoolean("file.overwrite", configOverwriteCheckbox.isSelected());
-//        Utils.setConfigInteger("threads.size", Integer.parseInt(configThreadsText.getText()));
-//        Utils.setConfigInteger("download.retries", Integer.parseInt(configRetriesText.getText()));
-//        Utils.setConfigInteger("download.timeout", Integer.parseInt(configTimeoutText.getText()));
-//        Utils.setConfigBoolean("clipboard.autorip", ClipboardUtils.getClipboardAutoRip());
-//        Utils.setConfigBoolean("auto.update", configAutoupdateCheckbox.isSelected());
-//        Utils.setConfigString("log.level", configLogLevelCombobox.getSelectedItem().toString());
-//        Utils.setConfigBoolean("play.sound", configPlaySound.isSelected());
-//        Utils.setConfigBoolean("download.save_order", configSaveOrderCheckbox.isSelected());
-//        Utils.setConfigBoolean("download.show_popup", configShowPopup.isSelected());
-//        Utils.setConfigBoolean("log.save", configSaveLogs.isSelected());
-//        Utils.setConfigBoolean("urls_only.save", configSaveURLsOnly.isSelected());
-//        Utils.setConfigBoolean("album_titles.save", configSaveAlbumTitles.isSelected());
-//        Utils.setConfigBoolean("clipboard.autorip", configClipboardAutorip.isSelected());
-//        Utils.setConfigBoolean("descriptions.save", configSaveDescriptions.isSelected());
-//        Utils.setConfigBoolean("prefer.mp4", configPreferMp4.isSelected());
-//        Utils.setConfigBoolean("remember.url_history", configURLHistoryCheckbox.isSelected());
-//        Utils.setConfigString("lang", configSelectLangComboBox.getSelectedItem().toString());
-//        saveWindowPosition(mainFrame);
-//        saveHistory();
-        Utils.saveConfig();
-    }
+
 }
 	
 

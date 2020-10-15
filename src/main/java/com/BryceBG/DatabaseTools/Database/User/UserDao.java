@@ -17,7 +17,7 @@ import com.BryceBG.DatabaseTools.Database.DAORoot; //for our instantiated object
  * associated with UserController that performs preliminary checks to ensure validity of actions before modifying the database.
  * @author Bryce-BG
  */
-public class UserDao extends DAORoot{
+public class UserDao {
 	private static final Logger logger = LogManager.getLogger(UserDao.class.getName());
 	
 
@@ -37,7 +37,7 @@ public class UserDao extends DAORoot{
     	//https://stackoverflow.com/questions/8066501/how-should-i-use-try-with-resources-with-jdbc
     	
     	//1. establish connection to our database
-    	try (Connection conn = library.connectToDB();        
+    	try (Connection conn = DAORoot.library.connectToDB();        
 	            PreparedStatement pstmt = conn.prepareStatement(sql);
 	            ) {
     		pstmt.setString(1, username);
@@ -90,7 +90,7 @@ public class UserDao extends DAORoot{
     	//https://stackoverflow.com/questions/8066501/how-should-i-use-try-with-resources-with-jdbc
     	
     	//1. establish connection to our database
-    	try (Connection conn = library.connectToDB();        
+    	try (Connection conn = DAORoot.library.connectToDB();        
 	            PreparedStatement pstmt = conn.prepareStatement(sql);
 	            ) {
     		pstmt.setString(1, emailI);
@@ -175,7 +175,7 @@ public class UserDao extends DAORoot{
 			String sql = "UPDATE users SET salt=?, hashedPassword=? WHERE username=?";
 					
 			//1. establish connection to our database
-	    	try (Connection conn = library.connectToDB();        
+	    	try (Connection conn = DAORoot.library.connectToDB();        
 		            PreparedStatement pstmt = conn.prepareStatement(sql);
 		            ) {
 	    		//2. set parameters in the prepared statement
@@ -225,7 +225,7 @@ public class UserDao extends DAORoot{
 		boolean rtVal = false;
 		String sql = "INSERT INTO USERS(username, hashedPassword, salt, first_name, last_name, email, is_admin) VALUES (?, ?, ?, ?, ?, ?, ?);";
 		//1. establish connection to our database
-    	try (Connection conn = library.connectToDB();        
+    	try (Connection conn = DAORoot.library.connectToDB();        
 	            PreparedStatement pstmt = conn.prepareStatement(sql);
 	            ) {
     		pstmt.setString(1, username.trim());
@@ -267,7 +267,7 @@ public class UserDao extends DAORoot{
 		boolean rtVal = false;
 		String sql = "DELETE FROM USERS WHERE username=?";
 		//1. establish connection to our database
-    	try (Connection conn = library.connectToDB();        
+    	try (Connection conn = DAORoot.library.connectToDB();        
 	            PreparedStatement pstmt = conn.prepareStatement(sql);
 	            ) {
     		pstmt.setString(1, userToRemove);
