@@ -53,53 +53,7 @@ public class LibraryDB {
 	
 	/**#############getter functions for DB checks############# **/
 	
-	/**
-	 * Get the names of all series currently listed in the database.
-	 * @return String array of names of series from the DB.
-	 */
-	public String[] getAllSeries(){
-		ArrayList<String> series_names = new ArrayList<String>(); //the names of all series in databae returned by our query
-		Statement stmt = null; //sql statement
-		ResultSet rs = null; //results
-		Connection conn = null;
-			try {
-				conn = connectToDB();
-				
-				//https://www.postgresql.org/docs/7.4/jdbc-query.html
-				stmt = conn.createStatement();
-				
-					rs = stmt.executeQuery("SELECT series_name FROM series");
-					while (rs.next()) {
-					    series_names.add(rs.getString(1));//add column 1 from current row to the list to be returned
-					}
 
-				
-				return (String[]) series_names.toArray();
-				
-				
-			} catch (ClassNotFoundException | SQLException e) {
-				e.printStackTrace();
-			}
-			finally{
-			      //finally block used to close resources
-			      try{
-			         if(stmt!=null)
-			            conn.close();
-			      }catch(SQLException se){
-			      }// do nothing
-			      try{
-			         if(conn!=null)
-			            conn.close();
-			      }catch(SQLException se){
-			         se.printStackTrace();
-			      }//end finally try
-			   }
-			return null;
-	
-		
-
-	}
-	
 	/**
 	 * Get all available book titles from the database.
 	 * @return String array containing all available book titles.

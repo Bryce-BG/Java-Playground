@@ -13,10 +13,10 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<!-- use Java 1.8 for compile -->
-		<maven.compiler.source>1.8</maven.compiler.source>
-		<maven.compiler.target>1.8</maven.compiler.target>
-		<junit.version>4.12</junit.version>
+		<!-- use Java 13 for compile -->
+		<maven.compiler.source>13</maven.compiler.source>
+		<maven.compiler.target>13</maven.compiler.target>
+		<junit.version>4.13.1</junit.version>
 	</properties>
 
 	<!-- library dependencies -->
