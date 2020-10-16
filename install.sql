@@ -1,14 +1,12 @@
 
 --TODO:
--- 1. create DB if not exists (instead of manual creation being required like above)
  --use assertion/CHECK in authors to ensure each alias refers to valid authorID
 
-*/
+
 
 DROP TABLE IF EXISTS books, authors, series, users CASCADE;
 DROP TYPE IF EXISTS series_status;
 
--- #####USER RELATED
 CREATE TABLE IF NOT EXISTS users (
     user_id SERIAL UNIQUE, --must be unique otherwise we can't reference
 	username VARCHAR(30) PRIMARY KEY, --always lowercase alphanumeric and 5-30 characters
@@ -24,15 +22,11 @@ CREATE TABLE IF NOT EXISTS users (
 --     custom_genres VARCHAR(30)[] /*genres that are not commonly used and so not accepted into DB default genres*/
 
 );
- --password: Password1 for this user
-INSERT INTO users (username, hashedPassword, salt, first_name, last_name, email, is_admin) VALUES ('admin', '$2a$10$D0uvz6/IgaKHVjV7zdlXAe8L92nEexa4gkNV7zyLtCRUTIyJEVKxy','$2a$10$D0uvz6/IgaKHVjV7zdlXAe', 'admin', 'admin', 'admin@email.com', true);
 CREATE TABLE IF NOT EXISTS authors (
     author_id SERIAL,
-    alias_id INT[], /*would be nice if we can ensure that this links to existing author_id*/
     fname VARCHAR(100), /*authors first name*/
     lname VARCHAR(100), /*authors last name*/
-    series_ids INT[], -- /*ids of series the author has written*/ TODO: this should be forign KEY list
-	author_bib VARCHAR(300),
+	author_bib VARCHAR,
 	alias_ids INT[], /*alternative names the author may go by (needs to be updated manually)*/
 	PRIMARY KEY (author_id)
 --     TODO BELOW
@@ -42,6 +36,9 @@ CREATE TABLE IF NOT EXISTS authors (
 	/*books_id can be computed by scanning the DB, but might we may want to just link for speed */
 );
 
+
+
+
 CREATE TYPE series_status_enum AS ENUM ('COMPLETED', 'ONGOING', 'UNDETERMINED');
 
 CREATE TABLE IF NOT EXISTS series (
@@ -50,12 +47,19 @@ CREATE TABLE IF NOT EXISTS series (
     author_id INT, /*author series belongs to*/
     number_books_in_series INT, /*THIS SHOULD BE DYNAMICALLY updated when new books are added to the series?*/
     series_status series_status_enum, /*has the series been finished or is it ongoing (presumably the check is implied)*/
+    UNIQUE(series_name, author_id),
     PRIMARY KEY (series_name, author_id),
     FOREIGN KEY (author_id) REFERENCES authors(author_id)
-     /*books_ids*/
-
+     /*ADD books_ids?*/
 
 );
+--this rule protects the integrity of the database by preventing deletion of series when it is currently referenced
+--http://wiki.postgresql.org/wiki/Introduction_to_PostgreSQL_Rules_-_Making_entries_which_can%27t_be_altered
+--https://stackoverflow.com/questions/810180/how-to-prevent-deletion-of-the-first-row-in-table-postgresql#:~:text=Basically%2C%20you'll%20have%20to,row%20will%20never%20be%20deleted.
+CREATE RULE protect_in_use_series_entry_delete as
+  on delete to series
+  where old.number_books_in_series > 0
+  do instead nothing;
 
 /*used as a tuple for book identifiers like: (ISBN: isbn_value) or: (MOBI-ASN: SHDA4N)*/
 CREATE TYPE identifier AS (
@@ -86,11 +90,6 @@ CREATE TABLE IF NOT EXISTS books (
 
 
 
-
-
-
-
-
 CREATE TABLE IF NOT EXISTS genres (
     genre_id serial, /*primary key*/
     parent int, /*references to the overarching theme/genre that this class extends*/
@@ -101,8 +100,6 @@ CREATE TABLE IF NOT EXISTS genres (
       main_char_genres: genres that apply directly to the main character (for example is the main character a witch?)
       overall_world_genres: general all purpose genres (for example are there witches in the book even if the main character isn't one?)
       setting_genre: basic setting (is it fantasy or science fiction)
-
-
       */
     PRIMARY KEY (genre_id),
     FOREIGN KEY (parent) REFERENCES genres(genre_id)
@@ -121,7 +118,6 @@ CREATE TABLE IF NOT EXISTS comments (
 	FOREIGN KEY (book_id) REFERENCES books(book_id)
 
 );
-
 CREATE TABLE IF NOT EXISTS comments_series (
 --     comment_id serial,
     user_id int,
@@ -132,7 +128,6 @@ CREATE TABLE IF NOT EXISTS comments_series (
 	FOREIGN KEY (series_id) REFERENCES series(series_id)
 
 );
-
 CREATE TABLE IF NOT EXISTS comments_author (
 --     comment_id serial PRIMARY KEY,
     user_id int,
@@ -162,7 +157,6 @@ CREATE TABLE IF NOT EXISTS recommendation_book_to_series (
     FOREIGN KEY (series1_id) references series(series_id),
     FOREIGN KEY (book2_id) references books(book_id)
 );
-
 CREATE TABLE IF NOT EXISTS recommendation_book_to_book (
     book1_id int,
     book2_id int,
@@ -186,4 +180,8 @@ CREATE TABLE IF NOT EXISTS user_book_rating (
 
 );
 
-/*https://www.postgresqltutorial.com/postgresql-alter-table/ */
+--MOCK DATA
+INSERT INTO users (username, hashedPassword, salt, first_name, last_name, email, is_admin) VALUES ('admin', '$2a$10$D0uvz6/IgaKHVjV7zdlXAe8L92nEexa4gkNV7zyLtCRUTIyJEVKxy','$2a$10$D0uvz6/IgaKHVjV7zdlXAe', 'admin', 'admin', 'admin@email.com', true);
+--TODO remove these as they are just test entries to play with
+INSERT INTO authors(fname, lname, series_ids, author_bib, alias_ids) VALUES ('James', 'Joyce', array[]::int[], 'TEST AUTHOR', array[]::int[]);
+INSERT INTO SERIES(series_name, author_id, number_books_in_series, series_status) VALUES ('test series', 1, 1, 'COMPLETED');

@@ -72,7 +72,7 @@ public class UserDao {
 			logger.error("Exception occured during executing SQL statement: " + e.getMessage());
         }
         return rtVal;
-    	}
+    }
     
 	/**
 	 * Get a user from the database

@@ -42,9 +42,12 @@ UserController.java
 
 #######README
 ##for db
-delete(series) -> should cascade delete(books_in_series)
+delete(series) -> should fail if: books_in_serie>0
 delete(author) -> should cascade delete(books) AND cascade delete(series)
 delete(book) -> should update(series.books_in_series) + update(series.number_books_in_series) + update(author)
 
 
+output unexpectedly:
+Running TestUserDao
+19:02:16.088 [main] ERROR com.BryceBG.DatabaseTools.Database.User.UserDao - Exception occured during executing SQL statement: ERROR: duplicate key value violates unique constraint "users_pkey"
 

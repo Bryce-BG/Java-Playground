@@ -8,12 +8,10 @@ import org.junit.Test;
 
 import com.BryceBG.DatabaseTools.Database.User.User;
 import com.BryceBG.DatabaseTools.Database.User.UserController;
-import com.BryceBG.DatabaseTools.Database.User.UserDao;
 import com.BryceBG.DatabaseTools.Database.DAORoot;
 
 /**
  * Tests for our UserController class.
- * 
  * @author Bryce-BG
  *
  */
@@ -128,12 +126,12 @@ public class TestUserController {
 		String email = "walleedora@email.com";
 
 		// Test 1: create valid user succeeds
-		int countUsersBefore = UserDao.userDao.getAllUserNames().size();
+		int countUsersBefore = DAORoot.userDao.getAllUserNames().size();
 
 		Pair<Boolean, String> res = UserController.createNewUser(creatingUsername, creatingUserPass, username, password,
 				fName, lName, email, false);
 		assertTrue(res.getValue0().booleanValue()); // should have successfully created user.
-		assertEquals(countUsersBefore + 1, UserDao.userDao.getAllUserNames().size()); // our user count has gone up by 1
+		assertEquals(countUsersBefore + 1, DAORoot.userDao.getAllUserNames().size()); // our user count has gone up by 1
 
 		helperRemoveUser(username); // remove so we don't have possible conflicts
 		// Test 2: create user with invalid(username) fails
