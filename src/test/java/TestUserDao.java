@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.ArrayList;
 
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mindrot.jbcrypt.BCrypt;
 
@@ -14,6 +15,12 @@ import com.BryceBG.DatabaseTools.Database.User.User;
 
 public class TestUserDao {
 
+	@BeforeClass
+	public static void runOnce() {
+		//set up our logger
+		com.BryceBG.DatabaseTools.utils.Utils.initializeAppLogger("test_log.txt","%d %p %c [%t] function: %M| %m%n");
+	}
+	
 	@Before
 	public void beforeTest() {
 		ArrayList<String> users = DAORoot.userDao.getAllUserNames();

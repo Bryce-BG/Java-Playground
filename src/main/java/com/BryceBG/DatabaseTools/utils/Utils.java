@@ -26,7 +26,6 @@ import org.apache.logging.log4j.core.config.builder.api.RootLoggerComponentBuild
 import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
 
 
-//import spark.resource.ClassPathResource;
 
 public class Utils {
 	private static final Logger LOGGER = LogManager.getLogger(Utils.class);

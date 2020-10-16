@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import org.javatuples.Pair;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.BryceBG.DatabaseTools.Database.User.User;
@@ -17,6 +18,12 @@ import com.BryceBG.DatabaseTools.Database.DAORoot;
  */
 public class TestUserController {
 
+	@BeforeClass
+	public static void runOnce() {
+		//set up our logger
+		com.BryceBG.DatabaseTools.utils.Utils.initializeAppLogger("test_log.txt","%d %p %c [%t] function: %M| %m%n");
+	}
+	
 	@Before
 	public void beforeTest() {
 		ArrayList<String> users = DAORoot.userDao.getAllUserNames();

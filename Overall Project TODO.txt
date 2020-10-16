@@ -22,7 +22,6 @@ UserController.java
 1. (IMPORTANT) Take sql query functions from LibraryDB.java and inject them into this file.
 
 
-##UserDao.java 
 
 
 
@@ -30,7 +29,7 @@ UserController.java
 (IMPORTANT) Create Genre inheritance tree and create SQL script to automatically generate them from our existing genre-types (like our install sql script)
 
 1.(IMPORTANT) createMockDB for testing instead of using real DB	as currently our tests would wipe out entries in the database if they are not created by our init script.
-
+2. (IMPORTANT) allow this mock DB to be reset easily so our tests can change their @Before functions and not have interlaced dependencies for the tests.
 
 
 ##project size tasks
