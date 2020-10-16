@@ -15,12 +15,7 @@
 3. potentially overload constructor so personal fields can be set with a single call.
 
 UserController.java
-1. add additional constraints to user creation to ensure better consnistency.
-
-
-##BookDao.java (skeleton functions at this time)
-1. (IMPORTANT) Take sql query functions from LibraryDB.java and inject them into this file.
-
+1. add additional constraints to user creation to ensure better consistency.
 
 
 
@@ -41,12 +36,10 @@ UserController.java
 
 #######README
 ##for db
-delete(series) -> should fail if: books_in_serie>0
+delete(series) -> should fail if: books_in_series>0
+update(series.number_books_in_series -1) -> fails if count is already at zero.
 delete(author) -> should cascade delete(books) AND cascade delete(series)
-delete(book) -> should update(series.books_in_series) + update(series.number_books_in_series) + update(author)
+delete(book) -> should update(series.number_books_in_series) + update(series.number_books_in_series) + update(author)
 
 
-output unexpectedly:
-Running TestUserDao
-19:02:16.088 [main] ERROR com.BryceBG.DatabaseTools.Database.User.UserDao - Exception occured during executing SQL statement: ERROR: duplicate key value violates unique constraint "users_pkey"
 

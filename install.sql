@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS users (
 );
 CREATE TABLE IF NOT EXISTS authors (
     author_id SERIAL,
+    series_ids INT[],
     fname VARCHAR(100), /*authors first name*/
     lname VARCHAR(100), /*authors last name*/
 	author_bib VARCHAR,
@@ -59,6 +60,12 @@ CREATE TABLE IF NOT EXISTS series (
 CREATE RULE protect_in_use_series_entry_delete as
   on delete to series
   where old.number_books_in_series > 0
+  do instead nothing;
+
+--prevent the count from going into the negative from UPDATE operations
+CREATE RULE protect_in_use_series_entry_update as
+  on update to series
+  where new.number_books_in_series < 0
   do instead nothing;
 
 /*used as a tuple for book identifiers like: (ISBN: isbn_value) or: (MOBI-ASN: SHDA4N)*/
