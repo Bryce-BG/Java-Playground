@@ -60,7 +60,7 @@ public class UserController {
 						
 				boolean rtnedVal = DAORoot.userDao.changeUserPassword(username, newSalt, newHashedPassword);
 				if (rtnedVal == false) {
-					return new Pair<Boolean, String>(Boolean.FALSE, "Password change unexpectedly failed. Please try again.)");
+					return new Pair<Boolean, String>(Boolean.FALSE, "Password change unexpectedly failed. Please try again.");
 				} else {
 					return new Pair<Boolean, String>(Boolean.TRUE, "SUCCESS!");
 				}			}
@@ -122,7 +122,7 @@ public class UserController {
 		logger.info(String.format("User: %s is creating new User: %s", creatingUsername, username));
 		boolean rtnedVal = DAORoot.userDao.addUser(username, hashedPassword, salt, fName, lName, email, is_admin);
 		if (rtnedVal == false) {
-			return new Pair<Boolean, String>(Boolean.FALSE, "Account Creation unexpectedly failed. Please try again.)");
+			return new Pair<Boolean, String>(Boolean.FALSE, "Account Creation unexpectedly failed. Please try again.");
 		} else {
 			return new Pair<Boolean, String>(Boolean.TRUE, "SUCCESS!");
 		}
@@ -166,7 +166,7 @@ public class UserController {
 		logger.info(String.format("User: %s performed delete on User: %s", deleteAuthorizingUsername, userToRemove));
 		boolean rtnedVal = DAORoot.userDao.removeUser( userToRemove);
 		if (rtnedVal == false) {
-			return new Pair<Boolean, String>(Boolean.FALSE, "Account deletion unexpectedly failed. Please try again.)");
+			return new Pair<Boolean, String>(Boolean.FALSE, "Account deletion unexpectedly failed. Please try again.");
 		} else {
 			return new Pair<Boolean, String>(Boolean.TRUE, "SUCCESS!");
 		}

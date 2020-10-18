@@ -16,25 +16,36 @@ CREATE TABLE IF NOT EXISTS users (
 	last_name VARCHAR(30) NOT NULL,
   	email TEXT NOT NULL UNIQUE, --further constraints required see: https://hashrocket.com/blog/posts/working-with-email-addresses-in-postgresql
 	is_admin BOOLEAN NOT NULL
-
-    /*TODO add much in this table*/
---	its bad practice to store password in plain form. Replace this with hashed password once we implement hashing for the app (with salt possibly)
---     custom_genres VARCHAR(30)[] /*genres that are not commonly used and so not accepted into DB default genres*/
-
+--     TODO custom_shelves VARCHAR(30)[] /*genres that are not commonly used and so not accepted into DB default genres*/
 );
+
+--To prevent a lot of issues such as:
+-- 1. admins deleting all other admins and then themselves (leaves the system in a state where without outside intervention no more users can be added)
+-- 2. Can't delete admin accounts because of foreign key reference from an author they created.
+--this rule was created to protect the "root" admin from deletion in the system (though it can be circumvented by changing userID of the admin).
+CREATE RULE protect_root_admin_entry_delete as
+  on delete to users
+  where old.user_id = 1
+  do instead nothing;
+
+
+
 CREATE TABLE IF NOT EXISTS authors (
     author_id SERIAL,
-    series_ids INT[],
-    fname VARCHAR(100), /*authors first name*/
-    lname VARCHAR(100), /*authors last name*/
+    fname VARCHAR(100) NOT NULL, /*authors first name*/
+    lname VARCHAR(100) NOT NULL, /*authors last name*/
 	author_bib VARCHAR,
-	alias_ids INT[], /*alternative names the author may go by (needs to be updated manually)*/
-	PRIMARY KEY (author_id)
---     TODO BELOW
+	verified_user_ID INT DEFAULT 1, --this field will be used to allow author to update their page once they create and account and are verified (by default all are owned by an admin)
+	PRIMARY KEY (author_id),
+	FOREIGN KEY (verified_user_ID) REFERENCES users(user_id) ON DELETE SET DEFAULT, --TODO on delete restore to default?
+	UNIQUE (fname, lname)
+--     TODO BELOW (requires triggers)
+-- 	alias_ids INT[], /*TODO ensure alternative names the author are updated manually)*/
+--   series_ids INT[], --TODO references series.series_id --removed because it currently just adds to much complexity
 -- 	CHECK EACH element OF alias_id REFERENCES authors.author_id
 -- https://dba.stackexchange.com/questions/154548/difference-between-assertion-and-trigger-in-postgresql
+--https://dba.stackexchange.com/questions/60132/foreign-key-constraint-on-array-member
 
-	/*books_id can be computed by scanning the DB, but might we may want to just link for speed */
 );
 
 
@@ -51,8 +62,7 @@ CREATE TABLE IF NOT EXISTS series (
     UNIQUE(series_name, author_id),
     PRIMARY KEY (series_name, author_id),
     FOREIGN KEY (author_id) REFERENCES authors(author_id)
-     /*ADD books_ids?*/
-
+     /*TODO add books_ids field?*/
 );
 --this rule protects the integrity of the database by preventing deletion of series when it is currently referenced
 --http://wiki.postgresql.org/wiki/Introduction_to_PostgreSQL_Rules_-_Making_entries_which_can%27t_be_altered
@@ -187,8 +197,6 @@ CREATE TABLE IF NOT EXISTS user_book_rating (
 
 );
 
---MOCK DATA
+
+--DATA ENTRIES SECTION
 INSERT INTO users (username, hashedPassword, salt, first_name, last_name, email, is_admin) VALUES ('admin', '$2a$10$D0uvz6/IgaKHVjV7zdlXAe8L92nEexa4gkNV7zyLtCRUTIyJEVKxy','$2a$10$D0uvz6/IgaKHVjV7zdlXAe', 'admin', 'admin', 'admin@email.com', true);
---TODO remove these as they are just test entries to play with
-INSERT INTO authors(fname, lname, series_ids, author_bib, alias_ids) VALUES ('James', 'Joyce', array[]::int[], 'TEST AUTHOR', array[]::int[]);
-INSERT INTO SERIES(series_name, author_id, number_books_in_series, series_status) VALUES ('test series', 1, 1, 'COMPLETED');

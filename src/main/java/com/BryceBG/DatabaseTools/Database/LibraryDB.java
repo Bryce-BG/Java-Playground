@@ -334,6 +334,38 @@ public class LibraryDB {
 		return names;
     }
 
+	/**
+	 * This function is used to run raw sql (vulnerable to injection and many other things), so it is ill advised to run it for anything except as debugging.
+	 * TODO remove this function from final version of program to prevent misuse.
+	 * @param sql the sql to be used.
+	 * @return
+	 */
+	public boolean runRawSQL(String sql) {
+		boolean rtVal = false;
+		// 1. establish connection to our database
+		try (Connection conn = DAORoot.library.connectToDB(); PreparedStatement pstmt = conn.prepareStatement(sql);) {
+
+			// 2. execute our update for removing series.
+			int rs = pstmt.executeUpdate();
+			// 3. check if sql query for series returned correct answer: should have added 1
+			// unless it failed
+			// row).
+			if (rs == 1) {
+				// update was successful
+				rtVal = true;
+			} else {
+				rtVal = false;
+			}
+		} // end of try-with-resources: connection
+			// catch blocks for try-with-resources: connection
+		catch (ClassNotFoundException e) {
+			logger.error("Exception occured during connectToDB: " + e.getMessage());
+		} catch (SQLException e) {
+			logger.error("Exception occured during executing SQL statement: " + e.getMessage());
+		}
+		return rtVal;
+		
+	}
 	
 
 
