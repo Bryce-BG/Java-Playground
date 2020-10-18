@@ -4,8 +4,7 @@
 		Also it only creates the database and doesn't run install.sql script to initilze tables.
 
 #Database changes
-	2. implement search functions for keyword, title, and author (maybe genre search as well)
-	
+	2. fix series(author_id) as it should actually reference a junction table as there are potentially more than one author per series. 
 	
 	
 

@@ -1,7 +1,9 @@
 
 --TODO:
  --use assertion/CHECK in authors to ensure each alias refers to valid authorID
-
+-- rewrite our foreign references see:
+-- https://stackoverflow.com/questions/37054474/how-to-refer-to-a-table-which-is-not-yet-created
+--this gets rid of irritating order of creation dependencies that we might have in our table (left as it is currently to provide glancing assurance for lack of circular references
 
 
 DROP TABLE IF EXISTS books, authors, series, users CASCADE;
@@ -37,7 +39,7 @@ CREATE TABLE IF NOT EXISTS authors (
 	author_bib VARCHAR,
 	verified_user_ID INT DEFAULT 1, --this field will be used to allow author to update their page once they create and account and are verified (by default all are owned by an admin)
 	PRIMARY KEY (author_id),
-	FOREIGN KEY (verified_user_ID) REFERENCES users(user_id) ON DELETE SET DEFAULT, --TODO on delete restore to default?
+	FOREIGN KEY (verified_user_ID) REFERENCES users(user_id) ON DELETE SET DEFAULT,
 	UNIQUE (fname, lname)
 --     TODO BELOW (requires triggers)
 -- 	alias_ids INT[], /*TODO ensure alternative names the author are updated manually)*/
@@ -48,6 +50,12 @@ CREATE TABLE IF NOT EXISTS authors (
 
 );
 
+--TODO joint table to allow an author to own series
+-- CREATE TABLE IF NOT EXISTS author_series (
+--     series_id int REFERENCES series(series_id),
+--     author_id int REFERENCES authors(author_id),
+--     PRIMARY KEY (series_id, author_id)
+-- );
 
 
 
@@ -56,7 +64,7 @@ CREATE TYPE series_status_enum AS ENUM ('COMPLETED', 'ONGOING', 'UNDETERMINED');
 CREATE TABLE IF NOT EXISTS series (
     series_id SERIAL UNIQUE, --TODO might remove this
     series_name VARCHAR(40) NOT NULL, /*name of the series*/
-    author_id INT, /*author series belongs to*/
+    author_id INT, /*author series belongs to --TODO this should be external joint table as there can be many authors */
     number_books_in_series INT, /*THIS SHOULD BE DYNAMICALLY updated when new books are added to the series?*/
     series_status series_status_enum, /*has the series been finished or is it ongoing (presumably the check is implied)*/
     UNIQUE(series_name, author_id),
@@ -78,6 +86,11 @@ CREATE RULE protect_in_use_series_entry_update as
   where new.number_books_in_series < 0
   do instead nothing;
 
+
+
+
+
+
 /*used as a tuple for book identifiers like: (ISBN: isbn_value) or: (MOBI-ASN: SHDA4N)*/
 CREATE TYPE identifier AS (
     name            text,
@@ -85,25 +98,45 @@ CREATE TYPE identifier AS (
 );
 
 
+
+
 CREATE TABLE IF NOT EXISTS books (
     book_id SERIAL,
     title VARCHAR NOT NULL,
-    rating_overall NUMERIC(2,2), /*2 places before decimal and 2 after the decimal (need to set range (FLOAT 0-10))*/
-    rating_count INT, -- number of votes taken for rating
-    series_id INT REFERENCES series(series_id),
-    number_in_series NUMERIC(2,2),
+    rating_overall NUMERIC(2,2) DEFAULT 0.0, /*2 places before decimal and 2 after the decimal*/
+    rating_count INT DEFAULT 0, -- number of votes taken for rating
+    series_id INT REFERENCES series(series_id) DEFAULT NULL, --TODO is this legal?
+    number_in_series NUMERIC(2,2) DEFAULT 0.0,
     edition INT,
-    author_ids INT[ ] /*REFERENCES authors(author_id)*/, /*may be more than 1 author for a book so a list is required*/
+--     author_ids INT[ ] --moved to a junction table <book_authors> to make this validated.
     publish_date DATE,
     publisher VARCHAR(70),
-    genres int[],
+--     genres int[], --moved to a junction table <book_genres> to make this validated.
     cover_location VARCHAR, --TODO make this in a nested file directory structure (and keep img name short)
     identifiers identifier[], --all the identifiers associated with a book.
     PRIMARY KEY (book_id),
-    CHECK (rating_overall>0 AND rating_overall<10)
+    CHECK (rating_overall>0 AND rating_overall<=10)
     /*future: comment_stream_id: if I ever allow OTHER people to add comments */
 );
 
+--  a junction table between books and authors.
+--https://stackoverflow.com/questions/7296846/how-to-implement-one-to-one-one-to-many-and-many-to-many-relationships-while-de?rq=1
+/*
+ We need a many-to-many relationship potentially in books as: a book may have MANY authors and an author probably has MANY books.
+ As sql doesn't easily support foreign references in arrays. This means we want a junction table between these two entries
+ */
+CREATE TABLE IF NOT EXISTS book_authors (
+    --  junction table between book and authors for the book
+    book_id INT REFERENCES books(book_id),
+    author_id INT REFERENCES authors(author_id),
+     PRIMARY KEY (book_id, author_id)
+);
+CREATE TABLE IF NOT EXISTS book_genres (
+    --junction table for the books and genres in said book
+    book_id int, --REFERENCES books(book_id)
+    genre_id int, --REFERENCES genres(genre_id)
+    PRIMARY KEY (book_id, genre_id)
+);
 
 
 
@@ -184,7 +217,7 @@ CREATE TABLE IF NOT EXISTS recommendation_book_to_book (
 );
 
 
-
+--junction table between Users and books
 CREATE TABLE IF NOT EXISTS user_book_rating (
     --this table is for users rating for books
 --     comment_id serial,
@@ -196,6 +229,12 @@ CREATE TABLE IF NOT EXISTS user_book_rating (
 	FOREIGN KEY (book_id) REFERENCES books(book_id)
 
 );
+
+-- #####TABLE ALTERATIONS TO ADD FOREIGN KEYS
+
+-- book_genres table
+ALTER TABLE book_genres ADD FOREIGN KEY (book_id) REFERENCES books(book_id);
+ALTER TABLE book_genres ADD FOREIGN KEY (genre_id) REFERENCES genres(genre_id);
 
 
 --DATA ENTRIES SECTION
