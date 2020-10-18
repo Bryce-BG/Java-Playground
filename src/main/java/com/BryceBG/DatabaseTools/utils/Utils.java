@@ -331,7 +331,7 @@ public class Utils {
         LayoutComponentBuilder layoutBuilder = builder.newLayout("PatternLayout")
                 .addAttribute("pattern", pattern);
         ComponentBuilder<?> triggeringPolicy = builder.newComponent("Policies")
-                .addComponent(builder.newComponent("SizeBasedTriggeringPolicy").addAttribute("size", "1KB"));
+                .addComponent(builder.newComponent("SizeBasedTriggeringPolicy").addAttribute("size", "1MB"));
         appenderBuilder = builder.newAppender("LogToRollingFile", "RollingFile")
                 .addAttribute("fileName", fileName)
                 .addAttribute("filePattern", fileName+"-%d{MM-dd-yy-HH-mm-ss}.log.")

@@ -135,9 +135,6 @@ public class UserDao {
     	String sql =
                 "SELECT * " +
                 "FROM USERS ";	
-    	//Use of try with resources to auto close connection examples:
-    	//https://stackoverflow.com/questions/38545507/postgresql-close-connection-after-method-has-finished
-    	//https://stackoverflow.com/questions/8066501/how-should-i-use-try-with-resources-with-jdbc
     	
     	//1. establish connection to our database
     	try (Connection conn = DAORoot.library.connectToDB();        
@@ -279,7 +276,7 @@ public class UserDao {
             	rtVal = true;
             }
             else {
-            	logger.info(String.format("The addUser failed: the execute update returned: %d", rs));
+            	logger.info(String.format("The removeUser failed: the execute update returned: %d", rs));
             	rtVal = false;
             }  
         } //end of try-with-resources: connection 

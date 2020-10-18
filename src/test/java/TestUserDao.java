@@ -1,5 +1,6 @@
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -125,7 +126,33 @@ public class TestUserDao {
 	
 	@Test
 	public void testChangeUserPassword() {
-		//TODO implement me
+		//1. setup
+		ArrayList<String> users = DAORoot.userDao.getAllUserNames();
+		String theUserUsername = users.get(1);
+		User theUser = DAORoot.userDao.getUserByUsername(theUserUsername); //get the user.
+		String newSalt = BCrypt.gensalt();
+		String newPassword = "this1Tests";
+		String newHashedPassword = BCrypt.hashpw(newPassword, newSalt);
+				
+		//Test 1: change valid user accounts password (with valid password/salt)
+		assertTrue(DAORoot.userDao.changeUserPassword(theUser.getUsername(), newSalt, newHashedPassword));
+		
+		User userAfterChange = DAORoot.userDao.getUserByUsername(theUserUsername);
+		assertNotNull(userAfterChange);
+		assertEquals(newHashedPassword, userAfterChange.getHashedPassword()); //hashed password stored in database should be the same.
+		
+		//Test 2: try changing password on user that does not exist
+		String fakeUsername = "FakeUserName";
+		assertFalse(DAORoot.userDao.changeUserPassword(fakeUsername, newSalt, newHashedPassword));
+		
+		//Test 3: try changing password on empty username
+		fakeUsername = "";
+		assertFalse(DAORoot.userDao.changeUserPassword(fakeUsername, newSalt, newHashedPassword));
+		
+		//Test 4: try changing password on a null user
+		fakeUsername = null;
+		assertFalse(DAORoot.userDao.changeUserPassword(fakeUsername, newSalt, newHashedPassword));
+		
 	}
 	
 	
