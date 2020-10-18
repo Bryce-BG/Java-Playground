@@ -28,15 +28,7 @@ public class TestAuthorDao {
 		
 		@Before
 		public void runBeforeTest() {
-//			ArrayList<Author> authors = DAORoot.authorDao.getAllAuthors();
-//			for(Author x : authors) {
-//				if(x.getFirstName().equals("James") && x.getLastName().equals("Joyce")) 
-//					continue;
-//				else
-//					DAORoot.authorDao.removeAuthor(x.getAuthorID());
-//			}
 			testUtils.resetDB(Utils.getConfigString("app.dbname", null)); //reset database to initial state
-
 		}
 		@Test
 		public void testGetAllAuthors() {

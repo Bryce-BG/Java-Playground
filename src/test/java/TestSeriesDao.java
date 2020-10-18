@@ -5,7 +5,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -15,6 +14,7 @@ import org.junit.rules.Timeout;
 import com.BryceBG.DatabaseTools.Database.DAORoot;
 import com.BryceBG.DatabaseTools.Database.Series.Series;
 import com.BryceBG.DatabaseTools.Database.Series.SeriesDao;
+import com.BryceBG.DatabaseTools.utils.Utils;
 
 /**
  * Function to test our SeriesDao object. The order of the tests is intentional
@@ -23,15 +23,15 @@ import com.BryceBG.DatabaseTools.Database.Series.SeriesDao;
  * to perform cleanup which uses the removeSeries() function. As such, if the
  * remove function is broken it can lead to other tests failing as well.
  * 
- * @author Limited1
+ * @author Bryce-BG
  *
  */
 public class TestSeriesDao {
-	
-	//global timeout to ensure no issues
+
+	// global timeout to ensure no issues
 	@Rule
 	public Timeout globalTimeout = Timeout.seconds(2);
-	
+
 	@BeforeClass
 	public static void runOnce() {
 		// set up our logger
@@ -39,23 +39,8 @@ public class TestSeriesDao {
 	}
 
 	@Before
-	@After
 	public void beforeTest() {
-		// DEPENDENCY: removeSeries() and updateSeriesBookCount()
-		// cleanup to remove series from DB that our tests create
-		// TODO create function that runs our install.sql so none of these dependencies
-		// exist for tests.
-		ArrayList<Series> t = DAORoot.seriesDao.getAllSeries();
-		for (Series x : t) {
-			if (x.getSeriesID() != 1) {// ignore our one constant series in system
-				String seriesName = x.getSeriesName();
-				int authorID = x.getAuthorID();
-				// loop until the number of books in series = 0 (only then can it be removed)
-				while (DAORoot.seriesDao.updateSeriesBookCount(seriesName, authorID, SeriesDao.UpdateType.DEC)) {
-				}
-				DAORoot.seriesDao.removeSeries(x.getSeriesName(), x.getAuthorID());
-			}
-		}
+		testUtils.resetDB(Utils.getConfigString("app.dbname", null)); // reset database to initial state
 	}
 
 	@Test
@@ -68,7 +53,7 @@ public class TestSeriesDao {
 		// check that the values were correctly filled
 		// NOTE: we don't check series_id as other tests will remove it and as it is
 		// never reused, it is hard to statically determine what this value should be
-		assertEquals(1, sO.getAuthorID());
+//		assertEquals(1, sO.getAuthorID());
 		assertEquals(1, sO.getNumberBooksInSeries());
 		assertEquals("test series", sO.getSeriesName());
 		assertEquals(Series.series_status_enum.COMPLETED, sO.getSeriesStatus());
@@ -79,13 +64,15 @@ public class TestSeriesDao {
 	public void testGetSeriesByNameAndAuthorID() {
 		// Test1: test series not in system (should return null but not crash our
 		// system).
-		Series t = DAORoot.seriesDao.getSeriesByNameAndAuthorID("test", 1);
-		assertNull(t);
+		int author_id = DAORoot.authorDao.getAllAuthors().get(0).getAuthorID(); // author id of first (and only) author
+
+		Series t = DAORoot.seriesDao.getSeriesByNameAndAuthorID("test", author_id);
+		assertNull(t); //because series doesn't exist
 
 		// Test 2: test series known to be in system
-		Series sO = DAORoot.seriesDao.getSeriesByNameAndAuthorID("test series", 1);
+		Series sO = DAORoot.seriesDao.getSeriesByNameAndAuthorID("test series", author_id);
 		// check that the values were correctly filled
-		assertEquals(1, sO.getAuthorID());
+		assertEquals(author_id, sO.getAuthorID());
 		assertEquals("test series", sO.getSeriesName());
 		assertEquals(Series.series_status_enum.COMPLETED, sO.getSeriesStatus());
 
@@ -118,14 +105,15 @@ public class TestSeriesDao {
 	public void testAddSeries() {
 
 		int count_before = DAORoot.seriesDao.getAllSeries().size();
-
+		int author_id = DAORoot.authorDao.getAllAuthors().get(0).getAuthorID(); // author id of first (and only) author
+																				// in our mock db.
 		// Test 1: add valid series
-		assertTrue(DAORoot.seriesDao.addSeries("this is a new series", 1)); // update should have succeeded
+		assertTrue(DAORoot.seriesDao.addSeries("this is a new series", author_id)); // update should have succeeded
 		assertEquals(count_before + 1, DAORoot.seriesDao.getAllSeries().size()); // should be 1 more entry
 
 		// Test 2: add invalid series
 		// 2.a. null should not crash
-		assertFalse(DAORoot.seriesDao.addSeries(null, 1)); // update should fail
+		assertFalse(DAORoot.seriesDao.addSeries(null, author_id)); // update should fail
 
 		// 2.b. authorID is invalid
 		assertFalse(DAORoot.seriesDao.addSeries("legit series", -3)); // update should fail
@@ -140,8 +128,9 @@ public class TestSeriesDao {
 
 	@Test
 	public void testRemoveSeries() {
+		int author_id = DAORoot.authorDao.getAllAuthors().get(0).getAuthorID(); // author id of first (and only) author
 
-		DAORoot.seriesDao.addSeries("this is a new series", 1);
+		DAORoot.seriesDao.addSeries("this is a new series", author_id);
 		assertEquals(2, DAORoot.seriesDao.getAllSeries().size());
 		// TEST 1: remove legitimate series by id.
 		ArrayList<Series> t = DAORoot.seriesDao.getAllSeries();
@@ -157,27 +146,26 @@ public class TestSeriesDao {
 
 	@Test
 	public void testUpdateSeriesBookCount() {
-		// Note our function utilizes getSeriesByNameAndAuthorID() function to verify
+		// Note our updateSeriesBookCount() function utilizes getSeriesByNameAndAuthorID() function to verify
 		// series exists. So there is no need to check if we can trick it with invalid
 		// params passed in.
-		DAORoot.seriesDao.addSeries("hello world", 1);// add a test series to play with
+		
 		ArrayList<Series> t = DAORoot.seriesDao.getAllSeries();
-		Series testSeriesObject = t.get(1);
+		Series testSeriesObject = t.get(0);
 
 		// Test1: does count increment successfully for series in db
 		int numBefore = testSeriesObject.getNumberBooksInSeries();
 		// update should succeed
-		assertTrue("increment should have been successful but was not", DAORoot.seriesDao.updateSeriesBookCount(testSeriesObject.getSeriesName(),
-				testSeriesObject.getAuthorID(), SeriesDao.UpdateType.INC));
-		
-		Series series_after = DAORoot.seriesDao
-				.getSeriesByNameAndAuthorID(testSeriesObject.getSeriesName(), testSeriesObject.getAuthorID());
+		assertTrue("increment should have been successful but was not", DAORoot.seriesDao.updateSeriesBookCount(
+				testSeriesObject.getSeriesName(), testSeriesObject.getAuthorID(), SeriesDao.UpdateType.INC));
+
+		Series series_after = DAORoot.seriesDao.getSeriesByNameAndAuthorID(testSeriesObject.getSeriesName(),
+				testSeriesObject.getAuthorID());
 		int numAfter = series_after.getNumberBooksInSeries();
 		assertEquals(numBefore + 1, numAfter);
-		
-		//decrement operation tests
-		testSeriesObject = series_after;
 
+		// decrement operation tests
+		testSeriesObject = series_after;
 
 		// Test 2: try DEC on valid series
 		numBefore = numAfter;
@@ -189,27 +177,24 @@ public class TestSeriesDao {
 				.getNumberBooksInSeries();
 		assertEquals(numBefore - 1, numAfter);
 
-		// loop until we hit 0 so we can check for illegal additions (shouldn't require loop at all)
-//		while (DAORoot.seriesDao
-//				.getSeriesByNameAndAuthorID(testSeriesObject.getSeriesName(), testSeriesObject.getAuthorID())
-//				.getNumberBooksInSeries() > 0) {
-//			DAORoot.seriesDao.updateSeriesBookCount(testSeriesObject.getSeriesName(),
-//					testSeriesObject.getAuthorID()); // Perform deincrement
-//		}
+		// loop until we hit 0 so we can ensure it won't allow updates below 0
+		while (DAORoot.seriesDao
+				.getSeriesByNameAndAuthorID(testSeriesObject.getSeriesName(), testSeriesObject.getAuthorID())
+				.getNumberBooksInSeries() > 0) {
+			DAORoot.seriesDao.updateSeriesBookCount(testSeriesObject.getSeriesName(),
+					testSeriesObject.getAuthorID(), SeriesDao.UpdateType.DEC); // Perform decrement
+		}
 		// Test 3: try DEC (should fail) now that the count reaches 0
 		assertFalse(DAORoot.seriesDao.updateSeriesBookCount(testSeriesObject.getSeriesName(),
 				testSeriesObject.getAuthorID(), SeriesDao.UpdateType.DEC));
-
-		
 
 	}
 
 	@Test
 	public void testSetSeriesStatus() {
-		DAORoot.seriesDao.addSeries("hello world", 1);// add a test series to play with
 		ArrayList<Series> t = DAORoot.seriesDao.getAllSeries();
 		// TODO add new series to work on.
-		Series testSeriesObject = t.get(1);
+		Series testSeriesObject = t.get(0);
 
 		// Test 1: try if "ongoing" status works
 		assertTrue(DAORoot.seriesDao.setSeriesStatus(testSeriesObject.getSeriesName(), testSeriesObject.getAuthorID(),
@@ -233,7 +218,5 @@ public class TestSeriesDao {
 		assertEquals(afterUpdateSeries.getSeriesStatus(), Series.series_status_enum.COMPLETED);
 
 	}
-
-
 
 };

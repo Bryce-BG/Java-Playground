@@ -12,6 +12,7 @@ import org.mindrot.jbcrypt.BCrypt;
 
 import com.BryceBG.DatabaseTools.Database.DAORoot;
 import com.BryceBG.DatabaseTools.Database.User.User;
+import com.BryceBG.DatabaseTools.utils.Utils;
 
 public class TestUserDao {
 
@@ -22,19 +23,10 @@ public class TestUserDao {
 	}
 	
 	@Before
-	public void beforeTest() {
-		ArrayList<String> users = DAORoot.userDao.getAllUserNames();
-		if(users.size()>1) { //cleanup to remove users from DB that our tests create
-			for (String x: users) {
-				if(x.equalsIgnoreCase("admin")) {
-					continue;
-				}
-				else {
-					DAORoot.userDao.removeUser(x); //wipe out users created by other tests
-				}
-			}	
-		}
+	public void runBeforeTest() {
+		testUtils.resetDB(Utils.getConfigString("app.dbname", null)); //reset database to initial state
 	}
+	
 	@Test
 	public void testGetUserByUsername() {
 		
@@ -125,8 +117,10 @@ public class TestUserDao {
 		//Test 1: ensure existing admin user is found 
 		ArrayList<String> users = DAORoot.userDao.getAllUserNames();
 				
-		assertEquals(1, users.size()); //only one user in system
-		assertEquals("admin", users.get(0)); //correct username
+		assertEquals(2, users.size()); //two users in the system (admin + mock user)
+		
+		//other users still exist unaffected.
+		assertTrue((users.contains("admin") && users.contains("JamesJoyce"))); 
 	}
 	
 	@Test
@@ -179,13 +173,13 @@ public class TestUserDao {
 		
 		ArrayList<String> users = DAORoot.userDao.getAllUserNames();
 		//BEFORE remove
-		assertEquals(2, users.size());
+		assertEquals(3, users.size());
 		assertTrue(users.contains(username)); //should have the user in the list of all users
 		
 		assertTrue(DAORoot.userDao.removeUser(username));
 		//AFTER remove
 		users = DAORoot.userDao.getAllUserNames();
-		assertEquals(1, users.size());
+		assertEquals(2, users.size());
 		assertFalse(users.contains(username)); //should have the user in the list of all users
 		
 	}

@@ -1,6 +1,5 @@
 import static org.junit.Assert.*;
 
-import java.util.ArrayList;
 
 import org.javatuples.Pair;
 import org.junit.Before;
@@ -9,6 +8,7 @@ import org.junit.Test;
 
 import com.BryceBG.DatabaseTools.Database.User.User;
 import com.BryceBG.DatabaseTools.Database.User.UserController;
+import com.BryceBG.DatabaseTools.utils.Utils;
 import com.BryceBG.DatabaseTools.Database.DAORoot;
 
 /**
@@ -26,16 +26,7 @@ public class TestUserController {
 	
 	@Before
 	public void beforeTest() {
-		ArrayList<String> users = DAORoot.userDao.getAllUserNames();
-		if (users.size() > 1) { // cleanup to remove users from DB that our tests create
-			for (String x : users) {
-				if (x.equalsIgnoreCase("admin")) {
-					continue;
-				} else {
-					DAORoot.userDao.removeUser(x); // wipe out users created by other tests
-				}
-			}
-		}
+		testUtils.resetDB(Utils.getConfigString("app.dbname", null)); //reset database to initial state
 	}
 
 	@Test

@@ -13,5 +13,5 @@ INSERT INTO users (username, hashedPassword, salt, first_name, last_name, email,
 INSERT INTO authors(fname, lname, author_bib) VALUES ('James', 'Joyce', 'TEST AUTHOR');
 --INSERT INTO SERIES(series_name, author_id, number_books_in_series, series_status) VALUES ('test series',1 , 1, 'COMPLETED');
 --use select to determine the one and only author we are assigning this series to
-INSERT INTO series (series_name, author_id, number_books_in_series, series_status) SELECT  'test series', authors.author_id, 0, 'COMPLETED' FROM authors WHERE authors.fname='James' AND authors.lname='Joyce';
+INSERT INTO series (series_name, author_id, number_books_in_series, series_status) SELECT  'test series', authors.author_id, 1, 'COMPLETED' FROM authors WHERE authors.fname='James' AND authors.lname='Joyce';
 
