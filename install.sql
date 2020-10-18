@@ -61,7 +61,7 @@ CREATE TABLE IF NOT EXISTS series (
     series_status series_status_enum, /*has the series been finished or is it ongoing (presumably the check is implied)*/
     UNIQUE(series_name, author_id),
     PRIMARY KEY (series_name, author_id),
-    FOREIGN KEY (author_id) REFERENCES authors(author_id)
+    FOREIGN KEY (author_id) REFERENCES authors(author_id) ON DELETE CASCADE --wipe out series if author is wiped out.
      /*TODO add books_ids field?*/
 );
 --this rule protects the integrity of the database by preventing deletion of series when it is currently referenced
