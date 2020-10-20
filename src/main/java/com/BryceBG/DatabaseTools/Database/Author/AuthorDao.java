@@ -6,11 +6,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
+import org.apache.commons.text.WordUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.BryceBG.DatabaseTools.Database.DAORoot;
 import com.BryceBG.DatabaseTools.Database.User.User;
+import com.BryceBG.DatabaseTools.utils.DBUtils;
 
 /**
  * This is the base level object for interacting with our author table. Once
@@ -34,39 +36,45 @@ public class AuthorDao {
 	public Author getAuthor(String fName, String lName) {
 		Author rtVal = null;
 		String sql = "SELECT * " + "FROM AUTHORS " + "WHERE fname=? AND lname=?";
-		// 1. establish connection to our database
-		try (Connection conn = DAORoot.library.connectToDB(); PreparedStatement pstmt = conn.prepareStatement(sql);) {
-			pstmt.setString(1, fName);
-			pstmt.setString(2, lName);
-			// 2. execute our query.
-			try (ResultSet rs = pstmt.executeQuery()) {
-				if (rs.next()) { // 3. check if sql query for author returned an answer.
-					// 4. extract results from result set needed to create Author object
-					String author_bib = rs.getString("author_bib");
-					int author_id = rs.getInt("author_id");
-					String fName2 = rs.getString("fname");// Redundant as we have it.
-					String lName2 = rs.getString("lname");
-					int verified_user_ID = rs.getInt("verified_user_ID");
-					// 5. create our return object with the values
-					rtVal = new Author(author_id, fName2, lName2, author_bib, verified_user_ID);
-				} else {
-					logger.info(String.format(
-							"The query for (fName: %s, lName: %s) returned null. I.e. no match was found in the database.",
-							fName, lName));
-				}
+		//protect against null values
+		if (DBUtils.stringIsOk(fName) && DBUtils.stringIsOk(lName)) {
+			// 0. format author fields passed in
+			fName = WordUtils.capitalizeFully(fName.strip());
+			lName = WordUtils.capitalizeFully(lName.strip());
+			// 1. establish connection to our database
+			try (Connection conn = DAORoot.library.connectToDB();
+					PreparedStatement pstmt = conn.prepareStatement(sql);) {
+				pstmt.setString(1, fName);
+				pstmt.setString(2, lName);
+				// 2. execute our query.
+				try (ResultSet rs = pstmt.executeQuery()) {
+					if (rs.next()) { // 3. check if sql query for author returned an answer.
+						// 4. extract results from result set needed to create Author object
+						String author_bib = rs.getString("author_bib");
+						int author_id = rs.getInt("author_id");
+						String fName2 = rs.getString("fname");// Redundant as we have it.
+						String lName2 = rs.getString("lname");
+						int verified_user_ID = rs.getInt("verified_user_ID");
+						// 5. create our return object with the values
+						rtVal = new Author(author_id, fName2, lName2, author_bib, verified_user_ID);
+					} else {
+						logger.info(String.format(
+								"The query for (fName: %s, lName: %s) returned null. I.e. no match was found in the database.",
+								fName, lName));
+					}
 
-			} // end of try-with-resources: result set
-		} // end of try-with-resources: connection
-			// catch blocks for try-with-resources: connection
-		catch (ClassNotFoundException e) {
-			logger.error("Exception occured during connectToDB: " + e.getMessage());
-		} catch (SQLException e) {
-			logger.error("Exception occured during executing SQL statement: " + e.getMessage());
+				} // end of try-with-resources: result set
+			} // end of try-with-resources: connection
+				// catch blocks for try-with-resources: connection
+			catch (ClassNotFoundException e) {
+				logger.error("Exception occured during connectToDB: " + e.getMessage());
+			} catch (SQLException e) {
+				logger.error("Exception occured during executing SQL statement: " + e.getMessage());
+			}
 		}
 		return rtVal;
 	}
 
-	
 	public ArrayList<Author> getAllAuthors() {
 		ArrayList<Author> rtVal = new ArrayList<Author>();
 		String sql = "SELECT * FROM authors";
@@ -84,7 +92,7 @@ public class AuthorDao {
 					String fName = rs.getString("fname");
 					String lName = rs.getString("lName");
 					int verified_user_ID = rs.getInt("verified_user_ID");
-					
+
 					// 5. create our return object with the values
 					rtVal.add(new Author(author_id, fName, lName, author_bib, verified_user_ID));
 				}
@@ -99,7 +107,7 @@ public class AuthorDao {
 		}
 		return rtVal;
 	}
-	
+
 	public boolean addAuthor(String fName, String lName) {
 		boolean rtVal = false;
 
@@ -186,7 +194,7 @@ public class AuthorDao {
 		return rtVal;
 
 	}
-	
+
 	public boolean setVerifiedUserID(String fName, String lName, String username) {
 		boolean rtVal = false;
 		// 0. ensure author and user exist
