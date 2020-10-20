@@ -11,6 +11,8 @@ import org.junit.rules.Timeout;
 import com.BryceBG.DatabaseTools.Database.Author.AuthorController;
 import com.BryceBG.DatabaseTools.utils.Utils;
 
+import static com.BryceBG.DatabaseTools.utils.GlobalConstants.*;
+
 public class TestAuthorController {
 	
 	//global timeout to ensure no issues
@@ -20,7 +22,7 @@ public class TestAuthorController {
 	@BeforeClass
 	public static void runOnce() {
 		// set up our logger
-		com.BryceBG.DatabaseTools.utils.Utils.initializeAppLogger("test_log.txt", "%d %p %c [%t] function: %M| %m%n");
+		com.BryceBG.DatabaseTools.utils.Utils.initializeAppLogger(TEST_LOGGER_OUT_FILE_NAME, TEST_LOGGER_PATTERN);
 	}
 	
 	@Before
@@ -84,8 +86,8 @@ public class TestAuthorController {
 				//Test 2.a: empty bio update (should succeed)
 				assertTrue(AuthorController.updateAuthorBio("admin", "Password1", "James", "Joyce", author_bio).getValue0().booleanValue());
 
-				//Test 2.b: misspelled identifier (james)
-				assertFalse(AuthorController.updateAuthorBio("admin", "Password1", "james", "Joyce", author_bio).getValue0().booleanValue());
+				//Test 2.b: misspelled identifier (jmes)
+				assertFalse(AuthorController.updateAuthorBio("admin", "Password1", "jmes", "Joyce", author_bio).getValue0().booleanValue());
 				//Test 2.c: null author first name field
 				assertFalse(AuthorController.updateAuthorBio("admin", "Password1", null, "Joyce", author_bio).getValue0().booleanValue());
 				//Test 2.d: empty first author first name

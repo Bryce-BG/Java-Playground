@@ -1,3 +1,4 @@
+import static com.BryceBG.DatabaseTools.utils.GlobalConstants.*;
 import static org.junit.Assert.*;
 
 
@@ -21,7 +22,7 @@ public class TestUserController {
 	@BeforeClass
 	public static void runOnce() {
 		//set up our logger
-		com.BryceBG.DatabaseTools.utils.Utils.initializeAppLogger("test_log.txt","%d %p %c [%t] function: %M| %m%n");
+		com.BryceBG.DatabaseTools.utils.Utils.initializeAppLogger(TEST_LOGGER_OUT_FILE_NAME, TEST_LOGGER_PATTERN);
 	}
 	
 	@Before

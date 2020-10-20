@@ -1,8 +1,5 @@
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static com.BryceBG.DatabaseTools.utils.GlobalConstants.*;
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 
@@ -20,7 +17,7 @@ public class TestUserDao {
 	@BeforeClass
 	public static void runOnce() {
 		//set up our logger
-		com.BryceBG.DatabaseTools.utils.Utils.initializeAppLogger("test_log.txt","%d %p %c [%t] function: %M| %m%n");
+		com.BryceBG.DatabaseTools.utils.Utils.initializeAppLogger(TEST_LOGGER_OUT_FILE_NAME, TEST_LOGGER_PATTERN);
 	}
 	
 	@Before
