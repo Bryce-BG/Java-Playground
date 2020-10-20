@@ -201,7 +201,7 @@ public class AuthorController {
 						"Attempted to update \"%s\" bibliography. However, that author does not exist.", authorName));
 			}
 		} else {
-			logger.info(String.format("Invalid user attempted to login %s ", username));
+			logger.info(String.format("Invalid user (%s) attempted to login", username));
 			return new Pair<Boolean, String>(Boolean.FALSE, "Invalid user to attempt bibliography update.");
 		}
 
