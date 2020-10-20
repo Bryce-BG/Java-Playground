@@ -10,22 +10,23 @@ package com.BryceBG.DatabaseTools.Database.Series;
  */
 public class Series {
 	public enum series_status_enum {
-		COMPLETED, //author has finished writing the series
-		ONGOING, //author has indicated that there WILL be more books coming out for the series
-		UNDETERMINED //maybe more books but the author hasn't declared either way
+		COMPLETED, //author(s) has finished writing the series
+		ONGOING, //author(s) has indicated that there WILL be more books coming out for the series
+		UNDETERMINED //maybe more books but the author(s) haven't declared either way
 	};
 
 	private int seriesID;
 	private String seriesName;
-	private int authorID; // TODO preform translation to actual author?
+	private int primaryAuthorID; 
+	
 	private int numberBooksInSeries;
 	private series_status_enum seriesStatus;
 
-	public Series(int series_id, String seriesName, int authorID, int numberBooksInSeries,
+	public Series(int series_id, String seriesName, int primaryAuthorID, int numberBooksInSeries,
 			series_status_enum seriesStatus) {
 		this.setSeriesID(series_id);
 		this.setSeriesName(seriesName);
-		this.setAuthorID(authorID);
+		this.setPrimaryAuthorID(primaryAuthorID);
 		this.setNumberBooksInSeries(numberBooksInSeries);
 		this.setSeriesStatus(seriesStatus);
 	}
@@ -46,14 +47,6 @@ public class Series {
 		this.seriesName = seriesName;
 	}
 
-	public int getAuthorID() {
-		return authorID;
-	}
-
-	public void setAuthorID(int authorID) {
-		this.authorID = authorID;
-	}
-
 	public int getNumberBooksInSeries() {
 		return numberBooksInSeries;
 	}
@@ -68,5 +61,13 @@ public class Series {
 
 	public void setSeriesStatus(series_status_enum seriesStatus) {
 		this.seriesStatus = seriesStatus;
+	}
+
+	public int getPrimaryAuthorID() {
+		return primaryAuthorID;
+	}
+
+	public void setPrimaryAuthorID(int primaryAuthorID) {
+		this.primaryAuthorID = primaryAuthorID;
 	}
 }
