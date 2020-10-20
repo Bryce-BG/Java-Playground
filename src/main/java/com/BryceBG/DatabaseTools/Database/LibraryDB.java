@@ -39,11 +39,6 @@ public class LibraryDB {
 	
 
 	
-		
-	
-	
-
-	
 //	/**
 //	 * Connect to a postgresql database with custom parameters (stored in the globals after they are recieved.
 //	 * @param host: address of the server for the database
@@ -98,126 +93,13 @@ public class LibraryDB {
 
 	}
 	
-	/**
-	 * Get all author names (fname lname) concatenated currently in the database.
-	 * @return String array containing all authors in the database.
-	 */
-	public String[] getAllAuthors(){
-		//https://www.postgresql.org/docs/7.4/jdbc-query.html
-		ArrayList<String> authors = new ArrayList<String>(); //The names of all authors in database returned by our query
-		Statement stmt = null; //sql statement
-		ResultSet rs = null; //results
-		Connection conn = null;
-		
-		try {
-			conn = connectToDB();
-			
-			stmt = conn.createStatement();
-			rs = stmt.executeQuery("SELECT fname, lname FROM authors");
-			while (rs.next()) {
-				authors.add(rs.getString(1) + " " + rs.getString(2));//Concatenate authors first + last name and add them to the list to return
-			}
-			return (String[]) authors.toArray();
-			
-		} catch (ClassNotFoundException | SQLException e) {
-			e.printStackTrace();
-		}
-		finally{
-		      //finally block used to close resources
-		      try{
-		         if(stmt!=null)
-		            conn.close();
-		      }catch(SQLException se){
-		      }// do nothing
-		      try{
-		         if(conn!=null)
-		            conn.close();
-		      }catch(SQLException se){
-		         se.printStackTrace();
-		      }//end finally try
-		}
-      return null;
-	}
-
-	
-	/*The more useful queries available (searches)*/
-	public String[] getByAuthor(String author) {
-		return null;
-		//TODO implement me
-		
-	}
-	
-	public String[] getByTitle(String title) {
-		return null;
-		//TODO implement me
-		
-	}
-	
-	public String[] getBySeries(String series) {
-		return null;
-		//TODO implement me
-	}
-	
-	public String[] getByKeyword(String keyword) {
-		return null;
-		//TODO implement me
-	}
-	
-	public String[] getByGenres(String genres[]) {
-		return null;
-//		for each genre in genres
-		//assert(genres in allGenres)
-		
-		//TODO implement me
-	}
-	//public String[] getByCustomGenre
-	
-
-	public String[] getBooksAdvancedQuery(String fields[], String searchValues[]){
-		assert(fields.length == searchValues.length);//TODO
-		//assert(fields are acceptable fields (i.e. areas they can query in DB)
-		
-		return searchValues;
-		//TODO implement me
-		
-	}
-	
-	/*Setters that allow adding to the database only allowed by admin users*/
-	
-	
-	public boolean addBook(String Title, String series, float number_in_series, int edition, String authors[], Date publicationDate, String publisher, String genres[]) {
-	    //take series string and identify the series_id associated with the series.
-		//take strings of author ids and convert into author id's for DB store
-		//TODO implement me
-		return false;
-	}
-	
-	public boolean removeBook(int book_id) {
-		//TODO implement me
-		return false;
-		
-	}
-
-	//edit book (change metadata)
-	
-	
-
-	
-	
-	//list genres
-	//add genre
-	//remove genre
-	//relabel-genre
-	
-	//addUser
-	//removeUser
-	//elevateUser?
 	
 	
 	
-	/*helper functions*/
 	
 	
+	
+	/**##########################################################*/
 	
 
 	
