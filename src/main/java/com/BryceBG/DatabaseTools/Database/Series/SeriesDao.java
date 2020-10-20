@@ -41,21 +41,25 @@ public class SeriesDao {
 		boolean rtVal = false;
 		if (DBUtils.stringIsOk(series_name)) {
 			series_name = series_name.strip();
-			String sql = "INSERT INTO SERIES(series_name, author_id, number_books_in_series, series_status) VALUES (?, ?, ?, ?);";
+			String sql = "INSERT INTO SERIES(series_name, primary_author_id, number_books_in_series, series_status) VALUES (?, ?, ?, ?);";
+					
 			// 1. establish connection to our database
 			try (Connection conn = DAORoot.library.connectToDB();
-					PreparedStatement pstmt = conn.prepareStatement(sql);) {
+					PreparedStatement pstmt = conn.prepareStatement(sql); //for updating series table
+					) {
 				pstmt.setString(1, series_name);
-				pstmt.setInt(2, authorID);
+				//author with the lowest ID is the one we assign as the primary author in our system. 				
+				pstmt.setInt(2, authorID); // as a new series it has no books
 				pstmt.setInt(3, 0); // as a new series it has no books
 				pstmt.setObject(4, Series.series_status_enum.UNDETERMINED.name(), Types.OTHER);
 
 				// 2. execute our update for adding series.
 				int rs = pstmt.executeUpdate();
+				
 				// 3. check if sql query for series correctly modified 1 row.
-				if (rs == 1) {
-					// update was successful
-					rtVal = true;
+				if (rs == 1) { // update was successful
+
+				rtVal=true;
 				} else {
 					logger.info(String.format("The addSeries failed: the execute update returned: %i", rs));
 					rtVal = false;
@@ -81,7 +85,7 @@ public class SeriesDao {
 	 */
 	public boolean removeSeries(String series_name, int authorID) {
 		boolean rtVal = false;
-		String sql = "DELETE FROM SERIES WHERE series_name=? AND author_id=?;";
+		String sql = "DELETE FROM SERIES WHERE series_name=? AND primary_author_id=?;";
 		// 1. establish connection to our database
 		try (Connection conn = DAORoot.library.connectToDB(); PreparedStatement pstmt = conn.prepareStatement(sql);) {
 			pstmt.setString(1, series_name);
@@ -89,9 +93,8 @@ public class SeriesDao {
 
 			// 2. execute our update for removing series.
 			int rs = pstmt.executeUpdate();
-			// 3. check if sql query for series returned correct answer: should have added 1
+			// 3. check if sql query for series returned correct answer: should have updated 1
 			// unless it failed
-			// row).
 			if (rs == 1) {
 				// update was successful
 				rtVal = true;
@@ -114,13 +117,13 @@ public class SeriesDao {
 	 * (seriesName, authorID) parameters.
 	 * 
 	 * @param seriesName The name of the series we want to look up.
-	 * @param authorID   The ID of the author who wrote the series.
+	 * @param authorID   The IDs of the author(s) who wrote the series
 	 * @return The series object representing the data from the row located in the
 	 *         database. or NULL if no match was found.
 	 */
 	public Series getSeriesByNameAndAuthorID(String seriesName, int authorID) {
 		Series rtVal = null;
-		String sql = "SELECT * " + "FROM SERIES " + "WHERE series_name=? AND author_id=?";
+		String sql = "SELECT * " + "FROM SERIES " + "WHERE series_name=? AND primary_author_id=?";
 
 		// 1. establish connection to our database
 		try (Connection conn = DAORoot.library.connectToDB(); PreparedStatement pstmt = conn.prepareStatement(sql);) {
@@ -132,11 +135,12 @@ public class SeriesDao {
 				if (rs.next()) { // 3. check if sql query for series returned an answer.
 					// 4. extract results from result set needed to create Series object
 					int series_id = rs.getInt("series_id");
+					int primary_author_id = rs.getInt("primary_author_id");
 					String series_name = rs.getString("series_name");
 					int number_books_in_series = rs.getInt("number_books_in_series");
 					Series.series_status_enum status = Series.series_status_enum.valueOf(rs.getString("series_status"));
 					// 5. create our return object with the values
-					rtVal = new Series(series_id, series_name, authorID, number_books_in_series, status);
+					rtVal = new Series(series_id, series_name, primary_author_id, number_books_in_series, status);
 				} else {
 					logger.info(String.format(
 							"The query for (series: %s, authorID: %d) returned null. I.e. no match was found in the database.",
@@ -174,12 +178,13 @@ public class SeriesDao {
 
 				if (rs.next()) { // 3. check if sql query for series returned an answer.
 					// 4. extract results from result set needed to create Series object
-					int authorID = rs.getInt("author_id");
+					int primary_author_id = rs.getInt("primary_author_id");
 					String series_name = rs.getString("series_name");
 					int number_books_in_series = rs.getInt("number_books_in_series");
 					Series.series_status_enum status = Series.series_status_enum.valueOf(rs.getString("series_status"));
 					// 5. create our return object with the values
-					rtVal = new Series(seriesID, series_name, authorID, number_books_in_series, status);
+					
+					rtVal = new Series(seriesID, series_name, primary_author_id, number_books_in_series, status);
 				} else {
 					logger.info(String.format(
 							"The query for series with ID %d returned null. I.e. no match was found in the database.",
@@ -213,13 +218,15 @@ public class SeriesDao {
 				while (rs.next()) {
 					// 4. extract results from result set needed to create Series object
 
-					int authorID = rs.getInt("author_id");
 					int seriesID = rs.getInt("series_id");
+					int primary_author_id = rs.getInt("primary_author_id");
 					String series_name = rs.getString("series_name");
 					int number_books_in_series = rs.getInt("number_books_in_series");
 					Series.series_status_enum status = Series.series_status_enum.valueOf(rs.getString("series_status"));
+
 					// 5. create our return object with the values
-					rtVal.add(new Series(seriesID, series_name, authorID, number_books_in_series, status));
+
+					rtVal.add(new Series(seriesID, series_name, primary_author_id, number_books_in_series, status));
 				}
 
 			} // end of try-with-resources: result set
@@ -246,13 +253,13 @@ public class SeriesDao {
 		// 0. ensure series exists
 		Series theSeries = DAORoot.seriesDao.getSeriesByNameAndAuthorID(seriesName, authorID);
 		if (theSeries != null && updateType!=null) {
-			String sql = "UPDATE series SET number_books_in_series=? WHERE series_name=? AND author_id=?";
+			String sql = "UPDATE series SET number_books_in_series=? WHERE series_name=? AND primary_author_id=?";
 
 			// 1. establish connection to our database
 			try (Connection conn = DAORoot.library.connectToDB();
 					PreparedStatement pstmt = conn.prepareStatement(sql);) {
 				// 2. set parameters in the prepared statement
-		        int updateBy = (updateType.equals(UpdateType.INC)) ? 1 : -1; //should we increment or deincrement
+		        int updateBy = (updateType.equals(UpdateType.INC)) ? 1 : -1; //should we increment or decrement
 				pstmt.setInt(1, theSeries.getNumberBooksInSeries()+updateBy);
 				pstmt.setString(2, seriesName);
 				pstmt.setInt(3, authorID);
@@ -290,7 +297,7 @@ public class SeriesDao {
 		// 0. ensure series exists 
 		Series theSeries = DAORoot.seriesDao.getSeriesByNameAndAuthorID(seriesName, authorID);
 		if (theSeries != null) {
-			String sql = "UPDATE series SET series_status=? WHERE series_name=? AND author_id=?";
+			String sql = "UPDATE series SET series_status=? WHERE series_name=? AND primary_author_id=?";
 
 			// 1. establish connection to our database
 			try (Connection conn = DAORoot.library.connectToDB();
