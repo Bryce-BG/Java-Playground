@@ -62,16 +62,19 @@ CREATE TABLE IF NOT EXISTS authors (
 CREATE TYPE series_status_enum AS ENUM ('COMPLETED', 'ONGOING', 'UNDETERMINED');
 
 CREATE TABLE IF NOT EXISTS series (
-    series_id SERIAL UNIQUE, --TODO might remove this
+    series_id SERIAL UNIQUE,
     series_name VARCHAR(40) NOT NULL, /*name of the series*/
-    author_id INT, /*author series belongs to --TODO this should be external joint table as there can be many authors */
+    -- The author series belongs to though other authors may have written the book as well.
+    primary_author_id INT, --FOREIGN KEY (altered below)
     number_books_in_series INT, /*THIS SHOULD BE DYNAMICALLY updated when new books are added to the series?*/
     series_status series_status_enum, /*has the series been finished or is it ongoing (presumably the check is implied)*/
-    UNIQUE(series_name, author_id),
-    PRIMARY KEY (series_name, author_id),
-    FOREIGN KEY (author_id) REFERENCES authors(author_id) ON DELETE CASCADE --wipe out series if author is wiped out.
+    UNIQUE (series_name, primary_author_id),
+    PRIMARY KEY (series_id)
      /*TODO add books_ids field?*/
 );
+
+
+
 --this rule protects the integrity of the database by preventing deletion of series when it is currently referenced
 --http://wiki.postgresql.org/wiki/Introduction_to_PostgreSQL_Rules_-_Making_entries_which_can%27t_be_altered
 --https://stackoverflow.com/questions/810180/how-to-prevent-deletion-of-the-first-row-in-table-postgresql#:~:text=Basically%2C%20you'll%20have%20to,row%20will%20never%20be%20deleted.
@@ -110,7 +113,7 @@ CREATE TABLE IF NOT EXISTS books (
     edition INT,
 --     author_ids INT[ ] --moved to a junction table <book_authors> to make this validated.
     publish_date DATE,
-    publisher VARCHAR(70),
+    publisher VARCHAR,
 --     genres int[], --moved to a junction table <book_genres> to make this validated.
     cover_location VARCHAR, --TODO make this in a nested file directory structure (and keep img name short)
     identifiers identifier[], --all the identifiers associated with a book.
@@ -194,7 +197,7 @@ CREATE TABLE IF NOT EXISTS comments_author (
 CREATE TABLE IF NOT EXISTS recommendation_series_to_series (
     series1_id int,
     series2_id int,
-    reasons VARCHAR(1000), /*reasons to recomend series - possibly make this a list where each entry is the reasons by userX?*/
+    reasons VARCHAR(1000), /*reasons to recommend series - possibly make this a list where each entry is the reasons by userX?*/
     PRIMARY KEY (series1_id, series2_id),
     FOREIGN KEY (series1_id) references series(series_id),
     FOREIGN KEY (series2_id) references series(series_id)
@@ -232,10 +235,16 @@ CREATE TABLE IF NOT EXISTS user_book_rating (
 
 -- #####TABLE ALTERATIONS TO ADD FOREIGN KEYS
 
+-- series table
+ALTER TABLE series ADD FOREIGN KEY (primary_author_id) REFERENCES authors(author_id) ON DELETE CASCADE;
+
 -- book_genres table
 ALTER TABLE book_genres ADD FOREIGN KEY (book_id) REFERENCES books(book_id);
 ALTER TABLE book_genres ADD FOREIGN KEY (genre_id) REFERENCES genres(genre_id);
 
 
---DATA ENTRIES SECTION
+--DATA ENTRIES SECTION (hashed password is Password1)
 INSERT INTO users (username, hashedPassword, salt, first_name, last_name, email, is_admin) VALUES ('admin', '$2a$10$D0uvz6/IgaKHVjV7zdlXAe8L92nEexa4gkNV7zyLtCRUTIyJEVKxy','$2a$10$D0uvz6/IgaKHVjV7zdlXAe', 'admin', 'admin', 'admin@email.com', true);
+
+
+
