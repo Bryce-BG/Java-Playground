@@ -24,13 +24,14 @@ public class SeriesDao {
 	 */
 	public enum UpdateType {
 		INC, //increment the count
-		DEC //decrement the count
+		DEC, //decrement the count
+		STATUS_CHANGE //change the status of the series
 	};
 	
 	
 	/**
 	 * This function allows the addition of a new series to the database. Should
-	 * only be called directly by Series_controller.
+	 * only be called directly by Series_controller. Series status is defaulted to "UNDETERMINED"
 	 * 
 	 * @param series_name Name for the new series
 	 * @param authorID    ID for the author that is writing the series.
