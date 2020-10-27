@@ -35,5 +35,18 @@ public class DAORoot {
 		authorDao = new AuthorDao();
 
 	}
+	
+	/**
+	 * This overrides the database our library.properties file defines. Thus this is usable if we want to create a mock instance of our database to perform tests on.
+	 * @param dbHost Host address for where the alternative database is located
+	 * @param dbPort port to use to connect to the host of the database
+	 * @param dbName database's name
+	 * @param dbPass password to login to the database.
+	 * @param dbUser username to connect to the database
+	 */
+	public static void changeDB(String dbHost, String dbPort, String dbName, String dbPass, String dbUser) {
+		library = new LibraryDB(dbHost, dbPort, dbName, dbPass, dbUser);
+	
+	}
 
 }

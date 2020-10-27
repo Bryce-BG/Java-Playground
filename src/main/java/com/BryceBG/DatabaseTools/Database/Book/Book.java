@@ -1,87 +1,148 @@
 package com.BryceBG.DatabaseTools.Database.Book;
 
+
+import java.io.File;
+import java.sql.Date;
+
 import org.javatuples.Pair;
 
+import com.BryceBG.DatabaseTools.utils.Utils;
+
+/**
+ * This class represents a book object. It not only contains the fields for the
+ * book table in our DB but also some fields that are extracted from
+ * Supplementary "junction tables" such as author_names (which is used if there
+ * is more than one author.
+ * 
+ * @author Bryce-BG
+ *
+ */
+
 public class Book {
-    private String title;
-    private String[] author; // supports multiple authors. But, currently we are ignoring author aliases (though may need to add something for them)
-    private Pair<String, String>[] identifiers;
-    private int book_id; //used to uniquely identify book AND what we will saved the cover of the book as in our image collection.
-    private float avg_rating;
-    private String series;
-    private float number_in_series;
-    private int edition;
-    private java.time.LocalDate publish_date;
-    private String publisher;
-    private String[] genres; 
-    private String cover_location;
-    
-    //user related info on book. (if user is logged in and has added the book to thier "read" selection).
-    private float personal_rating;
-    private String[] personal_shelves; 
-    private String[] personal_quotes;
-    private String personal_comment;
-    private String personal_series_comment;
-    
-    //TODO: potentially add some kind of comment/review stream field to this Object.
-    
-    
-    public String getSmallCover() {
-        return "rootCoverFolder" + cover_location + book_id + "-S.jpg"; 
-    }
-    public String getLargeCover() {
-        return "someCoverURL" + book_id + "-L.jpg"; 
-    }
 
-    public Book(String title, String[] author, Pair<String, String>[] identifiers, String series, float avg_rating, 
-    			String publisher, java.time.LocalDate publish_date, float number_in_series, String[] genres, 
-    			int edition, String cover_location, int book_id) {
-    	//constructor is not going to initialize an of the "personal_<tag> fields as more often than not they are probably non existent. 
-    	//Later we may overload the constructor so we can do an: if (logged_in): call constructor with personal setter (as then those fields are relevent).
-        this.setIdentifiers(identifiers);
-		this.setTitle(title);
-        this.setAuthor(author);
-		this.setBookID(book_id);
-		this.setAvgRating(avg_rating);
-		this.setSeries(series);
-		this.setNumberInSeries(number_in_series);
+	// this enum is the fields that we allow to be modified post creation.
+	enum BOOK_FIELD {
+
+		TITLE, // maybe not let this get changed?
+		RATING_OVERALL, RATING_COUNT, SERIES_ID, NUMBER_IN_SERIES, EDITION, PUBLISHER, PUBLISH_DATE, COVER_LOCATION,
+		IDENTIFIERS, AVG_RATING,
+
+	}
+
+	private int[] authorIDs; // NOT initialized by constructor (ids if there is more than one author)
+	private float average_rating = -1;
+	private long book_id = -1; // used to uniquely identify book.
+	private float book_index_in_series = -1;
+	private int count_authors = 1;
+	private String cover_location;
+	private String cover_name; // Filename is for the cover image (append to cover_location to get full path).
+	private String description;
+	private int edition = -1;
+	private int[] genres; // NOT initialized by constructor
+	private boolean has_identifiers;
+	private Pair<String, String>[] identifiers; // NOT initilized by constructor
+	int primary_author_id = -1;
+	private java.sql.Date publish_date;
+	private String publisher = "NA";
+	private long rating_count = 0;
+	private int series_id = -1;
+	private String title;
+
+	// user related info on book. (if user is logged in and has added the book to
+	// their "read" selection).
+	// these fields are NOT set by constructor and also require initilization from
+	// drawing data from additional tables
+	private float personal_rating = -1;
+	private String[] personal_shelves;
+	private String[] personal_quotes;
+	private String personal_comment;
+	private String personal_series_comment;
+
+	/**
+	 * constructor initializes everything that is obtainable DIRECTLY from the books
+	 * table in database. The other fields can be manually initialized with the
+	 * setters for this object
+	 * 
+	 * @param avgRating         The cumulative average rating from users who have
+	 *                          read the book.
+	 * @param bookID            The id of the book in our database.
+	 * @param bookIndexInSeries The position that a book occupies in a series (if it
+	 *                          is in a series) For example: HP and the Chamber of
+	 *                          Secrets has bookIndexInSeries =2 according to the
+	 *                          author. This field can be a floating point.
+	 * @param coverLocation     The relative path from the "root directory" to where
+	 *                          our cover image is located (does not include the
+	 *                          actual file name appended).
+	 * @param coverName         The name of the cover image for this book.
+	 * @param description       The blurb associated with a book
+	 * @param edition           The edition of the book.
+	 * @param has_identifiers   indicates if book has identifiers we should pull
+	 *                          from supplementary tables. For example: ("isbn",
+	 *                          "0061964360")
+	 * @param primaryAuthorID   The ID of the author who is set as the "primary
+	 *                          author" for the book.
+	 * @param publishDate       The date on which the book was published.
+	 * @param publisher         The publisher for the book.
+	 * @param ratingCount       How many people have rated the book in our system.
+	 * @param seriesID          The ID for the series the book belongs in.
+	 * @param title             The title of the book.
+	 */
+	public Book(float avgRating, long bookID, float bookIndexInSeries, int countAuthors, String coverLocation,
+			String coverName, String description, int edition, boolean has_identifiers, int primaryAuthorID,
+			Date publishDate, String publisher, long ratingCount, int seriesID, String title) {
+		this.setAvgRating(avgRating);
+		this.setBookID(bookID);
+		this.setBookIndexInSeries(bookIndexInSeries);
+		this.setCountAuthors(countAuthors);
+		this.setCoverLocation(coverLocation);
+		this.setCoverName(coverName);
+		this.setDescription(description);
 		this.setEdition(edition);
-		this.setPublishDate(publish_date);
+		this.setHasIdentifiers(has_identifiers);
+		this.setPrimaryAuthorID(primaryAuthorID);
+		this.setPublishDate(publishDate);
 		this.setPublisher(publisher);
-		this.setGenres(genres);
-		this.setCoverLocation(cover_location);
-    }
-    public int getBookID() {
-        return book_id;
-    }
-    public void setBookID(int book_id) {
-    	this.book_id = book_id;
-    }
+		this.setRatingCount(ratingCount);
+		this.setSeriesID(seriesID);
+		this.setTitle(title);
+	}
 
-    public void setIdentifiers(Pair<String,String>[] identifiers) {
-    	this.identifiers = identifiers;
-    }
-    public Pair<String,String>[] getIdentifiers() {
-        return identifiers;
-    }
+	public long getBookID() {
+		return book_id;
+	}
 
-    public String getTitle() {
-        return title;
-    }
-    public void setTitle(String title) {
-    	this.title = title;
-    }
+	public void setBookID(long book_id) {
+		this.book_id = book_id;
+	}
 
-    public void setAuthor(String[] author) {
-    	this.author = author;
-    }
-    public String[] getAuthor() {
-        return author;
-    }
+	public void setIdentifiers(Pair<String, String>[] identifiers) {
+		this.identifiers = identifiers;
+	}
+
+	public Pair<String, String>[] getIdentifiers() {
+		return identifiers;
+	}
+
+	public String getTitle() {
+		return title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
+	}
+
+	public void setPrimaryAuthorID(int authorID) {
+		this.primary_author_id = authorID;
+	}
+
+	public int getPrimaryAuthorID() {
+		return primary_author_id;
+	}
 
 	public String getCoverLocation() {
 		return cover_location;
 	}
+
 	public void setCoverLocation(String cover_location) {
 		this.cover_location = cover_location;
 	}
@@ -89,87 +150,161 @@ public class Book {
 	public String[] getPersonalShelves() {
 		return personal_shelves;
 	}
+
 	public void setPersonalShelves(String[] personal_shelves) {
 		this.personal_shelves = personal_shelves;
 	}
-	
 
-	public String[] getGenres() {
+	public int[] getGenreIDs() {
 		return genres;
 	}
 
-	public void setGenres(String[] genres) {
+	public void setGenreIDs(int[] genres) {
 		this.genres = genres;
 	}
-	
+
 	public String getPublisher() {
 		return publisher;
 	}
+
 	public void setPublisher(String publisher) {
 		this.publisher = publisher;
 	}
-	
-	public java.time.LocalDate getPublishDate() {
+
+	public Date getPublishDate() {
 		return publish_date;
 	}
-	public void setPublishDate(java.time.LocalDate publish_date) {
-		this.publish_date = publish_date;
+
+	public void setPublishDate(Date publishDate) {
+		this.publish_date = publishDate;
 	}
-	
+
 	public int getEdition() {
 		return edition;
 	}
+
 	public void setEdition(int edition) {
 		this.edition = edition;
 	}
-	
-	public float getNumberInSeries() {
-		return number_in_series;
+
+	public float getBookIndexInSeries() {
+		return book_index_in_series;
 	}
-	public void setNumberInSeries(float number_in_series) {
-		this.number_in_series = number_in_series;
+
+	public void setBookIndexInSeries(float book_index) {
+		this.book_index_in_series = book_index;
 	}
-	
-	public String getSeries() {
-		return series;
+
+	public int getSeriesID() {
+		return series_id;
 	}
-	public void setSeries(String series) {
-		this.series = series;
+
+	public void setSeriesID(int seriesID) {
+		this.series_id = seriesID;
 	}
-	
+
 	public float getPersonalRating() {
 		return personal_rating;
 	}
+
 	public void setPersonalRating(float personal_rating) {
 		this.personal_rating = personal_rating;
 	}
-	
+
 	public float getAvgRating() {
-		return avg_rating;
+		return average_rating;
 	}
+
 	public void setAvgRating(float avg_rating) {
-		this.avg_rating = avg_rating;
+		this.average_rating = avg_rating;
 	}
-	
-	public String[] getPersonal_quotes() {
+
+	public String[] getPersonalQuotes() {
 		return personal_quotes;
 	}
-	public void setPersonal_quotes(String[] personal_quotes) {
-		this.personal_quotes = personal_quotes;
+
+	public void setPersonalQuotes(String[] personalQuotes) {
+		this.personal_quotes = personalQuotes;
 	}
-	
-	public String getPersonal_comment() {
+
+	public String getPersonalComment() {
 		return personal_comment;
 	}
-	public void setPersonal_comment(String personal_comment) {
+
+	public void setPersonalComment(String personal_comment) {
 		this.personal_comment = personal_comment;
 	}
-	
-	public String getPersonal_series_comment() {
+
+	public String getPersonalSeriesComment() {
 		return personal_series_comment;
 	}
-	public void setPersonal_series_comment(String personal_series_comment) {
+
+	public void setPersonalSeriesComment(String personal_series_comment) {
 		this.personal_series_comment = personal_series_comment;
 	}
-}
 
+	public int[] getAuthorIDs() {
+		return authorIDs; // includes primary author
+	}
+
+	public void setAuthorIDs(int[] authorIDs) {
+		this.authorIDs = authorIDs;
+	}
+
+	public String getCoverName() {
+		return cover_name;
+	}
+
+	public void setCoverName(String cover_name) {
+		this.cover_name = cover_name;
+	}
+
+	/* special functions to get full path to cover images */
+	public String getSmallCover() {
+		// https://stackoverflow.com/questions/4416425/how-to-split-string-with-some-separator-but-without-removing-that-separator-in-j/4416576#4416576
+		// https://stackoverflow.com/questions/4545937/java-splitting-the-filename-into-a-base-and-extension
+		// this technique is called zero-width positive lookahead
+		String[] tokens = cover_name.split("\\.(?=[^\\.]+$)");
+		// tokens[0] = file name
+		// tokens[1] = extension
+
+		return Utils.getConfigString("app.root_cover_location", null) + File.separator + cover_location + File.separator
+				+ tokens[0] + "-S." + tokens[1];
+	}
+
+	public String getLargeCover() {
+		return Utils.getConfigString("app.root_cover_location", null) + File.separator + cover_location + File.separator + cover_name;
+	}
+
+	public long getRatingCount() {
+		return rating_count;
+	}
+
+	public void setRatingCount(long rating_count) {
+		this.rating_count = rating_count;
+	}
+
+	public int getCountAuthors() {
+		return count_authors;
+	}
+
+	public void setCountAuthors(int count_authors) {
+		this.count_authors = count_authors;
+	}
+
+	public boolean getHasIdentifiers() {
+		return has_identifiers;
+	}
+
+	public void setHasIdentifiers(boolean has_identifiers) {
+		this.has_identifiers = has_identifiers;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+}
