@@ -48,7 +48,7 @@ public class UserDao {
                 
 	            if (rs.next()) { //3. check if sql query for user returned an answer.
 		           	//4. extract results from result set needed to create User object
-	            	int userID = rs.getInt("user_id"); 
+	            	long userID = rs.getLong("user_id"); 
 	            	String userName = rs.getString("USERNAME"); 
 	            	String salt = rs.getString("salt"); 
 	            	String hashedPassword = rs.getString("hashedPassword");
@@ -100,7 +100,7 @@ public class UserDao {
             	
 	            if (rs.next()) { //3. check if sql query for user returned an answer.
 		           	//4. extract results from result set needed to create User object
-	            	int userID = rs.getInt("user_id"); 
+	            	long userID = rs.getLong("user_id"); 
 	            	String userName = rs.getString("USERNAME"); 
 	            	String salt = rs.getString("salt"); 
 	            	String hashedPassword = rs.getString("hashedPassword");

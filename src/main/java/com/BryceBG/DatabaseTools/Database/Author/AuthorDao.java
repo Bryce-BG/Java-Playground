@@ -19,7 +19,7 @@ import com.BryceBG.DatabaseTools.utils.DBUtils;
  * again: this should be mostly accessed through the AuthorController class to
  * prevent illegal use to our system.
  * 
- * @author Limited1
+ * @author Bryce-BG
  *
  */
 public class AuthorDao {
@@ -207,7 +207,7 @@ public class AuthorDao {
 			try (Connection conn = DAORoot.library.connectToDB();
 					PreparedStatement pstmt = conn.prepareStatement(sql);) {
 				// 2. set parameters in the prepared statement
-				pstmt.setInt(1, u.getUserId());
+				pstmt.setLong(1, u.getUserId());
 				pstmt.setString(2, fName);
 				pstmt.setString(3, lName);
 

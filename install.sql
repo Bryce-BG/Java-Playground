@@ -10,7 +10,7 @@ DROP TABLE IF EXISTS books, authors, series, users CASCADE;
 DROP TYPE IF EXISTS series_status;
 
 CREATE TABLE IF NOT EXISTS users (
-    user_id SERIAL UNIQUE, --must be unique otherwise we can't reference
+    user_id BIGSERIAL UNIQUE, --must be unique otherwise we can't reference
 	username VARCHAR(30) PRIMARY KEY, --always lowercase alphanumeric and 5-30 characters
 	hashedPassword VARCHAR NOT NULL,
 	salt VARCHAR NOT NULL,
@@ -37,11 +37,11 @@ CREATE TABLE IF NOT EXISTS authors (
     fname VARCHAR(100) NOT NULL, /*authors first name*/
     lname VARCHAR(100) NOT NULL, /*authors last name*/
 	author_bib VARCHAR,
-	verified_user_ID INT DEFAULT 1, --this field will be used to allow author to update their page once they create and account and are verified (by default all are owned by an admin)
+	verified_user_ID BIGINT DEFAULT 1, --this field will be used to allow author to update their page once they create and account and are verified (by default all are owned by an admin)
 	PRIMARY KEY (author_id),
 	FOREIGN KEY (verified_user_ID) REFERENCES users(user_id) ON DELETE SET DEFAULT,
 	UNIQUE (fname, lname)
---     TODO BELOW (requires triggers)
+--     TODO BELOW (requires either triggers, or stored functions)
 -- 	alias_ids INT[], /*TODO ensure alternative names the author are updated manually)*/
 --   series_ids INT[], --TODO references series.series_id --removed because it currently just adds to much complexity
 -- 	CHECK EACH element OF alias_id REFERENCES authors.author_id
@@ -50,12 +50,7 @@ CREATE TABLE IF NOT EXISTS authors (
 
 );
 
---TODO joint table to allow an author to own series
--- CREATE TABLE IF NOT EXISTS author_series (
---     series_id int REFERENCES series(series_id),
---     author_id int REFERENCES authors(author_id),
---     PRIMARY KEY (series_id, author_id)
--- );
+
 
 
 
@@ -95,30 +90,41 @@ CREATE RULE protect_in_use_series_entry_update as
 
 
 /*used as a tuple for book identifiers like: (ISBN: isbn_value) or: (MOBI-ASN: SHDA4N)*/
-CREATE TYPE identifier AS (
-    name            text,
-    id_val		    text
+-- https://manual.calibre-ebook.com/generated/en/ebook-meta.html
+CREATE TABLE IF NOT EXISTS book_identifier (
+    book_id BIGINT, --FOREIGN KEY altered below
+    identifier_type VARCHAR NOT NULL,
+    identifier_value VARCHAR NOT NULL
 );
 
 
 
 
 CREATE TABLE IF NOT EXISTS books (
-    book_id SERIAL,
-    title VARCHAR NOT NULL,
-    rating_overall NUMERIC(2,2) DEFAULT 0.0, /*2 places before decimal and 2 after the decimal*/
-    rating_count INT DEFAULT 0, -- number of votes taken for rating
-    series_id INT REFERENCES series(series_id) DEFAULT NULL, --TODO is this legal?
-    number_in_series NUMERIC(2,2) DEFAULT 0.0,
-    edition INT,
---     author_ids INT[ ] --moved to a junction table <book_authors> to make this validated.
+    average_rating NUMERIC(2,2) DEFAULT 0.0, /*2 places before decimal and 2 after the decimal*/
+    book_id BIGSERIAL,
+    book_index_in_series NUMERIC(2,2) DEFAULT 0.0,
+    count_authors INT DEFAULT 1, --how many authors wrote the series if  more than 1, look in junction table <book_authors> for other author's ids
+    cover_location VARCHAR DEFAULT NULL,
+    cover_name VARCHAR DEFAULT NULL,
+    description VARCHAR,
+    edition INT DEFAULT 0,
+    --     genres int[], --moved to a junction table <book_genres> to make this validated.
+    --     identifiers identifier[], --moved to:book_identifier table
+    has_identifiers BOOLEAN DEFAULT FALSE,
+    primary_author_id INT NOT NULL, --FOREIGN KEY references authors,
     publish_date DATE,
     publisher VARCHAR,
---     genres int[], --moved to a junction table <book_genres> to make this validated.
-    cover_location VARCHAR, --TODO make this in a nested file directory structure (and keep img name short)
-    identifiers identifier[], --all the identifiers associated with a book.
+    rating_count BIGINT DEFAULT 0, -- number of votes taken for rating
+    series_id INT REFERENCES series(series_id) DEFAULT NULL, --TODO is this legal? ON DELETE SET DEFAULT
+    title VARCHAR NOT NULL,
+
+
     PRIMARY KEY (book_id),
-    CHECK (rating_overall>0 AND rating_overall<=10)
+    UNIQUE (title, primary_author_id),
+    CHECK (average_rating>=0 AND average_rating<=10),
+    CHECK (count_authors>0)
+
     /*future: comment_stream_id: if I ever allow OTHER people to add comments */
 );
 
@@ -130,13 +136,13 @@ CREATE TABLE IF NOT EXISTS books (
  */
 CREATE TABLE IF NOT EXISTS book_authors (
     --  junction table between book and authors for the book
-    book_id INT REFERENCES books(book_id),
+    book_id BIGINT REFERENCES books(book_id),
     author_id INT REFERENCES authors(author_id),
      PRIMARY KEY (book_id, author_id)
 );
 CREATE TABLE IF NOT EXISTS book_genres (
     --junction table for the books and genres in said book
-    book_id int, --REFERENCES books(book_id)
+    book_id BIGINT, --REFERENCES books(book_id)
     genre_id int, --REFERENCES genres(genre_id)
     PRIMARY KEY (book_id, genre_id)
 );
@@ -163,8 +169,8 @@ CREATE TABLE IF NOT EXISTS genres (
 -- #####COMMENTS TABLES
 CREATE TABLE IF NOT EXISTS comments (
     --this table is for comments for a specific book
-    user_id int,
-	book_id int,
+    user_id BIGINT,
+	book_id BIGINT,
 	comment VARCHAR(1000),
 	PRIMARY KEY (user_id, book_id),
     FOREIGN KEY (user_id) REFERENCES users(user_id),
@@ -172,18 +178,16 @@ CREATE TABLE IF NOT EXISTS comments (
 
 );
 CREATE TABLE IF NOT EXISTS comments_series (
---     comment_id serial,
-    user_id int,
+    user_id BIGINT,
+    series_id int,
 	comment VARCHAR(1000),
-	series_id int,
 	PRIMARY KEY (user_id, series_id),
     FOREIGN KEY (user_id) REFERENCES users(user_id),
 	FOREIGN KEY (series_id) REFERENCES series(series_id)
 
 );
 CREATE TABLE IF NOT EXISTS comments_author (
---     comment_id serial PRIMARY KEY,
-    user_id int,
+    user_id BIGINT,
 	comment VARCHAR(1000),
 	author_id int,
 	PRIMARY KEY (user_id, author_id),
@@ -204,15 +208,15 @@ CREATE TABLE IF NOT EXISTS recommendation_series_to_series (
 );
 CREATE TABLE IF NOT EXISTS recommendation_book_to_series (
     series1_id int,
-    book2_id int,
+    book2_id BIGINT,
     reasons VARCHAR(1000), /*reasons to recommend series - possibly make this a list where each entry is the reasons by userX?*/
     PRIMARY KEY (series1_id, book2_id),
     FOREIGN KEY (series1_id) references series(series_id),
     FOREIGN KEY (book2_id) references books(book_id)
 );
 CREATE TABLE IF NOT EXISTS recommendation_book_to_book (
-    book1_id int,
-    book2_id int,
+    book1_id BIGINT,
+    book2_id BIGINT,
     reasons VARCHAR(1000), /*reasons to recommend series - possibly make this a list where each entry is the reasons by userX?*/
     PRIMARY KEY (book1_id, book2_id),
     FOREIGN KEY (book1_id) references books(book_id),
@@ -224,10 +228,11 @@ CREATE TABLE IF NOT EXISTS recommendation_book_to_book (
 CREATE TABLE IF NOT EXISTS user_book_rating (
     --this table is for users rating for books
 --     comment_id serial,
-    user_id int,
-	book_id int,
+    user_id BIGINT,
+	book_id BIGINT,
 	rating numeric(2,2), /*2 places before decimal and 2 after the decimal (need to set range (FLOAT 0-10))*/
 	PRIMARY KEY (user_id, book_id),
+	CHECK ( rating>0 AND rating>=10),
     FOREIGN KEY (user_id) REFERENCES users(user_id),
 	FOREIGN KEY (book_id) REFERENCES books(book_id)
 
@@ -242,6 +247,10 @@ ALTER TABLE series ADD FOREIGN KEY (primary_author_id) REFERENCES authors(author
 ALTER TABLE book_genres ADD FOREIGN KEY (book_id) REFERENCES books(book_id);
 ALTER TABLE book_genres ADD FOREIGN KEY (genre_id) REFERENCES genres(genre_id);
 
+--book table
+ALTER TABLE books ADD FOREIGN KEY (primary_author_id) REFERENCES authors(author_id);
+
+ALTER TABLE book_identifier ADD FOREIGN KEY (book_id) REFERENCES books(book_id) ON DELETE CASCADE;
 
 --DATA ENTRIES SECTION (hashed password is Password1)
 INSERT INTO users (username, hashedPassword, salt, first_name, last_name, email, is_admin) VALUES ('admin', '$2a$10$D0uvz6/IgaKHVjV7zdlXAe8L92nEexa4gkNV7zyLtCRUTIyJEVKxy','$2a$10$D0uvz6/IgaKHVjV7zdlXAe', 'admin', 'admin', 'admin@email.com', true);

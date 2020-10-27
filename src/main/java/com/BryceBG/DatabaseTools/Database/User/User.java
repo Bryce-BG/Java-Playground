@@ -6,7 +6,7 @@ package com.BryceBG.DatabaseTools.Database.User;
  *
  */
 public class User {
-	private int userId; //unique
+	private long userId; //unique
     private String username; //primary_key
     private String salt;
     private String hashedPassword;
@@ -15,7 +15,7 @@ public class User {
     private String email;
     private boolean isAdmin;
 
-    public User(int userId, String username, String salt, String hashedPassword, String firstName, String lastName, String email, boolean isAdmin) {
+    public User(long userId, String username, String salt, String hashedPassword, String firstName, String lastName, String email, boolean isAdmin) {
         this.setUserId(userId);
     	this.setUsername(username);
         this.setSalt(salt);
@@ -27,10 +27,10 @@ public class User {
     }
 
 
-	public int getUserId() {
+	public long getUserId() {
 		return userId;
 	}
-	public void setUserId(int userId) {
+	public void setUserId(long userId) {
 		this.userId = userId;
 	}
 
