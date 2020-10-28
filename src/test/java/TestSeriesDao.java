@@ -15,6 +15,8 @@ import com.BryceBG.DatabaseTools.Database.Series.Series;
 import com.BryceBG.DatabaseTools.Database.Series.SeriesDao;
 import com.BryceBG.DatabaseTools.utils.Utils;
 
+import testUtils.testUtils;
+
 /**
  * Function to test our SeriesDao object. The order of the tests is intentional
  * so that getters which are used in later tests are tested first to ensure the

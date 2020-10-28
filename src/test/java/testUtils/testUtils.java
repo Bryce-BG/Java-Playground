@@ -1,3 +1,4 @@
+package testUtils;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -7,10 +8,19 @@ import com.BryceBG.DatabaseTools.Database.DAORoot;
 import com.BryceBG.DatabaseTools.utils.Utils;
 
 public class testUtils {
+	static {
+		//TODO use our mock database
+//		createTestDB();
+//		DAORoot.changeDB("localhost", "5432", "libraryTestDatabase", "superSafe1", "postgres");
+	}
 	public static void main(String[] args) {
-		resetDB(Utils.getConfigString("app.dbname", null));
+//		resetDB(Utils.getConfigString("app.dbname", null));
 	}
 
+	public static void createDB() {
+		//TODO implement me.
+		
+	}
 	/**
 	 * TODO rewrite this all as it is a very brittle/vulnerable way to modify our
 	 * database. potential alternatives:
@@ -19,7 +29,6 @@ public class testUtils {
 	 * @param dbName
 	 */
 	public static void resetDB(String dbName) {
-
 		File resetFile = new File("resetDBEntries.sql");
 		BufferedReader reader;
 		try {
@@ -39,5 +48,13 @@ public class testUtils {
 			e.printStackTrace();
 		}
 
+	}
+
+	/**
+	 * Run this ONCE before running a suite of tests to create our database
+	 */
+	public static void createTestDB() {
+		//TODO implement me
+		System.out.println("createTestDB() was called but this function is currently a stub");
 	}
 }

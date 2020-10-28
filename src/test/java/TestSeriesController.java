@@ -17,6 +17,8 @@ import com.BryceBG.DatabaseTools.Database.Series.SeriesController;
 import com.BryceBG.DatabaseTools.Database.Series.SeriesDao.UpdateType;
 import com.BryceBG.DatabaseTools.utils.Utils;
 
+import testUtils.testUtils;
+
 public class TestSeriesController {
 	// credentials for a user who can perform any of the actions required for the
 	// test on the database.

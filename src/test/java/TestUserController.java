@@ -10,6 +10,9 @@ import org.junit.Test;
 import com.BryceBG.DatabaseTools.Database.User.User;
 import com.BryceBG.DatabaseTools.Database.User.UserController;
 import com.BryceBG.DatabaseTools.utils.Utils;
+
+import testUtils.testUtils;
+
 import com.BryceBG.DatabaseTools.Database.DAORoot;
 
 /**

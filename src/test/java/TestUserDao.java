@@ -12,6 +12,8 @@ import com.BryceBG.DatabaseTools.Database.DAORoot;
 import com.BryceBG.DatabaseTools.Database.User.User;
 import com.BryceBG.DatabaseTools.utils.Utils;
 
+import testUtils.testUtils;
+
 public class TestUserDao {
 
 	@BeforeClass

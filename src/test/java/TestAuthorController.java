@@ -11,6 +11,8 @@ import org.junit.rules.Timeout;
 import com.BryceBG.DatabaseTools.Database.Author.AuthorController;
 import com.BryceBG.DatabaseTools.utils.Utils;
 
+import testUtils.testUtils;
+
 import static com.BryceBG.DatabaseTools.utils.GlobalConstants.*;
 
 public class TestAuthorController {
