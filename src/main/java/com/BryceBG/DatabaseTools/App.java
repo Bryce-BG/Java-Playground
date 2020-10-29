@@ -2,6 +2,8 @@ package com.BryceBG.DatabaseTools;
 
 
 
+import javax.swing.SwingUtilities;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -13,6 +15,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.BryceBG.DatabaseTools.Database.LibraryDB;
+import com.BryceBG.DatabaseTools.ui.MainWindow;
 import com.BryceBG.DatabaseTools.utils.Utils;
 
 
@@ -45,14 +48,14 @@ public class App {
 
         logger.info("App Log4j2 system initialized");
 
-        
+        //TODO check if database exists if not call createDB?
         
         
         
 
         
-//		MainWindow mw = new MainWindow();
-//		SwingUtilities.invokeLater(mw);
+		MainWindow mw = new MainWindow();
+		SwingUtilities.invokeLater(mw);
 
 	}
 

@@ -7,7 +7,7 @@
 
 
 DROP TABLE IF EXISTS books, authors, series, users CASCADE;
-DROP TYPE IF EXISTS series_status;
+DROP TYPE IF EXISTS series_status_enum CASCADE;
 
 CREATE TABLE IF NOT EXISTS users (
     user_id BIGSERIAL UNIQUE, --must be unique otherwise we can't reference
@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS users (
 -- 1. admins deleting all other admins and then themselves (leaves the system in a state where without outside intervention no more users can be added)
 -- 2. Can't delete admin accounts because of foreign key reference from an author they created.
 --this rule was created to protect the "root" admin from deletion in the system (though it can be circumvented by changing userID of the admin).
+--the username, and password can be updated though to keep this user from being a security vulnerability.
 CREATE RULE protect_root_admin_entry_delete as
   on delete to users
   where old.user_id = 1

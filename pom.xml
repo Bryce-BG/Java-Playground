@@ -81,12 +81,21 @@
 			<artifactId>jbcrypt</artifactId>
 			<version>0.4</version>
 		</dependency>
-		<!-- for playing with strings (and capitilizing names for our DB) -->
+		<!-- for playing with strings (and capitalizing names for our DB) -->
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-text</artifactId>
 			<version>1.9</version>
 		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/org.mybatis/mybatis -->
+		<!-- Using this to provide the ability to read pre-written sql scripts for creating our database -->
+		<dependency>
+			<groupId>org.mybatis</groupId>
+			<artifactId>mybatis</artifactId>
+			<version>3.5.6</version>
+		</dependency>
+
 	</dependencies>
 
 

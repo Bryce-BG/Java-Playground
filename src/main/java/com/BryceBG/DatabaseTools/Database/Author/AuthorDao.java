@@ -12,7 +12,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.BryceBG.DatabaseTools.Database.DAORoot;
 import com.BryceBG.DatabaseTools.Database.User.User;
-import com.BryceBG.DatabaseTools.utils.DBUtils;
+import com.BryceBG.DatabaseTools.utils.DaoUtils;
 
 /**
  * This is the base level object for interacting with our author table. Once
@@ -37,7 +37,7 @@ public class AuthorDao {
 		Author rtVal = null;
 		String sql = "SELECT * " + "FROM AUTHORS " + "WHERE fname=? AND lname=?";
 		//protect against null values
-		if (DBUtils.stringIsOk(fName) && DBUtils.stringIsOk(lName)) {
+		if (DaoUtils.stringIsOk(fName) && DaoUtils.stringIsOk(lName)) {
 			// 0. format author fields passed in
 			fName = WordUtils.capitalizeFully(fName.strip());
 			lName = WordUtils.capitalizeFully(lName.strip());

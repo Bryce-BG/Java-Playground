@@ -8,7 +8,7 @@ import org.javatuples.Pair;
 import com.BryceBG.DatabaseTools.Database.DAORoot;
 import com.BryceBG.DatabaseTools.Database.User.User;
 import com.BryceBG.DatabaseTools.Database.User.UserController;
-import com.BryceBG.DatabaseTools.utils.DBUtils;
+import com.BryceBG.DatabaseTools.utils.DaoUtils;
 import static com.BryceBG.DatabaseTools.Database.DAORoot.*;
 
 /**
@@ -28,7 +28,7 @@ public class AuthorController {
 
 			// 2. validate authorFName and authorLName arn't going to cause issues adding to
 			// the database
-			if (DBUtils.stringIsOk(authorFName) && DBUtils.stringIsOk(authorLName)) {
+			if (DaoUtils.stringIsOk(authorFName) && DaoUtils.stringIsOk(authorLName)) {
 
 				// 3. format our fields (trim whitespace and capitalize names)
 				authorFName = WordUtils.capitalizeFully(authorFName.strip());
@@ -78,7 +78,7 @@ public class AuthorController {
 
 			// 2. validate authorFName and authorLName arn't going to cause issues adding to
 			// the database
-			if (DBUtils.stringIsOk(authorFName) && DBUtils.stringIsOk(authorLName)) {
+			if (DaoUtils.stringIsOk(authorFName) && DaoUtils.stringIsOk(authorLName)) {
 
 				// 3. format our fields (trim whitespace and capitalize names)
 				authorFName = WordUtils.capitalizeFully(authorFName.strip());
@@ -112,7 +112,7 @@ public class AuthorController {
 	public static Pair<Boolean, String> verifyAuthorAccount(String username, String password, String authorFName,
 			String authorLName, String verifiedUserUsername) {
 		//0. ensure identifiers for author are not empty strings or null
-		if (DBUtils.stringIsOk(authorFName) && DBUtils.stringIsOk(authorLName)) {
+		if (DaoUtils.stringIsOk(authorFName) && DaoUtils.stringIsOk(authorLName)) {
 			// 1. ensure real user is performing update
 			if (UserController.authenticate(username, password)) {
 				// 2. format our fields (trim whitespace and capitalize names)
@@ -125,7 +125,7 @@ public class AuthorController {
 					User theUpdateUser = userDao.getUserByUsername(username);
 					if (theUpdateUser.isAdmin()) {
 						//5. ensure verifiedUser exists in db
-						if(DBUtils.stringIsOk(verifiedUserUsername) && userDao.getUserByUsername(verifiedUserUsername)!=null) {
+						if(DaoUtils.stringIsOk(verifiedUserUsername) && userDao.getUserByUsername(verifiedUserUsername)!=null) {
 							// 6. perform update
 							boolean rtnedVal = DAORoot.authorDao.setVerifiedUserID(theAuthorToUpdate.getFirstName(),
 									theAuthorToUpdate.getLastName(), verifiedUserUsername);

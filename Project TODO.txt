@@ -1,30 +1,33 @@
-##in LibraryDB.java
-	3. rewrite createDB() as:
-		Also it does not save settings for connecting to the new db in config file.
-		Also it only creates the database and doesn't run install.sql script to initilze tables.
+##UtilsForTests.java
+* rewrite: resetDB() to use our new library to perform resets instead of our hand crafted system
 
-#Database changes
-	2. fix series(author_id) as it should actually reference a junction table as there are potentially more than one author per series. 
+##Database changes
+	2. fix book(author_id) as it should actually reference a junction table as there are potentially more than one author per series. 
+	(IMPORTANT) use pg_chron to make a periodic job that updates rating of a series? (since changing user ratings may or may not impact?
 	
-	
-
 ##Book.java
 1. Decide if we want to do something special for author aliases
 2. add comment/review stream field to this structure later.
 3. potentially overload constructor so personal fields can be set with a single call.
 
-UserController.java
-1. add additional constraints to user creation to ensure better consistency.
+##UserController.java
+2. add adjust_user_book_rating() function
+
+##UserDao.java
+	Add function to add/edit entry in user_book_rating table to allow a user to rate a book.
 
 
 
+##MISC
+add warning that checks and exits if(GlobalConstants.TEST_DBNAME.equalsIgnoreCase(Utils.getConfigString("app.dbname", null)) this protects against the tests wiping out our real database if someone names them the same thing.
+check if database exists and if not create it?
 
 #######
 (IMPORTANT) Create Genre inheritance tree and create SQL script to automatically generate them from our existing genre-types (like our install sql script)
 
-1.(IMPORTANT) createMockDB for testing instead of using real DB	as currently our tests would wipe out entries in the database if they are not created by our init script.
-2. (IMPORTANT) allow this mock DB to be reset easily so our tests can change their @Before functions and not have interlaced dependencies for the tests.
 
+
+#
 
 ##project size tasks
 1. Create Scraper to recursively scan our file directory and extract required metadata from the epub .opf file as well as extracting cover image for our view of the book.
@@ -40,5 +43,16 @@ update(series.number_books_in_series -1) -> fails if count is already at zero.
 delete(author) -> should cascade delete(books) AND cascade delete(series)
 delete(book) -> should update(series.number_books_in_series) + update(series.number_books_in_series) + update(author)
 
+Notes:
+For series. if the primary_author_id is deleted the series is deleted as well. However. Series is protected unless number_books_in_series==0. Thus to delete a series all books must be removed (or a mnual update to number_books_in_series to make it seem like there are no more books
 
 
+to delete author(delete all books)
+
+
+
+
+
+
+##functions i may want to add
+for seriesController we may want to add a function that forces series removal by decrementing count to 0 and deleting all the books in the series instead of manual book removal being required.

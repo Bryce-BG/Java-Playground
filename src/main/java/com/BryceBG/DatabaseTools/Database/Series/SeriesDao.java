@@ -11,7 +11,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.BryceBG.DatabaseTools.Database.DAORoot; //for our instantiated objects inheritence
-import com.BryceBG.DatabaseTools.utils.DBUtils;
+import com.BryceBG.DatabaseTools.utils.DaoUtils;
 
 
 public class SeriesDao {
@@ -40,7 +40,7 @@ public class SeriesDao {
 	 */
 	public boolean addSeries(String series_name, int authorID) {
 		boolean rtVal = false;
-		if (DBUtils.stringIsOk(series_name)) {
+		if (DaoUtils.stringIsOk(series_name)) {
 			series_name = series_name.strip();
 			String sql = "INSERT INTO SERIES(series_name, primary_author_id, number_books_in_series, series_status) VALUES (?, ?, ?, ?);";
 					

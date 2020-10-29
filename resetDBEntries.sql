@@ -1,14 +1,15 @@
 --MOCK DATA
---TODO remove these as they are just test entries to play with
 
---test use
-DELETE FROM users WHERE username != 'admin';
+--remove all users that can be removed
+DELETE FROM users WHERE username != 'admin'; --admin can't be deleted as it is a protected entry.
+
 --can't delete a series if this is > 0 so set all series values of this field to 0
 UPDATE series SET number_books_in_series=0; 
 --need to delete all series FIRST (as authors can't be deleted until no series reference them.
 DELETE FROM series; 
 DELETE FROM authors; 
 
+--reset our admin accounts salt/hashedPassword 
 UPDATE users set salt='$2a$10$D0uvz6/IgaKHVjV7zdlXAe', hashedPassword='$2a$10$D0uvz6/IgaKHVjV7zdlXAe8L92nEexa4gkNV7zyLtCRUTIyJEVKxy' WHERE username='admin'
 
 INSERT INTO users (username, hashedPassword, salt, first_name, last_name, email, is_admin) VALUES ('JamesJoyce', '$2a$10$D0uvz6/IgaKHVjV7zdlXAe8L92nEexa4gkNV7zyLtCRUTIyJEVKxy','$2a$10$D0uvz6/IgaKHVjV7zdlXAe', 'James', 'Joyce', 'jjoyce@email.com', false);

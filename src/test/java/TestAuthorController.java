@@ -9,14 +9,13 @@ import org.junit.Test;
 import org.junit.rules.Timeout;
 
 import com.BryceBG.DatabaseTools.Database.Author.AuthorController;
-import com.BryceBG.DatabaseTools.utils.Utils;
 
-import testUtils.testUtils;
+import testUtils.UtilsForTests;
 
 import static com.BryceBG.DatabaseTools.utils.GlobalConstants.*;
 
 public class TestAuthorController {
-	
+
 	//global timeout to ensure no issues
 	@Rule
 	public Timeout globalTimeout = Timeout.seconds(20);
@@ -25,11 +24,12 @@ public class TestAuthorController {
 	public static void runOnce() {
 		// set up our logger
 		com.BryceBG.DatabaseTools.utils.Utils.initializeAppLogger(TEST_LOGGER_OUT_FILE_NAME, TEST_LOGGER_PATTERN);
+		UtilsForTests.createTestDB(); //set our tests to run on the mock database
 	}
 	
 	@Before
 	public void runBeforeTest() {
-		testUtils.resetDB(Utils.getConfigString("app.dbname", null)); //reset database to initial state
+		UtilsForTests.resetDB(); //reset database to initial state
 	}
 	
 	

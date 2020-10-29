@@ -15,9 +15,8 @@ import com.BryceBG.DatabaseTools.Database.Series.Series;
 import com.BryceBG.DatabaseTools.Database.Series.Series.series_status_enum;
 import com.BryceBG.DatabaseTools.Database.Series.SeriesController;
 import com.BryceBG.DatabaseTools.Database.Series.SeriesDao.UpdateType;
-import com.BryceBG.DatabaseTools.utils.Utils;
 
-import testUtils.testUtils;
+import testUtils.UtilsForTests;
 
 public class TestSeriesController {
 	// credentials for a user who can perform any of the actions required for the
@@ -25,7 +24,7 @@ public class TestSeriesController {
 
 	final String username = "admin";
 	final String password = "Password1";
-	// User in our database (capitilization is wrong but it SHOULD be handled by our
+	// User in our database (capitalization is wrong but it SHOULD be handled by our
 	// functions)
 	Pair<String, String> authorName = new Pair<String, String>("james", "joyce");
 
@@ -33,12 +32,13 @@ public class TestSeriesController {
 	public static void runOnce() {
 		// set up our logger
 		com.BryceBG.DatabaseTools.utils.Utils.initializeAppLogger(TEST_LOGGER_OUT_FILE_NAME, TEST_LOGGER_PATTERN);
+		UtilsForTests.createTestDB(); //set our tests to run on the mock database
 	}
 
 	@Before
 	public void beforeTest() {
 		// reset changes to database from tests
-		testUtils.resetDB(Utils.getConfigString("app.dbname", null)); // reset database to initial state
+		UtilsForTests.resetDB(); // reset database to initial state
 	}
 
 	

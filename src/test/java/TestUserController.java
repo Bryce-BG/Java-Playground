@@ -9,9 +9,8 @@ import org.junit.Test;
 
 import com.BryceBG.DatabaseTools.Database.User.User;
 import com.BryceBG.DatabaseTools.Database.User.UserController;
-import com.BryceBG.DatabaseTools.utils.Utils;
 
-import testUtils.testUtils;
+import testUtils.UtilsForTests;
 
 import com.BryceBG.DatabaseTools.Database.DAORoot;
 
@@ -26,11 +25,12 @@ public class TestUserController {
 	public static void runOnce() {
 		//set up our logger
 		com.BryceBG.DatabaseTools.utils.Utils.initializeAppLogger(TEST_LOGGER_OUT_FILE_NAME, TEST_LOGGER_PATTERN);
+		UtilsForTests.createTestDB(); //set our tests to run on the mock database
 	}
 	
 	@Before
 	public void beforeTest() {
-		testUtils.resetDB(Utils.getConfigString("app.dbname", null)); //reset database to initial state
+		UtilsForTests.resetDB(); //reset database to initial state
 	}
 
 	@Test

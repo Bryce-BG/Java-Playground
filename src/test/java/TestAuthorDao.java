@@ -13,9 +13,8 @@ import org.junit.rules.Timeout;
 import com.BryceBG.DatabaseTools.Database.DAORoot;
 import com.BryceBG.DatabaseTools.Database.Author.Author;
 import com.BryceBG.DatabaseTools.Database.User.User;
-import com.BryceBG.DatabaseTools.utils.Utils;
 
-import testUtils.testUtils;
+import testUtils.UtilsForTests;
 
 public class TestAuthorDao {
 
@@ -27,12 +26,13 @@ public class TestAuthorDao {
 	public static void runOnce() {
 		// set up our logger
 		com.BryceBG.DatabaseTools.utils.Utils.initializeAppLogger(TEST_LOGGER_OUT_FILE_NAME, TEST_LOGGER_PATTERN);
+		UtilsForTests.createTestDB(); //set our tests to run on the mock database
 	}
 
 	@Before
 	@After
 	public void runBeforeTest() {
-		testUtils.resetDB(Utils.getConfigString("app.dbname", null)); // reset database to initial state
+		UtilsForTests.resetDB(); // reset database to initial state
 	}
 
 	@Test

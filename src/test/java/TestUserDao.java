@@ -10,9 +10,8 @@ import org.mindrot.jbcrypt.BCrypt;
 
 import com.BryceBG.DatabaseTools.Database.DAORoot;
 import com.BryceBG.DatabaseTools.Database.User.User;
-import com.BryceBG.DatabaseTools.utils.Utils;
 
-import testUtils.testUtils;
+import testUtils.UtilsForTests;
 
 public class TestUserDao {
 
@@ -20,11 +19,12 @@ public class TestUserDao {
 	public static void runOnce() {
 		//set up our logger
 		com.BryceBG.DatabaseTools.utils.Utils.initializeAppLogger(TEST_LOGGER_OUT_FILE_NAME, TEST_LOGGER_PATTERN);
+		UtilsForTests.createTestDB(); //set our tests to run on the mock database
 	}
 	
 	@Before
 	public void runBeforeTest() {
-		testUtils.resetDB(Utils.getConfigString("app.dbname", null)); //reset database to initial state
+		UtilsForTests.resetDB(); //reset database to initial state
 	}
 	
 	@Test

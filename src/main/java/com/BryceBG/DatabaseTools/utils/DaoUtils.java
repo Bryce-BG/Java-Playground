@@ -1,6 +1,6 @@
 package com.BryceBG.DatabaseTools.utils;
 
-public class DBUtils {
+public class DaoUtils {
 	/**
 	 * Helper function to verify that strings passed in are not empty null or only whitespace
 	 * @param toCheck String to check if it is "okay"

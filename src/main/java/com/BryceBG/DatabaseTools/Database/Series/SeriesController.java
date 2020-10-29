@@ -7,7 +7,7 @@ import org.javatuples.Pair;
 import com.BryceBG.DatabaseTools.Database.DAORoot;
 import com.BryceBG.DatabaseTools.Database.Author.Author;
 import com.BryceBG.DatabaseTools.Database.User.UserController;
-import com.BryceBG.DatabaseTools.utils.DBUtils;
+import com.BryceBG.DatabaseTools.utils.DaoUtils;
 
 public class SeriesController {
 	/**
@@ -25,14 +25,14 @@ public class SeriesController {
 	public static Pair<Boolean, String> createSeries(String username, String password, String series_name,
 			Pair<String, String>[] authorNames) {
 		// 0. authenticate user performing modification
-		if (!(DBUtils.stringIsOk(username) && DBUtils.stringIsOk(password)
+		if (!(DaoUtils.stringIsOk(username) && DaoUtils.stringIsOk(password)
 				&& UserController.authenticate(username, password) && userDao.getUserByUsername(username).isAdmin())) {
 			return new Pair<Boolean, String>(Boolean.FALSE, "User performing createSeries is invalid");
 		}
 
 		// 1. validate inputs
 		// 1.a. validate series name
-		if (!DBUtils.stringIsOk(series_name)) {
+		if (!DaoUtils.stringIsOk(series_name)) {
 			return new Pair<Boolean, String>(Boolean.FALSE, "New series name is invalid.");
 		}
 		// 1.b ensure at least 1 author for the series was passed in
@@ -89,13 +89,13 @@ public class SeriesController {
 	public static Pair<Boolean, String> removeSeries(String username, String password, String series_name,
 			Pair<String, String>[] authorNames) {
 		// 0. authenticate user performing modification
-		if (!(DBUtils.stringIsOk(username) && DBUtils.stringIsOk(password)
+		if (!(DaoUtils.stringIsOk(username) && DaoUtils.stringIsOk(password)
 				&& UserController.authenticate(username, password) && userDao.getUserByUsername(username).isAdmin())) {
 			return new Pair<Boolean, String>(Boolean.FALSE, "User performing removeSeries is invalid");
 		}
 		// 1. validate inputs
 		// 1.a. Validate series name
-		if (!DBUtils.stringIsOk(series_name)) {
+		if (!DaoUtils.stringIsOk(series_name)) {
 			return new Pair<Boolean, String>(Boolean.FALSE, "Series name is invalid");
 		}
 		// 1.b Ensure at least 1 author for the series was passed in
@@ -166,13 +166,13 @@ public class SeriesController {
 	public static Pair<Boolean, String> updateSeries(String username, String password, String series_name,
 			Pair<String, String>[] authorNames, SeriesDao.UpdateType newUpdateType, Series.series_status_enum newSeriesStatus) {
 		// 0. authenticate user performing modification
-		if (!(DBUtils.stringIsOk(username) && DBUtils.stringIsOk(password)
+		if (!(DaoUtils.stringIsOk(username) && DaoUtils.stringIsOk(password)
 				&& UserController.authenticate(username, password) && userDao.getUserByUsername(username).isAdmin())) {
 			return new Pair<Boolean, String>(Boolean.FALSE, "User performing update is invalid");
 		}
 		// 1. validate inputs
 		// 1.a. validate series_name
-		if (!DBUtils.stringIsOk(series_name)) {
+		if (!DaoUtils.stringIsOk(series_name)) {
 			return new Pair<Boolean, String>(Boolean.FALSE, "Series name is invalid.");
 		}
 		// 1.b ensure type of update is not null

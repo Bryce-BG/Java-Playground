@@ -22,10 +22,11 @@ public class DAORoot {
 	public static LibraryDB library;
 
 	static {
+		
 		library = new LibraryDB(Utils.getConfigString("app.dbhost", null), Utils.getConfigString("app.dbport", null),
 				Utils.getConfigString("app.dbname", null), Utils.getConfigString("app.dbpass", null),
 				Utils.getConfigString("app.dbuser", null));
-
+	
 		// Note: we can just make all the functions in the _Dao classes static instead
 		// of how they currently are and then these below references aren't needed. I'm
 		// not sure which is the best performance wise but this should be tested later
@@ -35,9 +36,12 @@ public class DAORoot {
 		authorDao = new AuthorDao();
 
 	}
-	
+
 	/**
-	 * This overrides the database our library.properties file defines. Thus this is usable if we want to create a mock instance of our database to perform tests on.
+	 * This overrides the database our library.properties file defines. Thus this is
+	 * used if we want to create a mock instance of our database to perform tests
+	 * on.
+	 * 
 	 * @param dbHost Host address for where the alternative database is located
 	 * @param dbPort port to use to connect to the host of the database
 	 * @param dbName database's name
@@ -46,7 +50,7 @@ public class DAORoot {
 	 */
 	public static void changeDB(String dbHost, String dbPort, String dbName, String dbPass, String dbUser) {
 		library = new LibraryDB(dbHost, dbPort, dbName, dbPass, dbUser);
-	
+
 	}
 
 }
