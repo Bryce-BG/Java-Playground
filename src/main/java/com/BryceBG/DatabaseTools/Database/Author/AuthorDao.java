@@ -36,7 +36,7 @@ public class AuthorDao {
 	public Author getAuthor(String fName, String lName) {
 		Author rtVal = null;
 		String sql = "SELECT * " + "FROM AUTHORS " + "WHERE fname=? AND lname=?";
-		//protect against null values
+		// protect against null values
 		if (DaoUtils.stringIsOk(fName) && DaoUtils.stringIsOk(lName)) {
 			// 0. format author fields passed in
 			fName = WordUtils.capitalizeFully(fName.strip());

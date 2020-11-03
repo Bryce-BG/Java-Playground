@@ -32,13 +32,13 @@ public class TestAuthorDao {
 	@Before
 	@After
 	public void runBeforeTest() {
-		UtilsForTests.resetDB(); // reset database to initial state
+		UtilsForTests.resetDB(false); // reset database to initial state
 	}
 
 	@Test
 	public void testGetAllAuthors() {
 		ArrayList<Author> authors = DAORoot.authorDao.getAllAuthors();
-		assertEquals(1, authors.size());
+		assertEquals(2, authors.size());
 		Author t = authors.get(0);
 
 		String fName = "James";
@@ -75,7 +75,7 @@ public class TestAuthorDao {
 		int sizeAfter = authorsAfter.size();
 		assertEquals(sizeBefore + 1, sizeAfter);
 
-		Author t = authorsAfter.get(1); // should be the new item (maybe)
+		Author t = authorsAfter.get(2); // should be the new item (maybe)
 		assertNotNull(t);
 		assertEquals("First name obtained was not the correct value", "hello", t.getFirstName());
 		assertEquals("Last name obtained was not the correct value", "its me", t.getLastName());
@@ -95,6 +95,11 @@ public class TestAuthorDao {
 
 		Author t = DAORoot.authorDao.getAuthor(fName, lName);
 		assertEquals(newBib, t.getAuthorBib());
+		
+		//Test 2: try to add author bib for author who does not exist.
+		assertFalse(DAORoot.authorDao.addAuthorBib("IDon'tExist", lName, newBib));
+		
+
 
 	}
 

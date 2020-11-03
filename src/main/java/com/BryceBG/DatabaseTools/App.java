@@ -96,7 +96,7 @@ public class App {
         	String newLibraryName = cmd.getOptionValue("c");
         	System.out.println(String.format("Our library name parsed is %s", newLibraryName));
 
-            if(LibraryDB.createDB(newLibraryName))
+            if(LibraryDB.createDB(newLibraryName, false))
             	System.out.println("Database creation was successful");
             else
             	System.out.println("Database creation was un-successful");

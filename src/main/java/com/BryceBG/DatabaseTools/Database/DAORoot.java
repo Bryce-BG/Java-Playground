@@ -1,5 +1,8 @@
 package com.BryceBG.DatabaseTools.Database;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+
 import com.BryceBG.DatabaseTools.Database.Author.AuthorDao;
 import com.BryceBG.DatabaseTools.Database.Book.BookDao;
 import com.BryceBG.DatabaseTools.Database.Series.SeriesDao;
@@ -47,10 +50,23 @@ public class DAORoot {
 	 * @param dbName database's name
 	 * @param dbPass password to login to the database.
 	 * @param dbUser username to connect to the database
+	 * @return returns true if the new database is actually able to be connected to (i.e. if parameters for new database are valid).
 	 */
-	public static void changeDB(String dbHost, String dbPort, String dbName, String dbPass, String dbUser) {
+	public static boolean changeDB(String dbHost, String dbPort, String dbName, String dbPass, String dbUser) {
 		library = new LibraryDB(dbHost, dbPort, dbName, dbPass, dbUser);
-
+		
+		boolean rtVal = false;
+		try (Connection conn = library.connectToDB();){
+			if(conn.isValid(0))
+				rtVal = true;
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return rtVal;
 	}
 
 }

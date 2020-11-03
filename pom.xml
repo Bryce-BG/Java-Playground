@@ -8,7 +8,7 @@
 	<groupId>com.BryceBG.DatabaseTools</groupId>
 	<artifactId>LibrarySystem</artifactId>
 	<packaging>jar</packaging>
-	<version>0.1-SNAPSHOT</version>
+	<version>0.3-SNAPSHOT</version>
 	<name>LibrarySystem</name>
 
 	<properties>
@@ -89,7 +89,7 @@
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/org.mybatis/mybatis -->
-		<!-- Using this to provide the ability to read pre-written sql scripts for creating our database -->
+		<!-- Using this to provide the ability to read pre-written SQL scripts for creating our database -->
 		<dependency>
 			<groupId>org.mybatis</groupId>
 			<artifactId>mybatis</artifactId>

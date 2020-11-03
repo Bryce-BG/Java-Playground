@@ -38,7 +38,7 @@ public class TestSeriesController {
 	@Before
 	public void beforeTest() {
 		// reset changes to database from tests
-		UtilsForTests.resetDB(); // reset database to initial state
+		UtilsForTests.resetDB(false); // reset database to initial state
 	}
 
 	

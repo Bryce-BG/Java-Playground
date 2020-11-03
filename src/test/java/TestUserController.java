@@ -30,7 +30,7 @@ public class TestUserController {
 	
 	@Before
 	public void beforeTest() {
-		UtilsForTests.resetDB(); //reset database to initial state
+		UtilsForTests.resetDB(false); //reset database to initial state
 	}
 
 	@Test

@@ -70,8 +70,10 @@ public class LibraryDB {
 	 * name exists in system
 	 * 
 	 * @param libraryName the name for the postgresql database to create
+	 * @param showResults This tells our system if it should be verbose and have the
+	 *                    function print out the script as it is executing or not
 	 */
-	public static boolean createDB(String libraryName) {
+	public static boolean createDB(String libraryName, boolean showResults) {
 		if (libraryName == null || libraryName.isEmpty() || libraryName.isBlank()) {
 			libraryName = "librarydatabase";
 
@@ -88,7 +90,7 @@ public class LibraryDB {
 			// 1. check if database with same name already exists and if it does drop it
 			List<String> dbNames = listAllDatabases(); // get names of current databases
 			for (String x : dbNames) {
-				if (libraryName.equalsIgnoreCase(x)) { // apparently postgres doesn't care about case for DB names
+				if (libraryName.equalsIgnoreCase(x)) {
 					logger.info("Existing database was found with name {}. (and then dropped).", libraryName);
 					// Drop database so we can recreate it
 					stmt.executeUpdate(sql);
@@ -102,22 +104,30 @@ public class LibraryDB {
 			logger.info("Successfully created database: {}", libraryName);
 
 			// 3. now apply our install.sql script to initialize the tables.
-			// 3.a. change our system to use the new database we just created one we just
-			DAORoot.changeDB(Utils.getConfigString("app.dbhost", null), Utils.getConfigString("app.dbport", null),
-					libraryName, Utils.getConfigString("app.dbpass", null), Utils.getConfigString("app.dbuser", null));
-			// 3.b. establish connection with database
+			// 3.a. change our system to use the new database we just created
+			boolean rtnedVal = DAORoot.changeDB(Utils.getConfigString("app.dbhost", null),
+					Utils.getConfigString("app.dbport", null), libraryName, Utils.getConfigString("app.dbpass", null),
+					Utils.getConfigString("app.dbuser", null));
+			if (!rtnedVal) { // can't connect with new parameters
+				logger.error("Unexpected error in changing the database occured in createDB function");
+				return false;
+			}
+			// 3.b. establish connection with new database
 			try (Connection conn = DAORoot.library.connectToDB();) {
 
 				// Initialize the script runner
 				ScriptRunner sr = new ScriptRunner(conn);
+				if (!showResults) // kill the log writing if they didn't want it
+					sr.setLogWriter(null);
 				// Creating a reader object
 				Reader r = Resources.getResourceAsReader(GlobalConstants.DB_INSTALL_SCRIPT_PATH);
-				//Reader reader = new InputStreamReader(UtilsForTests.class.getClassLoader().getResourceAsStream(GlobalConstants.DB_INSTALL_SCRIPT_PATH));
-				
+				// Reader reader = new
+				// InputStreamReader(UtilsForTests.class.getClassLoader().getResourceAsStream(GlobalConstants.DB_INSTALL_SCRIPT_PATH));
+
 				// 3.c.Running the script to add tables and rules
 				sr.runScript(r);
-				
-				//4. commit results
+
+				// 4. commit results
 				conn.commit();
 				r.close();
 
@@ -126,11 +136,13 @@ public class LibraryDB {
 			} catch (SQLException e) {
 				logger.error("Error occured during execution of our sql during DB creation: {}", e.getMessage());
 			} catch (IOException e) {
-				logger.error("Exception occured during trying to read install script {}. The exception was: {}", GlobalConstants.DB_INSTALL_SCRIPT_PATH, e.getMessage());
+				logger.error("Exception occured during trying to read install script {}. The exception was: {}",
+						GlobalConstants.DB_INSTALL_SCRIPT_PATH, e.getMessage());
 			}
 
-			//////////////////
-
+			// TODO determine if script actually worked correctly. if an actual exception
+			// Occurred it will return false but if individual statements fail this can
+			// still return true (incorrectly)
 			return true;
 		} catch (Exception ex) {
 			logger.error("An error occured during createDB: " + ex.getMessage());
@@ -185,41 +197,6 @@ public class LibraryDB {
 			logger.error("An error occured trying to list all databases\n" + e.getMessage());
 		}
 		return names;
-	}
-
-	/**
-	 * This function is used to run raw sql (vulnerable to injection and many other
-	 * things), so it is ill advised to run it for anything except as debugging.
-	 * TODO remove this function from final version of program to prevent misuse.
-	 * 
-	 * @param sql the sql to be used.
-	 * @return
-	 */
-	public boolean runRawSQL(String sql) {
-		boolean rtVal = false;
-		// 1. establish connection to our database
-		try (Connection conn = DAORoot.library.connectToDB(); PreparedStatement pstmt = conn.prepareStatement(sql);) {
-
-			// 2. execute our update for removing series.
-			int rs = pstmt.executeUpdate();
-			// 3. check if sql query for series returned correct answer: should have added 1
-			// unless it failed
-			// row).
-			if (rs == 1) {
-				// update was successful
-				rtVal = true;
-			} else {
-				rtVal = false;
-			}
-		} // end of try-with-resources: connection
-			// catch blocks for try-with-resources: connection
-		catch (ClassNotFoundException e) {
-			logger.error("Exception occured during connectToDB: " + e.getMessage());
-		} catch (SQLException e) {
-			logger.error("Exception occured during executing SQL statement: " + e.getMessage());
-		}
-		return rtVal;
-
 	}
 
 }
