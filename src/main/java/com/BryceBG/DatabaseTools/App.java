@@ -16,6 +16,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.BryceBG.DatabaseTools.Database.LibraryDB;
 import com.BryceBG.DatabaseTools.ui.MainWindow;
+import com.BryceBG.DatabaseTools.utils.GlobalConstants;
 import com.BryceBG.DatabaseTools.utils.Utils;
 
 
@@ -39,7 +40,8 @@ public class App {
 	 * @param args Array of command line arguments.
 	 */
 	public static void main(String[] args) {
-        Utils.initializeAppLogger("app.log","%d %p %c [%t] %m%n"); //sets up our logger instance for the program
+		
+        Utils.initializeAppLogger("app.log",GlobalConstants.APP_LOGGER_PATTERN); //sets up our logger instance for the program
 		logger.info("Loaded app version: " + Utils.getThisJarVersion());
 
 		// Schedule a job for the event-dispatching thread:

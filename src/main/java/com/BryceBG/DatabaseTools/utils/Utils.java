@@ -302,6 +302,10 @@ public class Utils {
 	 * Configures root logger, either for FILE output or just console.
 	 */
 	public static void initializeAppLogger(String fileName, String pattern) {
+		//https://logging.apache.org/log4j/2.x/manual/appenders.html#ConsoleAppender
+		//https://logging.apache.org/log4j/2.x/manual/configuration.html
+		//https://logging.apache.org/log4j/2.x/manual/layouts.html#PatternLayout
+		
 		// https://www.studytonight.com/post/log4j2-programmatic-configuration-in-java-class#:~:text=Log4j2%20Programmatic%20Configuration%20for%20File,builder%20%3D%20ConfigurationBuilderFactory.
 
 		ConfigurationBuilder<BuiltConfiguration> builder = ConfigurationBuilderFactory.newConfigurationBuilder();

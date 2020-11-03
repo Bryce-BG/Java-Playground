@@ -3,6 +3,9 @@ package com.BryceBG.DatabaseTools.Database;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.BryceBG.DatabaseTools.Database.Author.AuthorDao;
 import com.BryceBG.DatabaseTools.Database.Book.BookDao;
 import com.BryceBG.DatabaseTools.Database.Series.SeriesDao;
@@ -23,6 +26,9 @@ public class DAORoot {
 	public static SeriesDao seriesDao;
 	public static AuthorDao authorDao;
 	public static LibraryDB library;
+
+	
+	private static final Logger logger = LogManager.getLogger(DAORoot.class.getName());
 
 	static {
 		
@@ -61,11 +67,12 @@ public class DAORoot {
 				rtVal = true;
 		} catch (ClassNotFoundException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+//			e.printStackTrace();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+//			e.printStackTrace();
 		}
+		logger.info("Switched to using database: {}", dbName);
 		return rtVal;
 	}
 

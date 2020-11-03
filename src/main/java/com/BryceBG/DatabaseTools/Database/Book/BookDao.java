@@ -17,7 +17,7 @@ import com.BryceBG.DatabaseTools.Database.Series.Series;
 
 /**
  * This is the public DAO (data access object) for interfacing with the book
- * table from our database.
+ * table from our database (also the related junction tables indirectly).
  * 
  * @author Bryce-BG
  *
@@ -26,19 +26,18 @@ public class BookDao extends BookDaoInterface {
 	private static final Logger logger = LogManager.getLogger(BookDao.class.getName());
 
 	public ArrayList<Book> getAllBooks() {
-		logger.info("Call to getAllBooks() was made but this is a STUB"); // TODO remove this after implementation.
 		ArrayList<Book> rtVal = new ArrayList<Book>();
 		String sql = "SELECT * FROM BOOKS";
 		String sqlgetExtraAuthors = "SELECT author_id FROM book_authors WHERE book_id=?";
-		String sqlGetGenres = "SELECT genre_id from book_genres WHERE book_id=?";
+		String sqlGetGenres = "SELECT genre_name FROM book_genres WHERE book_id=?";
 		String sqlGetIdentiers = "SELECT identifier_type, identifier_value FROM book_identifier WHERE book_id=?";
 
-		// 1. establish connection to our database
+		// 1. establish connection to our database (and create our prepared statements
 		try (Connection conn = DAORoot.library.connectToDB();
-				PreparedStatement pstmt = conn.prepareStatement(sql);
-				PreparedStatement pstmtGetAuthors = conn.prepareStatement(sqlgetExtraAuthors);
-				PreparedStatement pstmtGetGenre = conn.prepareStatement(sqlGetGenres);
-				PreparedStatement pstmtgetIdentifiers = conn.prepareStatement(sqlGetIdentiers);) {
+				PreparedStatement pstmt = conn.prepareStatement(sql,ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+				PreparedStatement pstmtGetAuthors = conn.prepareStatement(sqlgetExtraAuthors, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+				PreparedStatement pstmtGetGenre = conn.prepareStatement(sqlGetGenres, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+				PreparedStatement pstmtgetIdentifiers = conn.prepareStatement(sqlGetIdentiers,ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);) {
 			// 2. execute our query.
 			try (ResultSet rs = pstmt.executeQuery()) {
 				// 3. loop through records returned to parse our data.
@@ -64,26 +63,26 @@ public class BookDao extends BookDaoInterface {
 					Book bookX = new Book(avgRating, bookID, bookIndexInSeries, countAuthors, coverLocation, coverName,
 							description, edition, has_identifiers, primaryAuthorID, publishDate, publisher, ratingCount, seriesID,
 							title);
-					// 6. fill additional fields as needed from other tables.
+					// 6. fill additional fields as needed from other tables (authors (if multiple), identifiers, and genres.
 
 					// 6.a get extra authors
-					if (countAuthors == 1) { // there are no other authors so skip aditional query.
+					if (countAuthors == 1) { // there are no other authors so skip additional query.
 						bookX.setAuthorIDs(new int[] { bookX.getPrimaryAuthorID() });
 					} else {
 						pstmtGetAuthors.setLong(1, bookID);
 						try (ResultSet rs2 = pstmtGetAuthors.executeQuery()) {
 							// 3. loop through records returned to parse our data.
 							int rowcount = 0;
-							if (rs.last()) { // https://stackoverflow.com/questions/192078/how-do-i-get-the-size-of-a-java-sql-resultset
-								rowcount = rs.getRow();
-								rs.beforeFirst(); // not rs.first() because the rs.next() below will move on, missing
+							if (rs2.last()) { // https://stackoverflow.com/questions/192078/how-do-i-get-the-size-of-a-java-sql-resultset
+								rowcount = rs2.getRow();
+								rs2.beforeFirst(); // not rs.first() because the rs.next() below will move on, missing
 													// the first element
 							}
 
 							int[] authorIDs = new int[rowcount];
 							rowcount = 0; // reusing variable.
-							while (rs.next()) {
-								authorIDs[rowcount] = rs.getInt("author_id");
+							while (rs2.next()) {
+								authorIDs[rowcount] = rs2.getInt("author_id");
 								rowcount++;
 							}
 							bookX.setAuthorIDs(authorIDs); // add authors
@@ -95,18 +94,18 @@ public class BookDao extends BookDaoInterface {
 						try (ResultSet rs2 = pstmtgetIdentifiers.executeQuery()) {
 							// 3. loop through records returned to parse our data.
 							int rowcount = 0;
-							if (rs.last()) {
-								rowcount = rs.getRow();
-								rs.beforeFirst(); // not rs.first() because the rs.next() below will move on, missing
+							if (rs2.last()) {
+								rowcount = rs2.getRow();
+								rs2.beforeFirst(); // not rs.first() because the rs.next() below will move on, missing
 													// the first element
 							}
 
 							@SuppressWarnings("unchecked")
 							Pair<String, String>[] bookIdentifiers = new Pair[rowcount];
 							rowcount = 0; // reusing variable.
-							while (rs.next()) {
-								bookIdentifiers[rowcount] = new Pair<String, String>(rs.getString("identifier_type"),
-										rs.getString("identifier_value"));
+							while (rs2.next()) {
+								bookIdentifiers[rowcount] = new Pair<String, String>(rs2.getString("identifier_type"),
+										rs2.getString("identifier_value"));
 								rowcount++;
 							}
 							bookX.setIdentifiers(bookIdentifiers); // add our identifiers
@@ -116,21 +115,21 @@ public class BookDao extends BookDaoInterface {
 					// 6.c get genres.
 					pstmtGetGenre.setLong(1, bookID);
 					try (ResultSet rs2 = pstmtGetGenre.executeQuery()) {
-						// 3. loop through records returned to parse our data.
+						//loop through records returned to parse our data.
 						int rowcount = 0;
-						if (rs.last()) {
-							rowcount = rs.getRow();
-							rs.beforeFirst(); // not rs.first() because the rs.next() below will move on, missing
+						if (rs2.last()) {
+							rowcount = rs2.getRow();
+							rs2.beforeFirst(); // not rs.first() because the rs.next() below will move on, missing
 												// the first element
 						}
-						if(rowcount != 0) { //ensure we don't crash if no genres are listed for a book
-							int[] genreIDs = new int[rowcount];
+						if(rowcount != 0) { //ensure we don't crash if no genres are listed for a book as you can't create an array of size 0
+							String[] genres = new String[rowcount];
 							rowcount = 0; // reusing variable.
-							while (rs.next()) {
-								genreIDs[rowcount] = rs.getInt("genre_id");
+							while (rs2.next()) {
+								genres[rowcount] = rs2.getString("genre_name");
 								rowcount++;
 							}
-							bookX.setGenreIDs(genreIDs); // add our genres
+							bookX.setGenres(genres); // add our genres
 						}
 						
 					} // end try rs2

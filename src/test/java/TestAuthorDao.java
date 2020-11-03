@@ -3,7 +3,6 @@ import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -30,7 +29,6 @@ public class TestAuthorDao {
 	}
 
 	@Before
-	@After
 	public void runBeforeTest() {
 		UtilsForTests.resetDB(false); // reset database to initial state
 	}
@@ -133,17 +131,22 @@ public class TestAuthorDao {
 	@Test
 	public void testSetVerifiedUserID() {
 		// Test 1: change the verified user of an author
-		DAORoot.authorDao.setVerifiedUserID("James", "Joyce", "JamesJoyce");
+		assertTrue(DAORoot.authorDao.setVerifiedUserID("James", "Joyce", "JamesJoyce"));
 		User newOwner = DAORoot.userDao.getUserByUsername("JamesJoyce");
 		Author after = DAORoot.authorDao.getAuthor("James", "Joyce");
 
 		assertEquals(newOwner.getUserId(), after.getVerifiedUserID());
+		//Test 2: change verified user to an user who doens't exist
+		assertFalse(DAORoot.authorDao.setVerifiedUserID("James", "Joyce", "jhonsey"));
+		
+		//Test 3: change verified user on an author that doesn't exist
+		assertFalse(DAORoot.authorDao.setVerifiedUserID("AuthorFakeFirst", "Joyce", "JamesJoyce"));
+
 	}
 
 	@Test
 	public void testDeleteVerifiedOwnerForAuthor() {
-		// TODO Test what happens to verified_userID on deletion of user associated.
-		DAORoot.authorDao.setVerifiedUserID("James", "Joyce", "JamesJoyce");
+		assertTrue(DAORoot.authorDao.setVerifiedUserID("James", "Joyce", "JamesJoyce"));
 		User newOwner = DAORoot.userDao.getUserByUsername("JamesJoyce");
 
 		// Test 1: ensure that it is possible to delete "author" users and having the

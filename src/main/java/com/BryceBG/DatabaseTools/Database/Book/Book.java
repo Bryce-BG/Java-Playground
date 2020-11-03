@@ -38,9 +38,9 @@ public class Book {
 	private String cover_name; // Filename is for the cover image (append to cover_location to get full path).
 	private String description;
 	private int edition = -1;
-	private int[] genres; // NOT initialized by constructor
+	private String[] genres; // NOT initialized by constructor
 	private boolean has_identifiers;
-	private Pair<String, String>[] identifiers; // NOT initilized by constructor
+	private Pair<String, String>[] identifiers; // NOT initialized by constructor
 	int primary_author_id = -1;
 	private java.sql.Date publish_date;
 	private String publisher = "NA";
@@ -155,11 +155,11 @@ public class Book {
 		this.personal_shelves = personal_shelves;
 	}
 
-	public int[] getGenreIDs() {
+	public String[] getGenres() {
 		return genres;
 	}
 
-	public void setGenreIDs(int[] genres) {
+	public void setGenres(String[] genres) {
 		this.genres = genres;
 	}
 
