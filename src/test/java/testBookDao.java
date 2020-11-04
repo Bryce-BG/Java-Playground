@@ -25,7 +25,6 @@ public class testBookDao {
 	@BeforeClass
 	public static void runOnce() {
 		// set up our logger
-		String loggerPatturn = "%highlight{%d [%t] %-5level: %msg%n%throwable}{FATAL=white, ERROR=red, WARN=blue, INFO=black, DEBUG=green, TRACE=blue}";
 
 		com.BryceBG.DatabaseTools.utils.Utils.initializeAppLogger(TEST_LOGGER_OUT_FILE_NAME, TEST_LOGGER_PATTERN);
 		UtilsForTests.createTestDB(); //set our tests to run on the mock database

@@ -22,22 +22,17 @@ import com.BryceBG.DatabaseTools.Database.Series.Series;
  * @author Bryce-BG
  *
  */
-public class BookDao extends BookDaoInterface {
+public class BookDao implements BookDaoInterface {
 	private static final Logger logger = LogManager.getLogger(BookDao.class.getName());
 
 	public ArrayList<Book> getAllBooks() {
 		ArrayList<Book> rtVal = new ArrayList<Book>();
 		String sql = "SELECT * FROM BOOKS";
-		String sqlgetExtraAuthors = "SELECT author_id FROM book_authors WHERE book_id=?";
-		String sqlGetGenres = "SELECT genre_name FROM book_genres WHERE book_id=?";
-		String sqlGetIdentiers = "SELECT identifier_type, identifier_value FROM book_identifier WHERE book_id=?";
 
 		// 1. establish connection to our database (and create our prepared statements
 		try (Connection conn = DAORoot.library.connectToDB();
-				PreparedStatement pstmt = conn.prepareStatement(sql,ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-				PreparedStatement pstmtGetAuthors = conn.prepareStatement(sqlgetExtraAuthors, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-				PreparedStatement pstmtGetGenre = conn.prepareStatement(sqlGetGenres, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-				PreparedStatement pstmtgetIdentifiers = conn.prepareStatement(sqlGetIdentiers,ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);) {
+				PreparedStatement pstmt = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE,
+						ResultSet.CONCUR_READ_ONLY);) {
 			// 2. execute our query.
 			try (ResultSet rs = pstmt.executeQuery()) {
 				// 3. loop through records returned to parse our data.
@@ -61,100 +56,55 @@ public class BookDao extends BookDaoInterface {
 
 					// 5. create our return object with the values
 					Book bookX = new Book(avgRating, bookID, bookIndexInSeries, countAuthors, coverLocation, coverName,
-							description, edition, has_identifiers, primaryAuthorID, publishDate, publisher, ratingCount, seriesID,
-							title);
-					// 6. fill additional fields as needed from other tables (authors (if multiple), identifiers, and genres.
+							description, edition, has_identifiers, primaryAuthorID, publishDate, publisher, ratingCount,
+							seriesID, title);
+					// 6. fill additional fields as needed from other tables (authors (if multiple),
+					// identifiers, and genres.
 
 					// 6.a get extra authors
-					if (countAuthors == 1) { // there are no other authors so skip additional query.
+					if (countAuthors == 1) {
+						// there are no other authors so skip additional query to reduce query overhead.
 						bookX.setAuthorIDs(new int[] { bookX.getPrimaryAuthorID() });
 					} else {
-						pstmtGetAuthors.setLong(1, bookID);
-						try (ResultSet rs2 = pstmtGetAuthors.executeQuery()) {
-							// 3. loop through records returned to parse our data.
-							int rowcount = 0;
-							if (rs2.last()) { // https://stackoverflow.com/questions/192078/how-do-i-get-the-size-of-a-java-sql-resultset
-								rowcount = rs2.getRow();
-								rs2.beforeFirst(); // not rs.first() because the rs.next() below will move on, missing
-													// the first element
-							}
-
-							int[] authorIDs = new int[rowcount];
-							rowcount = 0; // reusing variable.
-							while (rs2.next()) {
-								authorIDs[rowcount] = rs2.getInt("author_id");
-								rowcount++;
-							}
-							bookX.setAuthorIDs(authorIDs); // add authors
-						} // end try rs2
+						// call helper function to get authors from book_authors table
+						int[] authorIDs = helperGetBooksAuthors(conn, bookID);
+						if (authorIDs == null) {
+							// use logger to warn something went wrong but continue silently
+							logger.warn("An error was detected getting book {}'s authors", title);
+						}
+						bookX.setAuthorIDs(authorIDs); // add authors
 					}
 					// 6.b. get identifiers.
 					if (bookX.getHasIdentifiers()) {
-						pstmtgetIdentifiers.setLong(1, bookID);
-						try (ResultSet rs2 = pstmtgetIdentifiers.executeQuery()) {
-							// 3. loop through records returned to parse our data.
-							int rowcount = 0;
-							if (rs2.last()) {
-								rowcount = rs2.getRow();
-								rs2.beforeFirst(); // not rs.first() because the rs.next() below will move on, missing
-													// the first element
-							}
-
-							@SuppressWarnings("unchecked")
-							Pair<String, String>[] bookIdentifiers = new Pair[rowcount];
-							rowcount = 0; // reusing variable.
-							while (rs2.next()) {
-								bookIdentifiers[rowcount] = new Pair<String, String>(rs2.getString("identifier_type"),
-										rs2.getString("identifier_value"));
-								rowcount++;
-							}
-							bookX.setIdentifiers(bookIdentifiers); // add our identifiers
-						} // end try rs2
+						Pair<String, String>[] bookIdentifiers = helperGetBookIdentifiers(conn, bookID);
+						if (bookIdentifiers == null) {
+							// should have been identifiers but we didn't get them so something went wrong
+							// in helper function.
+							logger.warn("An error was detected getting book {}'s identifiers", title);
+						}
+						bookX.setIdentifiers(bookIdentifiers); // add our identifiers
 					}
 
 					// 6.c get genres.
-					pstmtGetGenre.setLong(1, bookID);
-					try (ResultSet rs2 = pstmtGetGenre.executeQuery()) {
-						//loop through records returned to parse our data.
-						int rowcount = 0;
-						if (rs2.last()) {
-							rowcount = rs2.getRow();
-							rs2.beforeFirst(); // not rs.first() because the rs.next() below will move on, missing
-												// the first element
-						}
-						if(rowcount != 0) { //ensure we don't crash if no genres are listed for a book as you can't create an array of size 0
-							String[] genres = new String[rowcount];
-							rowcount = 0; // reusing variable.
-							while (rs2.next()) {
-								genres[rowcount] = rs2.getString("genre_name");
-								rowcount++;
-							}
-							bookX.setGenres(genres); // add our genres
-						}
-						
-					} // end try rs2
-				
-				//7. add our fully fleshed out book object to return list
-				rtVal.add(bookX);
+					String[] genres = helperGetBooksGenres(conn, bookID);
+					bookX.setGenres(genres); // add our genres to book object
+
+					// 7. add our fully fleshed out book object to return list
+					rtVal.add(bookX);
+				}
 			}
+			// end of try-with-resources: result set
+		} // end of try-with-resources: connection
+			// catch blocks for try-with-resources: connection
+		catch (ClassNotFoundException e) {
+			logger.error("Exception occured during connectToDB: " + e.getMessage());
+		} catch (SQLException e) {
+			logger.error("Exception occured during executing SQL statement: " + e.getMessage());
 		}
-		// end of try-with-resources: result set
-	} // end of try-with-resources: connection
-		// catch blocks for try-with-resources: connection
-	catch(
-
-	ClassNotFoundException e)
-	{
-		logger.error("Exception occured during connectToDB: " + e.getMessage());
-	}catch(
-	SQLException e)
-	{
-		logger.error("Exception occured during executing SQL statement: " + e.getMessage());
+		return rtVal;
 	}
 
-	return rtVal;
-
-	}
+	
 
 	public Book getBookByIdentifier(String identifier_name, String identifier) {
 //    	Pair<String, String> id_pair = Pair.with(identifier_name, identifier);
@@ -188,12 +138,16 @@ public class BookDao extends BookDaoInterface {
 	@Override
 	public Book[] getBooksBySeries(Series series) {
 		// TODO Auto-generated method stub
+		logger.info("Call to getBooksBySeries() was made but this is a STUB");
+
 		return null;
 	}
 
 	@Override
 	public Book[] getBooksByTitle(String title) {
 		// TODO Auto-generated method stub
+		logger.info("Call to getBooksByTitle() was made but this is a STUB");
+
 		return null;
 	}
 
@@ -210,12 +164,6 @@ public class BookDao extends BookDaoInterface {
 	}
 
 	@Override
-	protected boolean helperUpdateBookAuthorsTable(Connection conn, long book_id, long authors_id) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
 	public boolean addBook(String title, String cover_location, Pair<String, String>[] authors) {
 		// TODO Auto-generated method stub
 		return false;
@@ -227,16 +175,126 @@ public class BookDao extends BookDaoInterface {
 		return false;
 	}
 
-	@Override
-	protected int[] helperGetBooksAuthors(Connection conn, long book_id) {
-		// TODO Auto-generated method stub
-		return null;
+	// Helpers
+	/**
+	 * Helper function for getBook functions. This function gets entries from the
+	 * database from the table book_authors (a supplementary "junction table" for
+	 * books)
+	 * 
+	 * @param conn    An active connection to the database
+	 * @param book_id ID of the book we are getting authors for.
+	 * @return null if an exception occurred OR an array containing the IDs of the
+	 *         authors who wrote the book.
+	 */
+	private int[] helperGetBooksAuthors(Connection conn, long book_id) {
+		String sqlgetExtraAuthors = "SELECT author_id FROM book_authors WHERE book_id=?";
+		int[] authorIDs = null;
+		try (PreparedStatement pstmtGetAuthors = conn.prepareStatement(sqlgetExtraAuthors,
+				ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);) {
+			pstmtGetAuthors.setLong(1, book_id);
+			try (ResultSet rs2 = pstmtGetAuthors.executeQuery()) {
+				// loop through records returned to parse our data.
+				int rowcount = 0;
+				if (rs2.last()) { // https://stackoverflow.com/questions/192078/how-do-i-get-the-size-of-a-java-sql-resultset
+					rowcount = rs2.getRow();
+					rs2.beforeFirst(); // not rs.first() because the rs.next() below will move on, missing
+										// the first element
+				}
+				if (rowcount > 0) { // always should be but just in case
+					authorIDs = new int[rowcount];
+					rowcount = 0;
+					while (rs2.next()) {
+						authorIDs[rowcount] = rs2.getInt("author_id");
+						rowcount++;
+					}
+				}
+			} // end try rs2
+		} catch (SQLException e) {
+			logger.error("An exception occured getting authors for book_id {}. Exception: {}", book_id, e.getMessage());
+		}
+		return authorIDs;
 	}
+	/**
+	 * Helper function that gets the genres a book has listed from the database
+	 * table book_genres
+	 * 
+	 * @param conn    An active connection to the database we are querying.
+	 * @param book_id ID of the book we want to get the genres of.
+	 * @return null if an error occurs OR there are no genres listed for the book. A
+	 *         list of genre names in all other cases
+	 */
+	private String[] helperGetBooksGenres(Connection conn, long book_id) {
+		String sqlGetGenres = "SELECT genre_name FROM book_genres WHERE book_id=?";
+		String[] genres = null;
+		try (PreparedStatement pstmtGetGenre = conn.prepareStatement(sqlGetGenres, ResultSet.TYPE_SCROLL_INSENSITIVE,
+				ResultSet.CONCUR_READ_ONLY);) {
+			pstmtGetGenre.setLong(1, book_id);
+			try (ResultSet rs2 = pstmtGetGenre.executeQuery()) {
+				// loop through records returned to parse our data.
+				int rowcount = 0;
+				if (rs2.last()) {
+					rowcount = rs2.getRow();
+					rs2.beforeFirst(); // not rs.first() because the rs.next() below will move on, missing
+										// the first element
+				}
+				if (rowcount != 0) { // ensure we don't crash if no genres are listed for a book
+					genres = new String[rowcount];
+					rowcount = 0; // reusing variable.
+					while (rs2.next()) {
+						genres[rowcount] = rs2.getString("genre_name");
+						rowcount++;
+					}
+				}
+			} // end try rs2
+		} catch (SQLException e) {
+			logger.error("An exception occured getting genres for book_id {}. Exception: {}", book_id, e.getMessage());
+		}
+		return genres;
+	}
+	
+	/**
+	 * A helper functions that gets identifiers such as ASIN and ISBN numbers for a
+	 * book from our book_identifier table.
+	 * 
+	 * @param conn    An active connection to the database
+	 * @param book_id ID of the book we are looking up identifiers for.
+	 * @return returns null if there is an error getting the identifiers for the
+	 *         book. Otherwise returns an array of pairs such that the first value
+	 *         is the identifier type (ISBN, ASIN, etc.) and the second value is the
+	 *         id for the identifier.
+	 */
+	@SuppressWarnings("unchecked")
+	private Pair<String, String>[] helperGetBookIdentifiers(Connection conn, long book_id) {
+		String sqlGetIdentiers = "SELECT identifier_type, identifier_value FROM book_identifier WHERE book_id=?";
+		Pair<String, String>[] bookIdentifiers = null;
 
-	@Override
-	protected int[] helperGetBooksGenres(Connection conn, long book_id) {
-		// TODO Auto-generated method stub
-		return null;
+		try (PreparedStatement pstmtgetIdentifiers = conn.prepareStatement(sqlGetIdentiers,
+				ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);) {
+			pstmtgetIdentifiers.setLong(1, book_id);
+			try (ResultSet rs2 = pstmtgetIdentifiers.executeQuery()) {
+				// 3. loop through records returned to parse our data.
+				int rowcount = 0;
+				if (rs2.last()) {
+					rowcount = rs2.getRow();
+					rs2.beforeFirst(); // not rs.first() because the rs.next() below will move on, missing
+										// the first element
+				}
+				if (rowcount > 0) { // because has_identifiers should only be true if there are identifiers this
+									// should always be true.
+					bookIdentifiers = new Pair[rowcount];
+					rowcount = 0; // reusing variable. to identify where to store now
+					while (rs2.next()) {
+						bookIdentifiers[rowcount] = new Pair<String, String>(rs2.getString("identifier_type"),
+								rs2.getString("identifier_value"));
+						rowcount++;
+					}
+				}
+			} // end try rs2
+		} catch (SQLException e) {
+			logger.error("An exception occured getting identifiers for book_id {}. Exception: {}", book_id,
+					e.getMessage());
+		}
+		return bookIdentifiers;
 	}
 
 }

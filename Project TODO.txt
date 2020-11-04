@@ -50,11 +50,12 @@ delete(author) -> should cascade delete(books) AND cascade delete(series)
 delete(book) -> should update(series.number_books_in_series) + update(series.number_books_in_series) + update(author)
 
 Notes:
-For series. if the primary_author_id is deleted the series is deleted as well. However. Series is protected unless number_books_in_series==0. Thus to delete a series all books must be removed (or a mnual update to number_books_in_series to make it seem like there are no more books
-
+For series. if the primary_author_id is deleted the series is deleted as well. However. Series is protected unless number_books_in_series==0. Thus to delete a series all books must be removed (or a manual update to number_books_in_series to make it seem like there are no more books
 
 to delete author(delete all books)
 
+when implementing bookDao: for the getter functions.
+If I actually inlined all the requests for the supplementary tables (book_authors, book_genres, book_identifiers), the execution speed almost doubles with getAllBooks(): 0.33s to 0.6-0.7s. That seems a rather substantial overhead for simply querying another function. Further checking may be required.
 
 
 
