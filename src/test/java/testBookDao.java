@@ -11,6 +11,7 @@ import org.junit.Test;
 import org.junit.rules.Timeout;
 
 import com.BryceBG.DatabaseTools.Database.DAORoot;
+import com.BryceBG.DatabaseTools.Database.Author.Author;
 import com.BryceBG.DatabaseTools.Database.Book.Book;
 
 import testUtils.UtilsForTests;
@@ -130,12 +131,15 @@ public class testBookDao {
 		}
 	}
 	
+	//Dependencies: getAllBooks(), authorDao.getAuthor()
 	@Test
 	public void testGetBooksByAuthor() {
 		Pair<String, String> a1 = new Pair<String, String>("James", "Joyce");
+
+		Author author1 = DAORoot.authorDao.getAuthor(a1.getValue0(), a1.getValue1());
 		
 		//Test 1: check for author 1
-		Book[] b1 = DAORoot.bookDao.getBooksByAuthor(a1.getValue0(), a1.getValue1());
+		Book[] b1 = DAORoot.bookDao.getBooksByAuthor(author1.getAuthorID());
 		ArrayList<Book> books = DAORoot.bookDao.getAllBooks();
 		assertEquals(5, b1.length);
 		for(Book bookX : b1) {
@@ -145,7 +149,9 @@ public class testBookDao {
 		
 		//Test 2: check if author 2 works;
 		Pair<String, String> a2 = new Pair<String, String>("Test", "Author2");
-		Book[] b2 = DAORoot.bookDao.getBooksByAuthor(a2.getValue0(), a2.getValue1());
+		Author author2 = DAORoot.authorDao.getAuthor(a2.getValue0(), a2.getValue1());
+
+		Book[] b2 = DAORoot.bookDao.getBooksByAuthor(author2.getAuthorID());
 		assertEquals(1, b2.length); //of test entries he only wrote 1
 		for(Book bookX : b2) {
 			assertTrue(books.contains(bookX));

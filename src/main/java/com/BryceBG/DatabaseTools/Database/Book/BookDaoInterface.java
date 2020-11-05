@@ -12,8 +12,9 @@ public interface BookDaoInterface {
 
 	public abstract ArrayList<Book> getAllBooks();
 
+	//TODO revise to take in long author_id instead of fName/lName
 	// non unique so may return many books
-	public abstract Book[] getBooksByAuthor(String fName, String lName);
+	public abstract Book[] getBooksByAuthor(int author_id);
 
 	// Primary key so will return only one book
 	public abstract Book getBookByBookID(long bookID);

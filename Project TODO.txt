@@ -5,6 +5,10 @@
 	1. Decide if we want to do something special for author aliases
 	2. add comment/review stream field to this structure later.
 	3. potentially overload constructor so personal fields can be set with a single call.
+	
+##BookDao.java
+1. redesign our getBooksByAuthor() function to use IN or ANY pre-prepared statement with static counts of ids in the list to improve our query performance. There are multiple listed alternative ways listed in the function.
+2. re-implement our getRandomBook() function as our way has large overhead when used in a huge database.
 
 ##Database changes
 	2. fix book(author_id) as it should actually reference a junction table as there are potentially more than one author per series. 

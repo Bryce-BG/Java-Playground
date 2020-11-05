@@ -1,6 +1,5 @@
 package com.BryceBG.DatabaseTools.Database.Book;
 
-import java.sql.Array;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -9,13 +8,11 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.javatuples.Pair;
 
 import com.BryceBG.DatabaseTools.Database.DAORoot;
-import com.BryceBG.DatabaseTools.Database.Author.Author;
 import com.BryceBG.DatabaseTools.Database.Book.Book.BOOK_FIELD;
 import com.BryceBG.DatabaseTools.Database.Series.Series;
 
@@ -94,11 +91,9 @@ public class BookDao implements BookDaoInterface {
 						}
 						bookX.setIdentifiers(bookIdentifiers); // add our identifiers
 					}
-
 					// 6.c get genres.
 					String[] genres = helperGetBooksGenres(conn, bookID);
 					bookX.setGenres(genres); // add our genres to book object
-
 					// 7. add our fully fleshed out book object to return list
 					rtVal.add(bookX);
 				}
@@ -114,20 +109,26 @@ public class BookDao implements BookDaoInterface {
 		return rtVal;
 	}
 
+	/**
+	 * A function to get a single book from the database based on a book_id value.
+	 * 
+	 * @param bookID The book_id for a book we want to retrieve from the database.
+	 * @return Null if there was an error Or if no errror, the book that matches the
+	 *         id passed in from the database
+	 */
+	@Override
 	public Book getBookByBookID(long bookID) {
 		Book bookX = null;
 		String sql = "SELECT * FROM BOOKS WHERE book_id=?;";
 
 		// 1. establish connection to our database (and create our prepared statements
-		try (Connection conn = DAORoot.library.connectToDB();
-				PreparedStatement pstmt = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE,
-						ResultSet.CONCUR_READ_ONLY);) {
+		try (Connection conn = DAORoot.library.connectToDB(); PreparedStatement pstmt = conn.prepareStatement(sql);) {
 
 			pstmt.setLong(1, bookID);
 			// 2. execute our query.
 			try (ResultSet rs = pstmt.executeQuery()) {
 				// 3. loop through records returned to parse our data.
-				while (rs.next()) { // should only loop once
+				if (rs.next()) {
 					// 4. extract results from result set needed to create objects
 					float avgRating = rs.getFloat("average_rating");
 					float bookIndexInSeries = rs.getFloat("book_index_in_series");
@@ -177,6 +178,8 @@ public class BookDao implements BookDaoInterface {
 					// 6.c get genres.
 					String[] genres = helperGetBooksGenres(conn, bookID);
 					bookX.setGenres(genres); // add our genres to book object
+				} else {
+					logger.warn("unexpectedly no results were returned from query for book_id {}", bookID);
 				}
 			}
 			// end of try-with-resources: result set
@@ -190,36 +193,39 @@ public class BookDao implements BookDaoInterface {
 		return bookX;
 	}
 
+	/**
+	 * A function that gets all books in the database that the author has authored/co-authored to the author provided.
+	 * 
+	 * @param author_id the id of the author we want to query for books.
+	 * @return null if the author has no books listed in the database or an
+	 *         exception occurred. Otherwise a list of all books the author has
+	 *         authored/co-authored is returned
+	 */
 	@Override
-	public Book[] getBooksByAuthor(String fName, String lName) {
-		logger.info("getBooksByAuthor() was called but this function is currently a BROKEN");
+	public Book[] getBooksByAuthor(int author_id) {
 		ArrayList<Book> rtVal = new ArrayList<Book>();
-//		String sql = "select * from books WHERE book_id ANY (?);";
-
-		// 1. verify author passed in actually exists in our DB.
-		Author a = DAORoot.authorDao.getAuthor(fName, lName);
-		if (a != null) {
+			
 			try (Connection conn = DAORoot.library.connectToDB();) {
 
-				// 2. call helper function to get book_ids for books the author has contributed to.
-				long[] bookIDs = helperGetBookIDsForAuthor(conn, a.getAuthorID());
-				if(bookIDs!=null) {
-					//3. query to get all books with ids from our list.
-					//ugly workaround to dealing with IN array close (poor performance since we can't pre-prepare it)
-//					https://stackoverflow.com/questions/178479/preparedstatement-in-clause-alternatives
-					//https://stackoverflow.com/questions/36929116/how-to-use-in-clause-with-preparedstatement-in-postgresql/36930781#36930781
-					//https://stackoverflow.com/questions/3107044/preparedstatement-with-list-of-parameters-in-a-in-clause
+				// 2. call helper function to get book_ids for where author has contributed
+				long[] bookIDs = helperGetBookIDsForAuthor(conn, author_id);
+				if (bookIDs != null) {
+					// 3. query to get all books with ids from our list.
+					// ugly workaround to dealing with IN array close (poor performance since we
+					// can't pre-prepare it)
+					//https://stackoverflow.com/questions/178479/preparedstatement-in-clause-alternatives
+					// https://stackoverflow.com/questions/36929116/how-to-use-in-clause-with-preparedstatement-in-postgresql/36930781#36930781
+					// https://stackoverflow.com/questions/3107044/preparedstatement-with-list-of-parameters-in-a-in-clause
 					String valueClause = String.join(", ", Collections.nCopies(bookIDs.length, "?"));
 					String sql = "select * from books WHERE book_id IN (" + valueClause + ")";
 
-					try(PreparedStatement pstmt = conn.prepareStatement(sql);){
+					try (PreparedStatement pstmt = conn.prepareStatement(sql);) {
 						int index = 1;
 						for (long id : bookIDs) {
-						   pstmt.setLong(index++, id);
+							pstmt.setLong(index++, id);
 						}
-					 
-					 //4. execute query to get book data and parse results
-					 try (ResultSet rs = pstmt.executeQuery()) {
+						// 4. execute query to get book data and parse results
+						try (ResultSet rs = pstmt.executeQuery()) {
 
 							// 3. loop through records returned to parse our data.
 							while (rs.next()) {
@@ -241,9 +247,9 @@ public class BookDao implements BookDaoInterface {
 								String title = rs.getString("title");
 
 								// 5. create our return object with the values
-								Book bookX = new Book(avgRating, bookID, bookIndexInSeries, countAuthors, coverLocation, coverName,
-										description, edition, has_identifiers, primaryAuthorID, publishDate, publisher, ratingCount,
-										seriesID, title);
+								Book bookX = new Book(avgRating, bookID, bookIndexInSeries, countAuthors, coverLocation,
+										coverName, description, edition, has_identifiers, primaryAuthorID, publishDate,
+										publisher, ratingCount, seriesID, title);
 								// 6. fill additional fields as needed from other tables (authors (if multiple),
 								// identifiers, and genres.
 
@@ -278,8 +284,8 @@ public class BookDao implements BookDaoInterface {
 								// 7. add our fully fleshed out book object to return list
 								rtVal.add(bookX);
 							}
-						}// end of try-with-resources: result set
-					}//end prepared statment try
+						} // end of try-with-resources: result set
+					} // end prepared statement try
 				}
 			} catch (ClassNotFoundException e) {
 				logger.error("Exception occured during connectToDB: " + e.getMessage());
@@ -287,7 +293,7 @@ public class BookDao implements BookDaoInterface {
 				logger.error("Exception occured during executing SQL statement: {}", e.getMessage());
 			}
 
-		}
+		
 
 		return rtVal.toArray(new Book[rtVal.size()]);
 	}
@@ -388,8 +394,8 @@ public class BookDao implements BookDaoInterface {
 	}
 
 	/**
-	 * Helper function for book_authors table. Used to get all book_ids that an author has either written or
-	 * contributed to writing
+	 * Helper function for book_authors table. Used to get all book_ids that an
+	 * author has either written or contributed to writing
 	 * 
 	 * @param conn      An active connection to the database we are querying.
 	 * @param author_id The id of the author we are looking for books by
@@ -427,9 +433,9 @@ public class BookDao implements BookDaoInterface {
 		return bookIDs;
 	}
 
-	
 	/**
-	 * Helper function for book_genres table. Gets the genres a book has listed from the database
+	 * Helper function for book_genres table. Gets the genres a book has listed from
+	 * the database
 	 * 
 	 * @param conn    An active connection to the database we are querying.
 	 * @param book_id ID of the book we want to get the genres of.
@@ -466,8 +472,8 @@ public class BookDao implements BookDaoInterface {
 	}
 
 	/**
-	 * Helper function book_identifiers table. Gets identifiers such as ASIN and ISBN numbers for a
-	 * book from the database.
+	 * Helper function book_identifiers table. Gets identifiers such as ASIN and
+	 * ISBN numbers for a book from the database.
 	 * 
 	 * @param conn    An active connection to the database
 	 * @param book_id ID of the book we are looking up identifiers for.
