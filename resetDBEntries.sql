@@ -48,6 +48,8 @@ FROM authors WHERE authors.fname='James' AND authors.lname='Joyce';
 --2. add our genre tag to the book_genres table
 INSERT INTO book_genres(book_id, genre_name)
 SELECT book_id, genres.genre_name FROM books, genres WHERE title='TestBook3'; --adds two rows to do unconstrianed join
+
+--Go through books and ensure all "primary_author_id" for books are in book_authors table (this should NOT need to be done for books inserted using our library system as our functions should do it automatically
 INSERT INTO book_authors(book_id, author_id) SELECT books.book_id, books.primary_author_id FROM books;
 
 --Task4: create book with multiple authors
@@ -61,7 +63,6 @@ FROM books, authors
 WHERE books.title='TestBook4'; --should add 2 rows as two authors exist currently
 
 
---Go through books and ensure all "primary_author_id" for books are in book_authors table (this should NOT need to be done for books inserted using our library system as our functions should do it automatically
 
 
 
@@ -73,3 +74,9 @@ WHERE books.title='TestBook4'; --should add 2 rows as two authors exist currentl
 INSERT INTO books (count_authors, cover_location,cover_name, description, has_identifiers, primary_author_id, publish_date, publisher, series_id, title)
 SELECT 1, 'cover/1/2','coverImage.jpg','This is a test book, it does not exist',false, authors.author_id, null, null, series.series_id,'TestBook5'
 FROM authors, series WHERE authors.fname='James' AND authors.lname='Joyce' AND series.series_name='test series';
+
+
+INSERT INTO book_authors (book_id, author_id) SELECT books.book_id, authors.author_id
+FROM books, authors
+WHERE books.title='TestBook5' AND authors.fname='James';
+
