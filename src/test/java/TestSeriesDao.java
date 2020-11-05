@@ -1,6 +1,4 @@
-import static com.BryceBG.DatabaseTools.utils.GlobalConstants.*;
 import static org.junit.Assert.*;
-
 
 import java.util.ArrayList;
 
@@ -34,9 +32,7 @@ public class TestSeriesDao {
 
 	@BeforeClass
 	public static void runOnce() {
-		// set up our logger
-		com.BryceBG.DatabaseTools.utils.Utils.initializeAppLogger(TEST_LOGGER_OUT_FILE_NAME, TEST_LOGGER_PATTERN);
-		UtilsForTests.createTestDB(); //set our tests to run on the mock database
+		UtilsForTests.setupForTests();
 	}
 
 	@Before
@@ -67,7 +63,7 @@ public class TestSeriesDao {
 		// system).
 		int author_id = DAORoot.authorDao.getAllAuthors().get(0).getAuthorID(); // author id of first (and only) author
 		Series t = DAORoot.seriesDao.getSeriesByNameAndAuthorID("test", author_id);
-		assertNull(t); //because series doesn't exist
+		assertNull(t); // because series doesn't exist
 
 		// Test 2: test series known to be in system
 		Series sO = DAORoot.seriesDao.getSeriesByNameAndAuthorID("test series", author_id);
@@ -146,10 +142,11 @@ public class TestSeriesDao {
 
 	@Test
 	public void testUpdateSeriesBookCount() {
-		// Note our updateSeriesBookCount() function utilizes getSeriesByNameAndAuthorID() function to verify
+		// Note our updateSeriesBookCount() function utilizes
+		// getSeriesByNameAndAuthorID() function to verify
 		// series exists. So there is no need to check if we can trick it with invalid
 		// params passed in.
-		
+
 		ArrayList<Series> t = DAORoot.seriesDao.getAllSeries();
 		Series testSeriesObject = t.get(0);
 
@@ -196,22 +193,22 @@ public class TestSeriesDao {
 		Series testSeriesObject = t.get(0);
 
 		// Test 1: try if "ongoing" status works
-		assertTrue(DAORoot.seriesDao.setSeriesStatus(testSeriesObject.getSeriesName(), testSeriesObject.getPrimaryAuthorID(),
-				Series.series_status_enum.ONGOING));
+		assertTrue(DAORoot.seriesDao.setSeriesStatus(testSeriesObject.getSeriesName(),
+				testSeriesObject.getPrimaryAuthorID(), Series.series_status_enum.ONGOING));
 		Series afterUpdateSeries = DAORoot.seriesDao.getSeriesByNameAndAuthorID(testSeriesObject.getSeriesName(),
 				testSeriesObject.getPrimaryAuthorID());
 		assertEquals(afterUpdateSeries.getSeriesStatus(), Series.series_status_enum.ONGOING);
 
 		// Test 2: try if "undetermined" status works"
-		assertTrue(DAORoot.seriesDao.setSeriesStatus(testSeriesObject.getSeriesName(), testSeriesObject.getPrimaryAuthorID(),
-				Series.series_status_enum.UNDETERMINED));
+		assertTrue(DAORoot.seriesDao.setSeriesStatus(testSeriesObject.getSeriesName(),
+				testSeriesObject.getPrimaryAuthorID(), Series.series_status_enum.UNDETERMINED));
 		afterUpdateSeries = DAORoot.seriesDao.getSeriesByNameAndAuthorID(testSeriesObject.getSeriesName(),
 				testSeriesObject.getPrimaryAuthorID());
 		assertEquals(afterUpdateSeries.getSeriesStatus(), Series.series_status_enum.UNDETERMINED);
 
 		// Test 3 try if "completed" status works
-		assertTrue(DAORoot.seriesDao.setSeriesStatus(testSeriesObject.getSeriesName(), testSeriesObject.getPrimaryAuthorID(),
-				Series.series_status_enum.COMPLETED));
+		assertTrue(DAORoot.seriesDao.setSeriesStatus(testSeriesObject.getSeriesName(),
+				testSeriesObject.getPrimaryAuthorID(), Series.series_status_enum.COMPLETED));
 		afterUpdateSeries = DAORoot.seriesDao.getSeriesByNameAndAuthorID(testSeriesObject.getSeriesName(),
 				testSeriesObject.getPrimaryAuthorID());
 		assertEquals(afterUpdateSeries.getSeriesStatus(), Series.series_status_enum.COMPLETED);

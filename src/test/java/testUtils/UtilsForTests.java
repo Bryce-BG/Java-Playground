@@ -20,28 +20,35 @@ import com.BryceBG.DatabaseTools.utils.Utils;
 public class UtilsForTests {
 	private static final Logger logger = LogManager.getLogger(UtilsForTests.class.getName());
 
-	static {
-		// Initialize our logger
+	public static void setupForTests() {
+		// set up our logger
 		com.BryceBG.DatabaseTools.utils.Utils.initializeAppLogger(TEST_LOGGER_OUT_FILE_NAME, TEST_LOGGER_PATTERN);
-
-		// 1. call our function once to create our test database
-		createTestDB();
+		//run our createTestDB script
+		UtilsForTests.createTestDB(); //set our tests to run on the mock database
 
 	}
 
 	/**
 	 * This function is used to create the database of name:
 	 * GlobalConstants.TESTDB_NAME This database is a mockup of our real library
-	 * database with the same schema defined in resources/install.sql
+	 * database with the same schema defined in resources/install.sql it also
+	 * switches our system to operate on it if successful)
 	 */
 	public static void createTestDB() {
 		// 1. create our empty testing database
-		if (!LibraryDB.createDB(TEST_DBNAME, false))
+		if (!LibraryDB.createDB(TEST_DBNAME, false)) {
 			logger.error("Trying to create our test database: {} failed", TEST_DBNAME);
-		else {
-			// set our system to use the new database.
-			DAORoot.changeDB(Utils.getConfigString("app.dbhost", null), Utils.getConfigString("app.dbport", null),
-					TEST_DBNAME, Utils.getConfigString("app.dbpass", null), Utils.getConfigString("app.dbuser", null));
+			// This statement below will usually cause the tests to crash because of a
+			// switch to a database that wasn't created.
+			// (Unless it couldn't be created because it already exists and a user had an
+			// active connection".
+			// However, it ensures that even if DB creation fails we don't opperate on the
+			// REAL database and mess it up with our tests
+			boolean rtnedVal = DAORoot.changeDB(Utils.getConfigString("app.dbhost", null),
+					Utils.getConfigString("app.dbport", null), TEST_DBNAME, Utils.getConfigString("app.dbpass", null),
+					Utils.getConfigString("app.dbuser", null));
+			if(!rtnedVal)
+				logger.error("DB connection for tests failed.");
 		}
 
 	}
@@ -57,8 +64,8 @@ public class UtilsForTests {
 
 			// Initialize the script runner
 			ScriptRunner sr = new ScriptRunner(conn);
-			if(!showExecution)
-				sr.setLogWriter(null); //hide output from the scriptrunner
+			if (!showExecution)
+				sr.setLogWriter(null); // hide output from the scriptrunner
 			// Creating a reader object
 
 			File resetFile = new File("resetDBEntries.sql");

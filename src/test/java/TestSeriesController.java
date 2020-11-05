@@ -1,4 +1,3 @@
-import static com.BryceBG.DatabaseTools.utils.GlobalConstants.*;
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
@@ -30,9 +29,7 @@ public class TestSeriesController {
 
 	@BeforeClass
 	public static void runOnce() {
-		// set up our logger
-		com.BryceBG.DatabaseTools.utils.Utils.initializeAppLogger(TEST_LOGGER_OUT_FILE_NAME, TEST_LOGGER_PATTERN);
-		UtilsForTests.createTestDB(); //set our tests to run on the mock database
+		UtilsForTests.setupForTests();
 	}
 
 	@Before
@@ -40,9 +37,6 @@ public class TestSeriesController {
 		// reset changes to database from tests
 		UtilsForTests.resetDB(false); // reset database to initial state
 	}
-
-	
-
 
 	// DEPENDENCIES: SeriesDao.getAllSeries(), AuthorController.createAuthor()
 	@SuppressWarnings("unchecked")
@@ -170,8 +164,6 @@ public class TestSeriesController {
 				null, authorName.getValue1());
 		assertEquals("method returned but not with the expected message.", expectedMsg, rtnedVal.getValue1());
 
-	
-		
 	}
 
 	// tests for removeSeries() were split up so we could try to do the tests with
@@ -342,16 +334,16 @@ public class TestSeriesController {
 		updateType = UpdateType.INC;
 		rtnedVal = SeriesController.updateSeries(username, password, series_name, authorNames, updateType, null);
 		assertTrue(rtnedVal.getValue0().booleanValue());
-		
+
 		// Test 4: perform INC operation on series (with invalid user)
 		updateType = UpdateType.INC;
-		rtnedVal = SeriesController.updateSeries(username, "password wrong", series_name, authorNames, updateType, null);
+		rtnedVal = SeriesController.updateSeries(username, "password wrong", series_name, authorNames, updateType,
+				null);
 		assertFalse(rtnedVal.getValue0().booleanValue());
 		expectedMsg = "User performing update is invalid";
 		assertEquals(expectedMsg, rtnedVal.getValue1());
 
-		
-		//TESTS RELATING TO CHANGING SERIES STATUS
+		// TESTS RELATING TO CHANGING SERIES STATUS
 		series_name = "test series";
 
 		authorNames = new Pair[1];
@@ -361,29 +353,33 @@ public class TestSeriesController {
 		Author author = DAORoot.authorDao.getAuthor("James", "Joyce");
 
 		// Test 1: change series status to ONGOING
-		assertTrue(SeriesController.updateSeries(username, password, series_name, authorNames, updateType, newSeriesStatus)
-				.getValue0().booleanValue());
+		assertTrue(
+				SeriesController.updateSeries(username, password, series_name, authorNames, updateType, newSeriesStatus)
+						.getValue0().booleanValue());
 		Series s = DAORoot.seriesDao.getSeriesByNameAndAuthorID(series_name, author.getAuthorID());
 		assertEquals(newSeriesStatus, s.getSeriesStatus());
 
 		// Test 2: change series status to COMPLETED
 		newSeriesStatus = Series.series_status_enum.COMPLETED;
-		assertTrue(SeriesController.updateSeries(username, password, series_name, authorNames, updateType, newSeriesStatus)
-				.getValue0().booleanValue());
+		assertTrue(
+				SeriesController.updateSeries(username, password, series_name, authorNames, updateType, newSeriesStatus)
+						.getValue0().booleanValue());
 		s = DAORoot.seriesDao.getSeriesByNameAndAuthorID(series_name, author.getAuthorID());
 		assertEquals(newSeriesStatus, s.getSeriesStatus());
 
 		// Test 3: change series status to UNDETERMINED
 		newSeriesStatus = Series.series_status_enum.UNDETERMINED;
-		assertTrue(SeriesController.updateSeries(username, password, series_name, authorNames, updateType, newSeriesStatus)
-				.getValue0().booleanValue());
+		assertTrue(
+				SeriesController.updateSeries(username, password, series_name, authorNames, updateType, newSeriesStatus)
+						.getValue0().booleanValue());
 		s = DAORoot.seriesDao.getSeriesByNameAndAuthorID(series_name, author.getAuthorID());
 		assertEquals(newSeriesStatus, s.getSeriesStatus());
 
 		// Test 4: set series status to null
 		newSeriesStatus = null;
-		assertFalse(SeriesController.updateSeries(username, password, series_name, authorNames, updateType, newSeriesStatus)
-				.getValue0().booleanValue());
+		assertFalse(
+				SeriesController.updateSeries(username, password, series_name, authorNames, updateType, newSeriesStatus)
+						.getValue0().booleanValue());
 		s = DAORoot.seriesDao.getSeriesByNameAndAuthorID(series_name, author.getAuthorID());
 		assertEquals(Series.series_status_enum.UNDETERMINED, s.getSeriesStatus());
 
@@ -392,7 +388,8 @@ public class TestSeriesController {
 		authorNames = new Pair[1];
 		authorNames[0] = authorName;
 
-		rtnedVal = SeriesController.updateSeries(username, "wrong password", series_name, authorNames, updateType, series_status_enum.ONGOING);
+		rtnedVal = SeriesController.updateSeries(username, "wrong password", series_name, authorNames, updateType,
+				series_status_enum.ONGOING);
 		assertFalse(rtnedVal.getValue0().booleanValue());
 		expectedMsg = "User performing update is invalid";
 		assertEquals("method returned but not with the expected message.", expectedMsg, rtnedVal.getValue1());
@@ -401,7 +398,8 @@ public class TestSeriesController {
 		series_name = "test series";
 		authorNames = null;
 
-		rtnedVal = SeriesController.updateSeries(username, password, series_name, authorNames, updateType, Series.series_status_enum.ONGOING);
+		rtnedVal = SeriesController.updateSeries(username, password, series_name, authorNames, updateType,
+				Series.series_status_enum.ONGOING);
 		assertFalse(rtnedVal.getValue0().booleanValue());
 		expectedMsg = "No authors were included for the series (required field).";
 		assertEquals("method returned but not with the expected message.", rtnedVal.getValue1(), expectedMsg);
@@ -411,7 +409,8 @@ public class TestSeriesController {
 		authorNames = new Pair[1];
 		authorNames[0] = null; // authorName;
 
-		rtnedVal = SeriesController.updateSeries(username, password, series_name, authorNames, updateType, Series.series_status_enum.ONGOING);
+		rtnedVal = SeriesController.updateSeries(username, password, series_name, authorNames, updateType,
+				Series.series_status_enum.ONGOING);
 		assertFalse(rtnedVal.getValue0().booleanValue());
 		expectedMsg = "A null author was passed in";
 		assertEquals("method returned but not with the expected message.", expectedMsg, rtnedVal.getValue1());
@@ -421,44 +420,48 @@ public class TestSeriesController {
 		authorNames = new Pair[1];
 		authorNames[0] = authorName.setAt0(null);
 
-		rtnedVal = SeriesController.updateSeries(username, password, series_name, authorNames, updateType, Series.series_status_enum.ONGOING);
+		rtnedVal = SeriesController.updateSeries(username, password, series_name, authorNames, updateType,
+				Series.series_status_enum.ONGOING);
 		assertFalse(rtnedVal.getValue0().booleanValue());
 		expectedMsg = String.format(
 				"Author - First Name: %s Last Name: %s - is not a valid author. Either add the author to the database or correct the spelling of the author",
 				null, authorName.getValue1());
 		assertEquals("method returned but not with the expected message.", expectedMsg, rtnedVal.getValue1());
 
-		//NEW tests
-		//Test 11: test empty series name
+		// NEW tests
+		// Test 11: test empty series name
 		series_name = "";
 		authorNames = new Pair[1];
 		authorNames[0] = authorName;
 		newSeriesStatus = Series.series_status_enum.ONGOING;
 
-		rtnedVal = SeriesController.updateSeries(username, password, series_name, authorNames, updateType, newSeriesStatus);
+		rtnedVal = SeriesController.updateSeries(username, password, series_name, authorNames, updateType,
+				newSeriesStatus);
 		assertFalse(rtnedVal.getValue0().booleanValue());
 		expectedMsg = "Series name is invalid.";
 		assertEquals(expectedMsg, rtnedVal.getValue1());
-		
-		//Test 12: test series not in our database but otherwise valid
+
+		// Test 12: test series not in our database but otherwise valid
 		series_name = "not in DB";
 		authorNames = new Pair[1];
 		authorNames[0] = authorName;
 		newSeriesStatus = Series.series_status_enum.ONGOING;
 
-		rtnedVal = SeriesController.updateSeries(username, password, series_name, authorNames, updateType, newSeriesStatus);
+		rtnedVal = SeriesController.updateSeries(username, password, series_name, authorNames, updateType,
+				newSeriesStatus);
 		assertFalse(rtnedVal.getValue0().booleanValue());
 		expectedMsg = "No series from database matches passed in criteria.";
 		assertEquals(expectedMsg, rtnedVal.getValue1());
-		
-		//Test 13: test invalid type of update
+
+		// Test 13: test invalid type of update
 		series_name = "test series";
 		updateType = null;
-		rtnedVal = SeriesController.updateSeries(username, password, series_name, authorNames, updateType, newSeriesStatus);
+		rtnedVal = SeriesController.updateSeries(username, password, series_name, authorNames, updateType,
+				newSeriesStatus);
 		assertFalse(rtnedVal.getValue0().booleanValue());
 		expectedMsg = "Indicator for type of series update is invalid.";
 		assertEquals(expectedMsg, rtnedVal.getValue1());
-		
+
 	}
 
 }

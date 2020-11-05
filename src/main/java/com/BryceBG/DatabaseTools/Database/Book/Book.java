@@ -3,6 +3,7 @@ package com.BryceBG.DatabaseTools.Database.Book;
 
 import java.io.File;
 import java.sql.Date;
+import java.util.Arrays;
 
 import org.javatuples.Pair;
 
@@ -307,4 +308,118 @@ public class Book {
 	public void setDescription(String description) {
 		this.description = description;
 	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + Arrays.hashCode(authorIDs);
+		result = prime * result + Float.floatToIntBits(average_rating);
+		result = prime * result + (int) (book_id ^ (book_id >>> 32));
+		result = prime * result + Float.floatToIntBits(book_index_in_series);
+		result = prime * result + count_authors;
+		result = prime * result + ((cover_location == null) ? 0 : cover_location.hashCode());
+		result = prime * result + ((cover_name == null) ? 0 : cover_name.hashCode());
+		result = prime * result + ((description == null) ? 0 : description.hashCode());
+		result = prime * result + edition;
+		result = prime * result + Arrays.hashCode(genres);
+		result = prime * result + (has_identifiers ? 1231 : 1237);
+		result = prime * result + Arrays.hashCode(identifiers);
+		result = prime * result + ((personal_comment == null) ? 0 : personal_comment.hashCode());
+		result = prime * result + Arrays.hashCode(personal_quotes);
+		result = prime * result + Float.floatToIntBits(personal_rating);
+		result = prime * result + ((personal_series_comment == null) ? 0 : personal_series_comment.hashCode());
+		result = prime * result + Arrays.hashCode(personal_shelves);
+		result = prime * result + primary_author_id;
+		result = prime * result + ((publish_date == null) ? 0 : publish_date.hashCode());
+		result = prime * result + ((publisher == null) ? 0 : publisher.hashCode());
+		result = prime * result + (int) (rating_count ^ (rating_count >>> 32));
+		result = prime * result + series_id;
+		result = prime * result + ((title == null) ? 0 : title.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Book other = (Book) obj;
+		if (!Arrays.equals(authorIDs, other.authorIDs))
+			return false;
+		if (Float.floatToIntBits(average_rating) != Float.floatToIntBits(other.average_rating))
+			return false;
+		if (book_id != other.book_id)
+			return false;
+		if (Float.floatToIntBits(book_index_in_series) != Float.floatToIntBits(other.book_index_in_series))
+			return false;
+		if (count_authors != other.count_authors)
+			return false;
+		if (cover_location == null) {
+			if (other.cover_location != null)
+				return false;
+		} else if (!cover_location.equals(other.cover_location))
+			return false;
+		if (cover_name == null) {
+			if (other.cover_name != null)
+				return false;
+		} else if (!cover_name.equals(other.cover_name))
+			return false;
+		if (description == null) {
+			if (other.description != null)
+				return false;
+		} else if (!description.equals(other.description))
+			return false;
+		if (edition != other.edition)
+			return false;
+		if (!Arrays.equals(genres, other.genres))
+			return false;
+		if (has_identifiers != other.has_identifiers)
+			return false;
+		if (!Arrays.equals(identifiers, other.identifiers))
+			return false;
+		if (personal_comment == null) {
+			if (other.personal_comment != null)
+				return false;
+		} else if (!personal_comment.equals(other.personal_comment))
+			return false;
+		if (!Arrays.equals(personal_quotes, other.personal_quotes))
+			return false;
+		if (Float.floatToIntBits(personal_rating) != Float.floatToIntBits(other.personal_rating))
+			return false;
+		if (personal_series_comment == null) {
+			if (other.personal_series_comment != null)
+				return false;
+		} else if (!personal_series_comment.equals(other.personal_series_comment))
+			return false;
+		if (!Arrays.equals(personal_shelves, other.personal_shelves))
+			return false;
+		if (primary_author_id != other.primary_author_id)
+			return false;
+		if (publish_date == null) {
+			if (other.publish_date != null)
+				return false;
+		} else if (!publish_date.equals(other.publish_date))
+			return false;
+		if (publisher == null) {
+			if (other.publisher != null)
+				return false;
+		} else if (!publisher.equals(other.publisher))
+			return false;
+		if (rating_count != other.rating_count)
+			return false;
+		if (series_id != other.series_id)
+			return false;
+		if (title == null) {
+			if (other.title != null)
+				return false;
+		} else if (!title.equals(other.title))
+			return false;
+		return true;
+	}
+	
+	
 }

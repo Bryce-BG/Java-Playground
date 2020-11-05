@@ -25,6 +25,12 @@ import com.BryceBG.DatabaseTools.Database.Series.Series;
 public class BookDao implements BookDaoInterface {
 	private static final Logger logger = LogManager.getLogger(BookDao.class.getName());
 
+	/**
+	 * Function to get all books currently in our database. This should probably
+	 * only be used for testing at this time as it is not setup to handle the
+	 * massive loads of a fully loaded database.
+	 */
+	@Override
 	public ArrayList<Book> getAllBooks() {
 		ArrayList<Book> rtVal = new ArrayList<Book>();
 		String sql = "SELECT * FROM BOOKS";
@@ -104,27 +110,102 @@ public class BookDao implements BookDaoInterface {
 		return rtVal;
 	}
 
-	
+	public Book getBookByBookID(long bookID) {
+		Book bookX = null;
+		String sql = "SELECT * FROM BOOKS WHERE book_id=?;";
+
+		// 1. establish connection to our database (and create our prepared statements
+		try (Connection conn = DAORoot.library.connectToDB();
+				PreparedStatement pstmt = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE,
+						ResultSet.CONCUR_READ_ONLY);) {
+
+			pstmt.setLong(1, bookID);
+			// 2. execute our query.
+			try (ResultSet rs = pstmt.executeQuery()) {
+				// 3. loop through records returned to parse our data.
+				while (rs.next()) { // should only loop once
+					// 4. extract results from result set needed to create objects
+					float avgRating = rs.getFloat("average_rating");
+					float bookIndexInSeries = rs.getFloat("book_index_in_series");
+					int countAuthors = rs.getInt("count_authors");
+					String coverLocation = rs.getString("cover_location");
+					String coverName = rs.getString("cover_name");
+					String description = rs.getString("description");
+					int edition = rs.getInt("edition");
+					boolean has_identifiers = rs.getBoolean("has_identifiers");
+					int primaryAuthorID = rs.getInt("primary_author_id");
+					Date publishDate = rs.getDate("publish_date");
+					String publisher = rs.getString("publisher");
+					long ratingCount = rs.getLong("rating_count");
+					int seriesID = rs.getInt("series_id");
+					String title = rs.getString("title");
+
+					// 5. create our return object with the values
+					bookX = new Book(avgRating, bookID, bookIndexInSeries, countAuthors, coverLocation, coverName,
+							description, edition, has_identifiers, primaryAuthorID, publishDate, publisher, ratingCount,
+							seriesID, title);
+					// 6. fill additional fields as needed from other tables (authors (if multiple),
+					// identifiers, and genres.
+
+					// 6.a get extra authors
+					if (countAuthors == 1) {
+						// there are no other authors so skip additional query to reduce query overhead.
+						bookX.setAuthorIDs(new int[] { bookX.getPrimaryAuthorID() });
+					} else {
+						// call helper function to get authors from book_authors table
+						int[] authorIDs = helperGetBooksAuthors(conn, bookID);
+						if (authorIDs == null) {
+							// use logger to warn something went wrong but continue silently
+							logger.warn("An error was detected getting book {}'s authors", title);
+						}
+						bookX.setAuthorIDs(authorIDs); // add authors
+					}
+					// 6.b. get identifiers.
+					if (bookX.getHasIdentifiers()) {
+						Pair<String, String>[] bookIdentifiers = helperGetBookIdentifiers(conn, bookID);
+						if (bookIdentifiers == null) {
+							// should have been identifiers but we didn't get them so something went wrong
+							// in helper function.
+							logger.warn("An error was detected getting book {}'s identifiers", title);
+						}
+						bookX.setIdentifiers(bookIdentifiers); // add our identifiers
+					}
+					// 6.c get genres.
+					String[] genres = helperGetBooksGenres(conn, bookID);
+					bookX.setGenres(genres); // add our genres to book object
+				}
+			}
+			// end of try-with-resources: result set
+		} // end of try-with-resources: connection
+			// catch blocks for try-with-resources: connection
+		catch (ClassNotFoundException e) {
+			logger.error("Exception occured during connectToDB: " + e.getMessage());
+		} catch (SQLException e) {
+			logger.error("Exception occured during executing SQL statement: " + e.getMessage());
+		}
+		return bookX;
+	}
+
+	@Override
+	public Book[] getBooksByAuthor(String Author) {
+		// 1. res = authorDao.getAuthor(fname, lname)
+		// 2. select book_id from book_authors where author_id=res.getAuthorID()
+		// for each book_id returned:
+		// getbookByID(book_id)? seems slow.
+		logger.info("getBooksByAuthor() was called but this function is currently a stub");
+
+		// TODO implement below with real implementation
+
+		ArrayList<Book> rtVal = new ArrayList<Book>();
+
+		return (Book[]) rtVal.toArray();
+	}
 
 	public Book getBookByIdentifier(String identifier_name, String identifier) {
 //    	Pair<String, String> id_pair = Pair.with(identifier_name, identifier);
 		// TODO implement me. Query DB for book with id tuple: <identifier_name, value>
 		logger.info("Call to getBookByIdentifier() was made but this is a STUB");
 
-		return null;
-	}
-
-	public Book[] getBooksByAuthor(String Author) {
-		logger.info("Call to getBookByAuthor() was made but this is a STUB");
-
-		// TODO implement me
-		return null;
-	}
-
-	public Book getBookByBookID(String bookID) {
-		logger.info("Call to getBookByBookID() was made but this is a STUB");
-
-		// TODO implement me
 		return null;
 	}
 
@@ -214,6 +295,7 @@ public class BookDao implements BookDaoInterface {
 		}
 		return authorIDs;
 	}
+
 	/**
 	 * Helper function that gets the genres a book has listed from the database
 	 * table book_genres
@@ -251,7 +333,7 @@ public class BookDao implements BookDaoInterface {
 		}
 		return genres;
 	}
-	
+
 	/**
 	 * A helper functions that gets identifiers such as ASIN and ISBN numbers for a
 	 * book from our book_identifier table.

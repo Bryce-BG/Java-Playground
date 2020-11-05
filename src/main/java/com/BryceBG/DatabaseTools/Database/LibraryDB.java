@@ -67,11 +67,15 @@ public class LibraryDB {
 	/**
 	 * This function is intended to be run once to initialize the database for
 	 * future use. WARNING This WILL drop existing database if a database with same
-	 * name exists in system
+	 * name exists in system. It also will execute our install.sql script on that
+	 * database and switch the DAORoot over to use the new database
 	 * 
 	 * @param libraryName the name for the postgresql database to create
 	 * @param showResults This tells our system if it should be verbose and have the
 	 *                    function print out the script as it is executing or not
+	 * @return returns true if database was successfully created (though the
+	 *         install.sql script may not have run correctly). False if the database
+	 *         could not be created/recreated
 	 */
 	public static boolean createDB(String libraryName, boolean showResults) {
 		if (libraryName == null || libraryName.isEmpty() || libraryName.isBlank()) {

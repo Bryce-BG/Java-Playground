@@ -1,4 +1,3 @@
-import static com.BryceBG.DatabaseTools.utils.GlobalConstants.*;
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
@@ -23,9 +22,7 @@ public class TestAuthorDao {
 
 	@BeforeClass
 	public static void runOnce() {
-		// set up our logger
-		com.BryceBG.DatabaseTools.utils.Utils.initializeAppLogger(TEST_LOGGER_OUT_FILE_NAME, TEST_LOGGER_PATTERN);
-		UtilsForTests.createTestDB(); //set our tests to run on the mock database
+		UtilsForTests.setupForTests();
 	}
 
 	@Before
@@ -48,7 +45,6 @@ public class TestAuthorDao {
 		assertEquals("Author bib was not what it should have been", "TEST AUTHOR", t.getAuthorBib());
 	}
 
-	
 	@Test
 	public void testGetAuthor() {
 		// pre-inserted entry as mock data
@@ -93,11 +89,9 @@ public class TestAuthorDao {
 
 		Author t = DAORoot.authorDao.getAuthor(fName, lName);
 		assertEquals(newBib, t.getAuthorBib());
-		
-		//Test 2: try to add author bib for author who does not exist.
-		assertFalse(DAORoot.authorDao.addAuthorBib("IDon'tExist", lName, newBib));
-		
 
+		// Test 2: try to add author bib for author who does not exist.
+		assertFalse(DAORoot.authorDao.addAuthorBib("IDon'tExist", lName, newBib));
 
 	}
 
@@ -136,10 +130,10 @@ public class TestAuthorDao {
 		Author after = DAORoot.authorDao.getAuthor("James", "Joyce");
 
 		assertEquals(newOwner.getUserId(), after.getVerifiedUserID());
-		//Test 2: change verified user to an user who doens't exist
+		// Test 2: change verified user to an user who doens't exist
 		assertFalse(DAORoot.authorDao.setVerifiedUserID("James", "Joyce", "jhonsey"));
-		
-		//Test 3: change verified user on an author that doesn't exist
+
+		// Test 3: change verified user on an author that doesn't exist
 		assertFalse(DAORoot.authorDao.setVerifiedUserID("AuthorFakeFirst", "Joyce", "JamesJoyce"));
 
 	}

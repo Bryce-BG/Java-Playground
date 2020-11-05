@@ -283,9 +283,10 @@ public class Utils {
 		String result = "resource not found";
 		/**
 		 * NOTE: the two lines below do the same thing however, the path to the resource
-		 * is different. 
-		 * If you just use "class.getResourceAsStream() to get our file it takes: "/library.properties"
-		 * If you use: Utils.class.getClassLoader().getResourceAsStream it takes "library.properties"
+		 * is different. If you just use "class.getResourceAsStream() to get our file it
+		 * takes: "/library.properties" If you use:
+		 * Utils.class.getClassLoader().getResourceAsStream it takes
+		 * "library.properties"
 		 */
 //    	InputStream inputStream =  Utils.class.getResourceAsStream(resourceName); //WORKS but needs "/" included in front of name of resource
 		InputStream inputStream = Utils.class.getClassLoader().getResourceAsStream(resourceName);//
@@ -298,14 +299,19 @@ public class Utils {
 
 	}
 
+
 	/**
-	 * Configures root logger, either for FILE output or just console.
+	 * This function configures the applications log4j logger system.
+	 * 
+	 * @param fileName This is the filename to output the log to.
+	 * @param pattern  The pattern used to detail the messages the log produces. For
+	 *                 more details see:
+	 *                 https://logging.apache.org/log4j/2.x/manual/layouts.html#PatternLayout
+	 * 
 	 */
 	public static void initializeAppLogger(String fileName, String pattern) {
-		//https://logging.apache.org/log4j/2.x/manual/appenders.html#ConsoleAppender
-		//https://logging.apache.org/log4j/2.x/manual/configuration.html
-		//https://logging.apache.org/log4j/2.x/manual/layouts.html#PatternLayout
-		
+		// https://logging.apache.org/log4j/2.x/manual/appenders.html#ConsoleAppender
+		// https://logging.apache.org/log4j/2.x/manual/configuration.html
 		// https://www.studytonight.com/post/log4j2-programmatic-configuration-in-java-class#:~:text=Log4j2%20Programmatic%20Configuration%20for%20File,builder%20%3D%20ConfigurationBuilderFactory.
 
 		ConfigurationBuilder<BuiltConfiguration> builder = ConfigurationBuilderFactory.newConfigurationBuilder();

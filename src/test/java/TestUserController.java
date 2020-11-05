@@ -1,6 +1,4 @@
-import static com.BryceBG.DatabaseTools.utils.GlobalConstants.*;
 import static org.junit.Assert.*;
-
 
 import org.javatuples.Pair;
 import org.junit.Before;
@@ -16,6 +14,7 @@ import com.BryceBG.DatabaseTools.Database.DAORoot;
 
 /**
  * Tests for our UserController class.
+ * 
  * @author Bryce-BG
  *
  */
@@ -23,14 +22,12 @@ public class TestUserController {
 
 	@BeforeClass
 	public static void runOnce() {
-		//set up our logger
-		com.BryceBG.DatabaseTools.utils.Utils.initializeAppLogger(TEST_LOGGER_OUT_FILE_NAME, TEST_LOGGER_PATTERN);
-		UtilsForTests.createTestDB(); //set our tests to run on the mock database
+		UtilsForTests.setupForTests();
 	}
-	
+
 	@Before
 	public void beforeTest() {
-		UtilsForTests.resetDB(false); //reset database to initial state
+		UtilsForTests.resetDB(false); // reset database to initial state
 	}
 
 	@Test
@@ -239,7 +236,7 @@ public class TestUserController {
 		assertTrue(res.getValue0().booleanValue());
 
 		// Test 3: can't delete non existent users
-		res = UserController.deleteUser(creatingUsername, creatingUserPass, u1.getUsername()); 
+		res = UserController.deleteUser(creatingUsername, creatingUserPass, u1.getUsername());
 		assertFalse(res.getValue0().booleanValue());
 
 	}
