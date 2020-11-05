@@ -3,6 +3,7 @@ import static org.junit.Assert.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.javatuples.Pair;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -127,5 +128,28 @@ public class testBookDao {
 			Book bookY = DAORoot.bookDao.getBookByBookID(bookX.getBookID());
 			assertEquals(bookX, bookY);
 		}
+	}
+	
+	@Test
+	public void testGetBooksByAuthor() {
+		Pair<String, String> a1 = new Pair<String, String>("James", "Joyce");
+		
+		//Test 1: check for author 1
+		Book[] b1 = DAORoot.bookDao.getBooksByAuthor(a1.getValue0(), a1.getValue1());
+		ArrayList<Book> books = DAORoot.bookDao.getAllBooks();
+		assertEquals(5, b1.length);
+		for(Book bookX : b1) {
+			assertTrue(books.contains(bookX));
+		}
+		
+		
+		//Test 2: check if author 2 works;
+		Pair<String, String> a2 = new Pair<String, String>("Test", "Author2");
+		Book[] b2 = DAORoot.bookDao.getBooksByAuthor(a2.getValue0(), a2.getValue1());
+		assertEquals(1, b2.length); //of test entries he only wrote 1
+		for(Book bookX : b2) {
+			assertTrue(books.contains(bookX));
+		}
+		
 	}
 }

@@ -13,8 +13,11 @@ public interface BookDaoInterface {
 	public abstract ArrayList<Book> getAllBooks();
 
 	// non unique so may return many books
-	public abstract Book[] getBooksByAuthor(String Author);
+	public abstract Book[] getBooksByAuthor(String fName, String lName);
 
+	// Primary key so will return only one book
+	public abstract Book getBookByBookID(long bookID);
+	
 	// SHOULD be unique. However, as this field is not designed by me, if this
 	// assumption is violated only the first book that matches is returned.
 	public abstract Book getBookByIdentifier(String identifier_name, String identifier);
@@ -22,8 +25,7 @@ public interface BookDaoInterface {
 	public abstract Book getRandomBook();
 
 
-	// Primary key so will return only one book
-	public abstract Book getBookByBookID(long bookID);
+
 
 	// non unique so may return many books
 	public abstract Book[] getBooksBySeries(Series series);
