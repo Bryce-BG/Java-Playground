@@ -15,6 +15,8 @@ import org.javatuples.Pair;
 import com.BryceBG.DatabaseTools.Database.DAORoot;
 import com.BryceBG.DatabaseTools.Database.Book.Book.BOOK_FIELD;
 import com.BryceBG.DatabaseTools.Database.Series.Series;
+import com.BryceBG.DatabaseTools.utils.DaoUtils;
+import com.BryceBG.DatabaseTools.utils.IdentifierUtils;
 
 /**
  * This is the public DAO (data access object) for interfacing with the book
@@ -194,7 +196,8 @@ public class BookDao implements BookDaoInterface {
 	}
 
 	/**
-	 * A function that gets all books in the database that the author has authored/co-authored to the author provided.
+	 * A function that gets all books in the database that the author has
+	 * authored/co-authored to the author provided.
 	 * 
 	 * @param author_id the id of the author we want to query for books.
 	 * @return null if the author has no books listed in the database or an
@@ -204,113 +207,230 @@ public class BookDao implements BookDaoInterface {
 	@Override
 	public Book[] getBooksByAuthor(int author_id) {
 		ArrayList<Book> rtVal = new ArrayList<Book>();
-			
-			try (Connection conn = DAORoot.library.connectToDB();) {
 
-				// 2. call helper function to get book_ids for where author has contributed
-				long[] bookIDs = helperGetBookIDsForAuthor(conn, author_id);
-				if (bookIDs != null) {
-					// 3. query to get all books with ids from our list.
-					// ugly workaround to dealing with IN array close (poor performance since we
-					// can't pre-prepare it)
-					//https://stackoverflow.com/questions/178479/preparedstatement-in-clause-alternatives
-					// https://stackoverflow.com/questions/36929116/how-to-use-in-clause-with-preparedstatement-in-postgresql/36930781#36930781
-					// https://stackoverflow.com/questions/3107044/preparedstatement-with-list-of-parameters-in-a-in-clause
-					String valueClause = String.join(", ", Collections.nCopies(bookIDs.length, "?"));
-					String sql = "select * from books WHERE book_id IN (" + valueClause + ")";
+		try (Connection conn = DAORoot.library.connectToDB();) {
 
-					try (PreparedStatement pstmt = conn.prepareStatement(sql);) {
-						int index = 1;
-						for (long id : bookIDs) {
-							pstmt.setLong(index++, id);
-						}
-						// 4. execute query to get book data and parse results
-						try (ResultSet rs = pstmt.executeQuery()) {
+			// 2. call helper function to get book_ids for where author has contributed
+			long[] bookIDs = helperGetBookIDsForAuthor(conn, author_id);
+			if (bookIDs != null) {
+				// 3. query to get all books with ids from our list.
+				// ugly workaround to dealing with IN array close (poor performance since we
+				// can't pre-prepare it)
+				// https://stackoverflow.com/questions/178479/preparedstatement-in-clause-alternatives
+				// https://stackoverflow.com/questions/36929116/how-to-use-in-clause-with-preparedstatement-in-postgresql/36930781#36930781
+				// https://stackoverflow.com/questions/3107044/preparedstatement-with-list-of-parameters-in-a-in-clause
+				String valueClause = String.join(", ", Collections.nCopies(bookIDs.length, "?"));
+				String sql = "select * from books WHERE book_id IN (" + valueClause + ")";
 
-							// 3. loop through records returned to parse our data.
-							while (rs.next()) {
-								// 4. extract results from result set needed to create objects
-								float avgRating = rs.getFloat("average_rating");
-								long bookID = rs.getLong("book_id");
-								float bookIndexInSeries = rs.getFloat("book_index_in_series");
-								int countAuthors = rs.getInt("count_authors");
-								String coverLocation = rs.getString("cover_location");
-								String coverName = rs.getString("cover_name");
-								String description = rs.getString("description");
-								int edition = rs.getInt("edition");
-								boolean has_identifiers = rs.getBoolean("has_identifiers");
-								int primaryAuthorID = rs.getInt("primary_author_id");
-								Date publishDate = rs.getDate("publish_date");
-								String publisher = rs.getString("publisher");
-								long ratingCount = rs.getLong("rating_count");
-								int seriesID = rs.getInt("series_id");
-								String title = rs.getString("title");
+				try (PreparedStatement pstmt = conn.prepareStatement(sql);) {
+					int index = 1;
+					for (long id : bookIDs) {
+						pstmt.setLong(index++, id);
+					}
+					// 4. execute query to get book data and parse results
+					try (ResultSet rs = pstmt.executeQuery()) {
 
-								// 5. create our return object with the values
-								Book bookX = new Book(avgRating, bookID, bookIndexInSeries, countAuthors, coverLocation,
-										coverName, description, edition, has_identifiers, primaryAuthorID, publishDate,
-										publisher, ratingCount, seriesID, title);
-								// 6. fill additional fields as needed from other tables (authors (if multiple),
-								// identifiers, and genres.
+						// 3. loop through records returned to parse our data.
+						while (rs.next()) {
+							// 4. extract results from result set needed to create objects
+							float avgRating = rs.getFloat("average_rating");
+							long bookID = rs.getLong("book_id");
+							float bookIndexInSeries = rs.getFloat("book_index_in_series");
+							int countAuthors = rs.getInt("count_authors");
+							String coverLocation = rs.getString("cover_location");
+							String coverName = rs.getString("cover_name");
+							String description = rs.getString("description");
+							int edition = rs.getInt("edition");
+							boolean has_identifiers = rs.getBoolean("has_identifiers");
+							int primaryAuthorID = rs.getInt("primary_author_id");
+							Date publishDate = rs.getDate("publish_date");
+							String publisher = rs.getString("publisher");
+							long ratingCount = rs.getLong("rating_count");
+							int seriesID = rs.getInt("series_id");
+							String title = rs.getString("title");
 
-								// 6.a get extra authors
-								if (countAuthors == 1) {
-									// there are no other authors so skip additional query to reduce query overhead.
-									bookX.setAuthorIDs(new int[] { bookX.getPrimaryAuthorID() });
-								} else {
-									// call helper function to get authors from book_authors table
-									int[] authorIDs = helperGetBooksAuthors(conn, bookID);
-									if (authorIDs == null) {
-										// use logger to warn something went wrong but continue silently
-										logger.warn("An error was detected getting book {}'s authors", title);
-									}
-									bookX.setAuthorIDs(authorIDs); // add authors
+							// 5. create our return object with the values
+							Book bookX = new Book(avgRating, bookID, bookIndexInSeries, countAuthors, coverLocation,
+									coverName, description, edition, has_identifiers, primaryAuthorID, publishDate,
+									publisher, ratingCount, seriesID, title);
+							// 6. fill additional fields as needed from other tables (authors (if multiple),
+							// identifiers, and genres.
+
+							// 6.a get extra authors
+							if (countAuthors == 1) {
+								// there are no other authors so skip additional query to reduce query overhead.
+								bookX.setAuthorIDs(new int[] { bookX.getPrimaryAuthorID() });
+							} else {
+								// call helper function to get authors from book_authors table
+								int[] authorIDs = helperGetBooksAuthors(conn, bookID);
+								if (authorIDs == null) {
+									// use logger to warn something went wrong but continue silently
+									logger.warn("An error was detected getting book {}'s authors", title);
 								}
-								// 6.b. get identifiers.
-								if (bookX.getHasIdentifiers()) {
-									Pair<String, String>[] bookIdentifiers = helperGetBookIdentifiers(conn, bookID);
-									if (bookIdentifiers == null) {
-										// should have been identifiers but we didn't get them so something went wrong
-										// in helper function.
-										logger.warn("An error was detected getting book {}'s identifiers", title);
-									}
-									bookX.setIdentifiers(bookIdentifiers); // add our identifiers
-								}
-
-								// 6.c get genres.
-								String[] genres = helperGetBooksGenres(conn, bookID);
-								bookX.setGenres(genres); // add our genres to book object
-
-								// 7. add our fully fleshed out book object to return list
-								rtVal.add(bookX);
+								bookX.setAuthorIDs(authorIDs); // add authors
 							}
-						} // end of try-with-resources: result set
-					} // end prepared statement try
-				}
-			} catch (ClassNotFoundException e) {
-				logger.error("Exception occured during connectToDB: " + e.getMessage());
-			} catch (SQLException e) {
-				logger.error("Exception occured during executing SQL statement: {}", e.getMessage());
-			}
+							// 6.b. get identifiers.
+							if (bookX.getHasIdentifiers()) {
+								Pair<String, String>[] bookIdentifiers = helperGetBookIdentifiers(conn, bookID);
+								if (bookIdentifiers == null) {
+									// should have been identifiers but we didn't get them so something went wrong
+									// in helper function.
+									logger.warn("An error was detected getting book {}'s identifiers", title);
+								}
+								bookX.setIdentifiers(bookIdentifiers); // add our identifiers
+							}
 
-		
+							// 6.c get genres.
+							String[] genres = helperGetBooksGenres(conn, bookID);
+							bookX.setGenres(genres); // add our genres to book object
+
+							// 7. add our fully fleshed out book object to return list
+							rtVal.add(bookX);
+						}
+					} // end of try-with-resources: result set
+				} // end prepared statement try
+			}
+		} catch (ClassNotFoundException e) {
+			logger.error("Exception occured during connectToDB: " + e.getMessage());
+		} catch (SQLException e) {
+			logger.error("Exception occured during executing SQL statement: {}", e.getMessage());
+		}
 
 		return rtVal.toArray(new Book[rtVal.size()]);
 	}
 
-	public Book getBookByIdentifier(String identifier_name, String identifier) {
-//    	Pair<String, String> id_pair = Pair.with(identifier_name, identifier);
-		// TODO implement me. Query DB for book with id tuple: <identifier_name, value>
-		logger.info("Call to getBookByIdentifier() was made but this is a STUB");
+	/**
+	 * A function to search for a book by some identifier scheme for example:
+	 * ("ISBN", "0199535566")
+	 * 
+	 * @param identifier_name  The scheme that is used with this identifier. For
+	 *                         example: ISBN, ASIN, UUID, etc.
+	 * @param identifier_value The value of the identifier for the book we are
+	 *                         looking for. For example "0199535566" for a value.
+	 * @return The book if any matching entry was found. If nothing was found or an
+	 *         error occurred then null will be returned.
+	 */
+	@Override
+	public Book getBookByIdentifier(String identifier_name, String identifier_value) {
+		Book rtVal = null;
+		// 1. ensure no crashes due to null or empty strings passed in.
+		if (DaoUtils.stringIsOk(identifier_name) && DaoUtils.stringIsOk(identifier_value)) {
 
-		return null;
+			// 2. call helper function to format our identifier passed in
+			@SuppressWarnings("unchecked")
+			Pair<String, String>[] id_pair_array = new Pair[1];
+			id_pair_array[0] = new Pair<String, String>(identifier_name, identifier_value);
+			id_pair_array = IdentifierUtils.formatAndValidateIdentifiers(id_pair_array);
+
+			if (id_pair_array.length != 0) { // just in case the id was invalid we want to note this and stop
+				identifier_name = id_pair_array[0].getValue0();
+				identifier_value = id_pair_array[0].getValue1();
+
+				// 3. establish DB connection
+				try (Connection conn = DAORoot.library.connectToDB();) {
+
+					// 4. query for entry in book_identifiers
+					long book_id = helperGetBookIDsFromIdentifiers(conn, id_pair_array[0]);
+					if (book_id != 0) {
+						rtVal = getBookByBookID(book_id);
+					}
+					// 5. get the book call getBookByBookID()
+
+				} catch (ClassNotFoundException e) {
+					logger.error("Exception occured during connectToDB: " + e.getMessage());
+				} catch (SQLException e) {
+					logger.error("Exception occured during executing SQL statement: " + e.getMessage());
+				}
+
+			} else {
+				logger.info("The identifier passed in was invalid so no search was performed");
+			}
+		}
+		return rtVal;
 	}
 
+	/**
+	 * Gets a book randomly from our database and returns it.
+	 * 
+	 * @return returns null if an error occured. Otherwise, returns a random book
+	 *         from our database.
+	 */
+	@Override
 	public Book getRandomBook() {
 		// intended to be used on the front page of our website
-		logger.info("Call to getRandomBook() was made but this is a STUB");
+		String sql = "select * from books offset random() * (select count(*) from books) limit 1 ;";
+		Book bookX = null;
 
-		return null;
+		// 1. establish connection to our database (and create our prepared statements
+		try (Connection conn = DAORoot.library.connectToDB(); PreparedStatement pstmt = conn.prepareStatement(sql);) {
+
+			// 2. execute our query.
+			try (ResultSet rs = pstmt.executeQuery()) {
+				// 3. loop through records returned to parse our data.
+				if (rs.next()) {
+					// 4. extract results from result set needed to create objects
+					float avgRating = rs.getFloat("average_rating");
+					long bookID = rs.getLong("book_id");
+					float bookIndexInSeries = rs.getFloat("book_index_in_series");
+					int countAuthors = rs.getInt("count_authors");
+					String coverLocation = rs.getString("cover_location");
+					String coverName = rs.getString("cover_name");
+					String description = rs.getString("description");
+					int edition = rs.getInt("edition");
+					boolean has_identifiers = rs.getBoolean("has_identifiers");
+					int primaryAuthorID = rs.getInt("primary_author_id");
+					Date publishDate = rs.getDate("publish_date");
+					String publisher = rs.getString("publisher");
+					long ratingCount = rs.getLong("rating_count");
+					int seriesID = rs.getInt("series_id");
+					String title = rs.getString("title");
+
+					// 5. create our return object with the values
+					bookX = new Book(avgRating, bookID, bookIndexInSeries, countAuthors, coverLocation, coverName,
+							description, edition, has_identifiers, primaryAuthorID, publishDate, publisher, ratingCount,
+							seriesID, title);
+					// 6. fill additional fields as needed from other tables (authors (if multiple),
+					// identifiers, and genres.
+
+					// 6.a get extra authors
+					if (countAuthors == 1) {
+						// there are no other authors so skip additional query to reduce query overhead.
+						bookX.setAuthorIDs(new int[] { bookX.getPrimaryAuthorID() });
+					} else {
+						// call helper function to get authors from book_authors table
+						int[] authorIDs = helperGetBooksAuthors(conn, bookID);
+						if (authorIDs == null) {
+							// use logger to warn something went wrong but continue silently
+							logger.warn("An error was detected getting book {}'s authors", title);
+						}
+						bookX.setAuthorIDs(authorIDs); // add authors
+					}
+					// 6.b. get identifiers.
+					if (bookX.getHasIdentifiers()) {
+						Pair<String, String>[] bookIdentifiers = helperGetBookIdentifiers(conn, bookID);
+						if (bookIdentifiers == null) {
+							// should have been identifiers but we didn't get them so something went wrong
+							// in helper function.
+							logger.warn("An error was detected getting book {}'s identifiers", title);
+						}
+						bookX.setIdentifiers(bookIdentifiers); // add our identifiers
+					}
+					// 6.c get genres.
+					String[] genres = helperGetBooksGenres(conn, bookID);
+					bookX.setGenres(genres); // add our genres to book object
+				} else {
+					logger.warn("unexpectedly no results were returned from query for a random book");
+				}
+			}
+			// end of try-with-resources: result set
+		} // end of try-with-resources: connection
+			// catch blocks for try-with-resources: connection
+		catch (ClassNotFoundException e) {
+			logger.error("Exception occured during connectToDB: " + e.getMessage());
+		} catch (SQLException e) {
+			logger.error("Exception occured during executing SQL statement: " + e.getMessage());
+		}
+		return bookX;
 	}
 
 	@Override
@@ -514,6 +634,37 @@ public class BookDao implements BookDaoInterface {
 					e.getMessage());
 		}
 		return bookIdentifiers;
+	}
+
+	/**
+	 * Helper function book_identifiers table. Gets a book id based on an identifier passed in. If any
+	 * such book is in the database with that identifier.
+	 * 
+	 * @param conn       An active connection to the database we are querying.
+	 * @param identifier The identifier for the book in the form (identifier_scheme,
+	 *                   identifier_value)
+	 * @return 0 if no such book is found. Otherwise, returns the book_id of the
+	 *         book in the database with the value specified.
+	 */
+	private long helperGetBookIDsFromIdentifiers(Connection conn, Pair<String, String> identifier) {
+		long rtVal = 0;
+		String sql = "SELECT book_id FROM book_identifier WHERE identifier_type=? AND identifier_value=?";
+
+		try (PreparedStatement pstmtgetIdentifiers = conn.prepareStatement(sql);) {
+			pstmtgetIdentifiers.setString(1, identifier.getValue0());
+			pstmtgetIdentifiers.setString(2, identifier.getValue1());
+
+			try (ResultSet rs2 = pstmtgetIdentifiers.executeQuery()) {
+				// 3. loop through records returned to parse our data.
+				if (rs2.next()) {
+					rtVal = rs2.getLong("book_id");
+				}
+			} // end try rs2
+		} catch (SQLException e) {
+			logger.error("An exception occured getting book with ID ({}, {}) Exception: {}", identifier.getValue0(),
+					identifier.getValue1(), e.getMessage());
+		}
+		return rtVal;
 	}
 
 }

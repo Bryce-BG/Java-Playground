@@ -36,7 +36,7 @@ public class testBookDao {
 	public void testGetAllBooks() {
 		ArrayList<Book> books = DAORoot.bookDao.getAllBooks();
 		// 1. should have 5 books based on resetDBEntries.sql script
-		assertEquals("Wrong amount of books was returned", 5, books.size());
+		assertEquals("Wrong amount of books was returned", 7, books.size());
 		List<String> titles = new ArrayList<String>(books.size()); // make sure we have titles
 		for (int x = 1; x <= books.size(); x++) {
 			titles.add(String.format("TestBook%d", x));
@@ -112,50 +112,97 @@ public class testBookDao {
 				// Task4: create book with multiple authors
 				assertEquals(2, bookX.getCountAuthors());
 				assertEquals(2, bookX.getAuthorIDs().length);
-			} else {
+			} else if (bookX.getTitle().equals(titles.get(4))) {
 				// TASK5 create book in series
 				assertNotEquals(-1, bookX.getSeriesID());
-
+			} else if (bookX.getTitle().equals(titles.get(5))) {
+				// TASK6: book with 1 identifier
+				assertEquals(1, bookX.getIdentifiers().length);
+				assertEquals("ISBN", bookX.getIdentifiers()[0].getValue0());
+				assertEquals("9780199535569", bookX.getIdentifiers()[0].getValue1());
+			} else {
+				// TASK7: book with 2 identifiers
+				assertEquals("ISBN", bookX.getIdentifiers()[0].getValue0());
+				assertEquals("0143105426", bookX.getIdentifiers()[0].getValue1());
+				assertEquals("UUID", bookX.getIdentifiers()[1].getValue0());
+				assertEquals("50f9f8b1-8a81-4dd5-b104-0766188d7d2c", bookX.getIdentifiers()[1].getValue1());
 			}
 		}
-
 	}
-	
-	//Dependencies: getAllBooks()
+
+	// Dependencies: getAllBooks()
 	@Test
 	public void testGetBookByID() {
 		ArrayList<Book> books = DAORoot.bookDao.getAllBooks();
-		for(Book bookX : books) {
+		for (Book bookX : books) {
 			Book bookY = DAORoot.bookDao.getBookByBookID(bookX.getBookID());
 			assertEquals(bookX, bookY);
 		}
 	}
-	
-	//Dependencies: getAllBooks(), authorDao.getAuthor()
+
+	// Dependencies: getAllBooks(), authorDao.getAuthor()
 	@Test
 	public void testGetBooksByAuthor() {
 		Pair<String, String> a1 = new Pair<String, String>("James", "Joyce");
 
 		Author author1 = DAORoot.authorDao.getAuthor(a1.getValue0(), a1.getValue1());
-		
-		//Test 1: check for author 1
+
+		// Test 1: check for author 1
 		Book[] b1 = DAORoot.bookDao.getBooksByAuthor(author1.getAuthorID());
 		ArrayList<Book> books = DAORoot.bookDao.getAllBooks();
-		assertEquals(5, b1.length);
-		for(Book bookX : b1) {
+		assertEquals(7, b1.length);// in our database "James Joyce" has authored or co-authored all 7 books.
+		for (Book bookX : b1) {
 			assertTrue(books.contains(bookX));
 		}
-		
-		
-		//Test 2: check if author 2 works;
+
+		// Test 2: check if author 2 works;
 		Pair<String, String> a2 = new Pair<String, String>("Test", "Author2");
 		Author author2 = DAORoot.authorDao.getAuthor(a2.getValue0(), a2.getValue1());
 
 		Book[] b2 = DAORoot.bookDao.getBooksByAuthor(author2.getAuthorID());
-		assertEquals(1, b2.length); //of test entries he only wrote 1
-		for(Book bookX : b2) {
+		assertEquals(1, b2.length); // of test entries he only wrote 1
+		for (Book bookX : b2) {
 			assertTrue(books.contains(bookX));
 		}
+
+	}
+
+	@Test
+	public void testGetRandomBook() {
+		List<Book> books = new ArrayList<Book>();
+		Book book = DAORoot.bookDao.getRandomBook();
+		books.add(book);
+
+		for (int x = 0; x < 5; x++) {
+			book = DAORoot.bookDao.getRandomBook();
+			if (!books.contains(book))
+				books.add(book);
+		}
+		// Theoretically this test CAN fail since it is random however, with 5 tries and
+		// 5 books in the database the probability of this occurring is: 0.00000121426
+		assertTrue(books.size() > 1);
+	}
+
+	//DEPENDENCY 
+	@Test
+	public void testGetBookByIdentifier() {		
+		//Test 1: invalid isbn
+		Book x = DAORoot.bookDao.getBookByIdentifier("isbn", "0199535570");
+		assertNull(x);
+		//Test 2: isbn not in our system.
+		x = DAORoot.bookDao.getBookByIdentifier("isbn", "1905921055");
+		assertNull(x);
 		
+		//Test 3: valid isbn (except spaces)
+		x = DAORoot.bookDao.getBookByIdentifier("isbn", " 9780199535569");
+		assertNotNull(x);
+		
+		//Test 4: hyphens in isbn:
+		x = DAORoot.bookDao.getBookByIdentifier("isbn", " 9780-199-535-569");
+		assertNotNull(x);
+		
+		//Test 5: null identifier value
+		x = DAORoot.bookDao.getBookByIdentifier("isbn", null);
+		assertNull(x);
 	}
 }

@@ -7,14 +7,20 @@
 	3. potentially overload constructor so personal fields can be set with a single call.
 	
 ##BookDao.java
-1. redesign our getBooksByAuthor() function to use IN or ANY pre-prepared statement with static counts of ids in the list to improve our query performance. There are multiple listed alternative ways listed in the function.
-2. re-implement our getRandomBook() function as our way has large overhead when used in a huge database.
+1. (OPTIMIZING) redesign our getBooksByAuthor() function to use IN or ANY pre-prepared statement with static counts of ids in the list to improve our query performance. There are multiple listed alternative ways listed in the function.
+2. (OPTIMIZING) re-implement our getRandomBook() function as our way has large overhead when used in a huge database.
+4. (OPTIMIZING) change getBookByBookID() to a skeleton function that calls a helper which takes the book_ID and a connection. This will allow getBookByIdentifier() to call the helper instead of getBookByBookID() thereby removing redundant open connections to the database and improving performance
+
 
 ##Database changes
 	2. fix book(author_id) as it should actually reference a junction table as there are potentially more than one author per series. 
 	(IMPORTANT) use pg_chron to make a periodic job that updates rating of a series? (since changing user ratings may or may not impact?
 	TODO add indexes to the tables
 	
+##IdentifierUtils.java
+3. extend formatAndValidateIdentifiers() to allow more identifier schemes than just ISBN
+
+
 ##LibraryDB.java
 	1. add getGenres(); to grab all genre titles and create and push to global constants a list of potential genres (for quick book adding suggestions)
 
@@ -62,8 +68,11 @@ when implementing bookDao: for the getter functions.
 If I actually inlined all the requests for the supplementary tables (book_authors, book_genres, book_identifiers), the execution speed almost doubles with getAllBooks(): 0.33s to 0.6-0.7s. That seems a rather substantial overhead for simply querying another function. Further checking may be required.
 
 
+#for identifier specification:
+http://idpf.github.io/epub-registries/identifiers/
 
 
 
 ##functions i may want to add
 for seriesController we may want to add a function that forces series removal by decrementing count to 0 and deleting all the books in the series instead of manual book removal being required.
+
