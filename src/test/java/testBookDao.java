@@ -14,7 +14,6 @@ import com.BryceBG.DatabaseTools.Database.DAORoot;
 import com.BryceBG.DatabaseTools.Database.Author.Author;
 import com.BryceBG.DatabaseTools.Database.Book.Book;
 import com.BryceBG.DatabaseTools.Database.Series.Series;
-import com.BryceBG.DatabaseTools.Database.Series.SeriesController;
 
 import testUtils.UtilsForTests;
 
@@ -226,5 +225,32 @@ public class testBookDao {
 		}
 		
 		assertTrue(titles.containsAll(titlesThatShouldBeInList));
+	}
+	
+	@Test
+	public void testGetBooksByTitle() {
+		//Test 1: check if we get book for one of titles exactly
+		Book[] t = DAORoot.bookDao.getBooksByTitle("TestBook1");
+		assertEquals(1, t.length);
+		
+		//Test 2: check if we get book even with bad casing.
+		t = DAORoot.bookDao.getBooksByTitle("TESTBOOK1");
+		assertEquals(1, t.length);
+		
+		//Test 3: check book name not in database
+		t = DAORoot.bookDao.getBooksByTitle("RandomBook");
+		assertEquals(0, t.length);
+		
+		//Test 4: null title
+		t = DAORoot.bookDao.getBooksByTitle(null);
+		assertEquals(0, t.length);
+		//Test 5: partial title match. beginning missing
+		t = DAORoot.bookDao.getBooksByTitle("Book1");
+		assertEquals(1, t.length);
+		
+		//Test 6: partial title match. end missing
+		t = DAORoot.bookDao.getBooksByTitle("TestBoo");
+		assertEquals(7, t.length);
+		
 	}
 }

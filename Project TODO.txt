@@ -7,6 +7,7 @@
 	3. potentially overload constructor so personal fields can be set with a single call.
 	
 ##BookDao.java
+0. Hollow out most of our getBooks function as almost everything except 1-3 lines PER function is the same. Exporting this to a conditional helper function could dramatically improve our stability 
 1. (OPTIMIZING) redesign our getBooksByAuthor() function to use IN or ANY pre-prepared statement with static counts of ids in the list to improve our query performance. There are multiple listed alternative ways listed in the function.
 2. (OPTIMIZING) re-implement our getRandomBook() function as our way has large overhead when used in a huge database.
 4. (OPTIMIZING) change getBookByBookID() to a skeleton function that calls a helper which takes the book_ID and a connection. This will allow getBookByIdentifier() to call the helper instead of getBookByBookID() thereby removing redundant open connections to the database and improving performance

@@ -432,11 +432,13 @@ public class BookDao implements BookDaoInterface {
 		}
 		return bookX;
 	}
-	
+
 	/**
 	 * Gets all the books in the database that the series passed in contains.
+	 * 
 	 * @param series The series we want to inquire for.
-	 * @return null if an error occurred otherwise returns all books which have the series_id = to the id of the series passed in.
+	 * @return null if an error occurred otherwise returns all books which have the
+	 *         series_id = to the id of the series passed in.
 	 */
 	@Override
 	public Book[] getBooksBySeries(Series series) {
@@ -520,12 +522,94 @@ public class BookDao implements BookDaoInterface {
 		return rtVal.toArray(new Book[rtVal.size()]);
 	}
 
+	/**
+	 * A primitive implementation to allow searching of the database for books by title.
+	 * @param title The title or partial title of the book to look for.
+	 * @return returns an array of books where the title matches the passed in string. Array is empty if no results were found or an error occurred.
+	 */
 	@Override
 	public Book[] getBooksByTitle(String title) {
-		// TODO Auto-generated method stub
-		logger.info("Call to getBooksByTitle() was made but this is a STUB");
+		//modeled after getBySeries only change is: String sql, if (DaoUtils.stringIsOk(title)) {
+		// pstmt.setString(1, title);
+		ArrayList<Book> rtVal = new ArrayList<Book>();
+		// 1. validate title passed in isn't going to cause issues.
+		if (DaoUtils.stringIsOk(title)) {
+			title = "%" + title + "%";
+			String sql = "SELECT * FROM books WHERE title ILIKE ?;";
 
-		return null;
+			// 1. establish connection to our database (and create our prepared statements
+			try (Connection conn = DAORoot.library.connectToDB();
+					PreparedStatement pstmt = conn.prepareStatement(sql);) {
+				pstmt.setString(1, title);
+				// 2. execute our query.
+				try (ResultSet rs = pstmt.executeQuery()) {
+					// 3. loop through records returned to parse our data.
+					while (rs.next()) {
+						// 4. extract results from result set needed to create objects
+						float avgRating = rs.getFloat("average_rating");
+						long bookID = rs.getLong("book_id");
+						float bookIndexInSeries = rs.getFloat("book_index_in_series");
+						int countAuthors = rs.getInt("count_authors");
+						String coverLocation = rs.getString("cover_location");
+						String coverName = rs.getString("cover_name");
+						String description = rs.getString("description");
+						int edition = rs.getInt("edition");
+						boolean has_identifiers = rs.getBoolean("has_identifiers");
+						int primaryAuthorID = rs.getInt("primary_author_id");
+						Date publishDate = rs.getDate("publish_date");
+						String publisher = rs.getString("publisher");
+						long ratingCount = rs.getLong("rating_count");
+						int seriesID = rs.getInt("series_id");
+						title = rs.getString("title"); 
+
+						// 5. create our return object with the values
+						Book bookX = new Book(avgRating, bookID, bookIndexInSeries, countAuthors, coverLocation,
+								coverName, description, edition, has_identifiers, primaryAuthorID, publishDate,
+								publisher, ratingCount, seriesID, title);
+						// 6. fill additional fields as needed from other tables (authors (if multiple),
+						// identifiers, and genres.
+
+						// 6.a get extra authors
+						if (countAuthors == 1) {
+							// there are no other authors so skip additional query to reduce query overhead.
+							bookX.setAuthorIDs(new int[] { bookX.getPrimaryAuthorID() });
+						} else {
+							// call helper function to get authors from book_authors table
+							int[] authorIDs = helperGetBooksAuthors(conn, bookID);
+							if (authorIDs == null) {
+								// use logger to warn something went wrong but continue silently
+								logger.warn("An error was detected getting book {}'s authors", title);
+							}
+							bookX.setAuthorIDs(authorIDs); // add authors
+						}
+						// 6.b. get identifiers.
+						if (bookX.getHasIdentifiers()) {
+							Pair<String, String>[] bookIdentifiers = helperGetBookIdentifiers(conn, bookID);
+							if (bookIdentifiers == null) {
+								// should have been identifiers but we didn't get them so something went wrong
+								// in helper function.
+								logger.warn("An error was detected getting book {}'s identifiers", title);
+							}
+							bookX.setIdentifiers(bookIdentifiers); // add our identifiers
+						}
+						// 6.c get genres.
+						String[] genres = helperGetBooksGenres(conn, bookID);
+						bookX.setGenres(genres); // add our genres to book object
+						// 7. add our fully fleshed out book object to return list
+						rtVal.add(bookX);
+					}
+				}
+				// end of try-with-resources: result set
+			} // end of try-with-resources: connection
+				// catch blocks for try-with-resources: connection
+			catch (ClassNotFoundException e) {
+				logger.error("Exception occured during connectToDB: " + e.getMessage());
+			} catch (SQLException e) {
+				logger.error("Exception occured during executing SQL statement: " + e.getMessage());
+			}
+		}
+
+		return rtVal.toArray(new Book[rtVal.size()]);
 	}
 
 	@Override
