@@ -13,6 +13,8 @@ import org.junit.rules.Timeout;
 import com.BryceBG.DatabaseTools.Database.DAORoot;
 import com.BryceBG.DatabaseTools.Database.Author.Author;
 import com.BryceBG.DatabaseTools.Database.Book.Book;
+import com.BryceBG.DatabaseTools.Database.Series.Series;
+import com.BryceBG.DatabaseTools.Database.Series.SeriesController;
 
 import testUtils.UtilsForTests;
 
@@ -204,5 +206,25 @@ public class testBookDao {
 		//Test 5: null identifier value
 		x = DAORoot.bookDao.getBookByIdentifier("isbn", null);
 		assertNull(x);
+	}
+	
+	@Test
+	public void testGetBooksBySeries() {
+		ArrayList<Series> series = DAORoot.seriesDao.getAllSeries();
+		assertEquals(1, series.size());
+		Book[] results = DAORoot.bookDao.getBooksBySeries(series.get(0));
+		assertEquals(3, results.length); //ensure there are correct amount of books returned
+		ArrayList<String> titles = new ArrayList<String>();
+		for(Book x : results) {
+			titles.add(x.getTitle());
+		}
+		
+		//ensure that the titles are correct
+		ArrayList<String> titlesThatShouldBeInList = new ArrayList<String>();
+		for(int i =5; i<=7; i++) {
+			titlesThatShouldBeInList.add(String.format("TestBook%d", i));
+		}
+		
+		assertTrue(titles.containsAll(titlesThatShouldBeInList));
 	}
 }
