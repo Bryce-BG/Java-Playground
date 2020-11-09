@@ -91,7 +91,7 @@ public class testBookDao {
 				assertNull(bookX.getPublisher());
 				assertEquals(0, bookX.getRatingCount());
 
-//				bookX.getSeriesID();
+				//TODO bookX.getSeriesID();
 //				bookX.getSmallCover();
 
 				assertEquals(titles.get(0), bookX.getTitle());
@@ -251,6 +251,25 @@ public class testBookDao {
 		//Test 6: partial title match. end missing
 		t = DAORoot.bookDao.getBooksByTitle("TestBoo");
 		assertEquals(7, t.length);
+		
+	}
+
+	//Dependencies getAllBooks()
+	@Test
+	public void testRemoveBookByBookID() {
+		//Test 1: try removing all the books currently in database.
+		ArrayList<Book> allBooks = DAORoot.bookDao.getAllBooks();
+		for(Book bookX : allBooks) {
+			assertTrue("failed to remove" + bookX.getTitle(),DAORoot.bookDao.removeBook(bookX.getBookID()));
+		}
+		ArrayList<Book> allBooksAfter = DAORoot.bookDao.getAllBooks();
+		assertEquals(0, allBooksAfter.size());
+		
+		//Test 2: try removing invalid books.
+		assertFalse(DAORoot.bookDao.removeBook(0));
+		assertFalse(DAORoot.bookDao.removeBook(-1));
+
+		
 		
 	}
 }

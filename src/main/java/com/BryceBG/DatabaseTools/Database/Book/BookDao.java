@@ -15,6 +15,7 @@ import org.javatuples.Pair;
 import com.BryceBG.DatabaseTools.Database.DAORoot;
 import com.BryceBG.DatabaseTools.Database.Book.Book.BOOK_FIELD;
 import com.BryceBG.DatabaseTools.Database.Series.Series;
+import com.BryceBG.DatabaseTools.Database.Series.SeriesDao;
 import com.BryceBG.DatabaseTools.utils.DaoUtils;
 import com.BryceBG.DatabaseTools.utils.IdentifierUtils;
 
@@ -45,7 +46,7 @@ public class BookDao implements BookDaoInterface {
 			// 2. execute our query.
 			try (ResultSet rs = pstmt.executeQuery()) {
 
-				Pair<Boolean, Book[]> temp = helperProcessBookResultSet(conn, rs); // TODO process this
+				Pair<Boolean, Book[]> temp = helperProcessBookResultSet(conn, rs); // process this
 				if (temp.getValue0().booleanValue()) // log that an error occurred.
 					logger.warn("An error occured proccessing the results of the sql query");
 				Collections.addAll(rtVal, temp.getValue1()); // convert to an arraylist
@@ -131,10 +132,10 @@ public class BookDao implements BookDaoInterface {
 					}
 					// 4. execute query to get book data and parse results
 					try (ResultSet rs = pstmt.executeQuery()) {
-						//5. parse results
+						// 5. parse results
 						Pair<Boolean, Book[]> temp = helperProcessBookResultSet(conn, rs);
-						if(temp.getValue0()) {//error occurred
-							//log error
+						if (temp.getValue0()) {// error occurred
+							// log error
 							logger.warn("An error occured proccessing the results of the sql query");
 						}
 						rtVal = temp.getValue1();
@@ -217,14 +218,16 @@ public class BookDao implements BookDaoInterface {
 			try (ResultSet rs = pstmt.executeQuery()) {
 				// 3. loop through records returned to parse our data.
 				Pair<Boolean, Book[]> temp = helperProcessBookResultSet(conn, rs);
-				if(temp.getValue0() || temp.getValue1().length!=1) {//error occurred
-					//log error
-					if(temp.getValue1().length!=1) {
-						logger.warn("unexpected amount of results returned from query for a single book. Instead got: {}", temp.getValue1().length);;
+				if (temp.getValue0() || temp.getValue1().length != 1) {// error occurred
+					// log error
+					if (temp.getValue1().length != 1) {
+						logger.warn(
+								"unexpected amount of results returned from query for a single book. Instead got: {}",
+								temp.getValue1().length);
+						;
 					}
 					logger.warn("An error occured proccessing the results of the sql query");
-				}
-				else
+				} else
 					bookX = temp.getValue1()[0];
 			} // end of try-with-resources: result set
 		} // end of try-with-resources: connection
@@ -259,8 +262,8 @@ public class BookDao implements BookDaoInterface {
 				try (ResultSet rs = pstmt.executeQuery()) {
 					// 3. loop through records returned to parse our data.
 					Pair<Boolean, Book[]> temp = helperProcessBookResultSet(conn, rs);
-					if(temp.getValue0()) {//error occurred
-						//log error
+					if (temp.getValue0()) {// error occurred
+						// log error
 						logger.warn("An error occured proccessing the results of the sql query");
 					}
 					rtVal = temp.getValue1();
@@ -287,7 +290,7 @@ public class BookDao implements BookDaoInterface {
 	 */
 	@Override
 	public Book[] getBooksByTitle(String title) {
-		// modeled after getBySeries 
+		// modeled after getBySeries
 		Book[] rtVal = new Book[0];
 		// 1. validate title passed in isn't going to cause issues.
 		if (DaoUtils.stringIsOk(title)) {
@@ -301,8 +304,8 @@ public class BookDao implements BookDaoInterface {
 				// 2. execute our query.
 				try (ResultSet rs = pstmt.executeQuery()) {
 					Pair<Boolean, Book[]> temp = helperProcessBookResultSet(conn, rs);
-					if(temp.getValue0()) {//error occurred
-						//log error
+					if (temp.getValue0()) {// error occurred
+						// log error
 						logger.warn("An error occured proccessing the results of the sql query");
 					}
 					rtVal = temp.getValue1();
@@ -319,27 +322,79 @@ public class BookDao implements BookDaoInterface {
 		return rtVal;
 	}
 
+	/**
+	 * Function to remove a book from the database and update all related table entries which are referencing the book.
+	 * 
+	 * @param bookID unique ID of the book which we are trying to remove.
+	 * @return true if the book was successfully removed and all other tables updated. False if the removal or update of other tables fails.
+	 */
 	@Override
-	public boolean removeBook(long book_id) {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean removeBook(long bookID) {
+		boolean transactionShouldContinue = true;
+		String sql = "DELETE FROM books WHERE book_id=?;";
+		// 1. validate its a real book_id
+		Book bookToDelete = getBookByBookID(bookID);
+		if (bookToDelete == null) // book doesn't exist exit now
+			return false;
+
+		// 2. start connection.
+		try (Connection conn = DAORoot.library.connectToDB(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+			// 3. disable auto-commit (so we can act like a transaction)
+			conn.setAutoCommit(false);
+			pstmt.setLong(1, bookID);
+
+			// 4. execute remove book from books table (and check success)
+			// Note: Because of our cascade settings in database automatically will remove
+			// referenced entries from: book_identifiers, book_authors, and book_genres
+			int rs = pstmt.executeUpdate();
+			// check if SQL update correctly modified 1 row.
+			if (rs == 1) {
+				// 5. if in series: update count booksInSeries
+				if (bookToDelete.getSeriesID() != 0) {
+					// get info needed to update our series
+					Series theBookSeries = DAORoot.seriesDao.getSeriesBySeriesID(bookToDelete.getSeriesID());
+					// decrement count books in series.
+					boolean rtnedVal = DAORoot.seriesDao.updateSeriesBookCount(theBookSeries.getSeriesName(),
+							bookToDelete.getPrimaryAuthorID(), SeriesDao.UpdateType.DEC);
+					transactionShouldContinue = transactionShouldContinue & rtnedVal;
+					if (!transactionShouldContinue) {
+						transactionShouldContinue = false;
+						logger.info("The updateSeriesBookCount() failed");
+					}
+				}
+			} else { // update was either unsuccessful or modified more rows than expected
+				logger.info("The removeBook() failed: the execute update returned: {}", rs);
+				transactionShouldContinue = false;
+			}
+			// 7. if all updates succeeded, commit and otherwise abort transaction.
+			if (transactionShouldContinue)
+				conn.commit();
+			else
+				conn.rollback();
+		} catch (ClassNotFoundException e) {
+			logger.error("Exception occured during connectToDB: " + e.getMessage());
+		} catch (SQLException e) {
+			logger.error("Exception occured during executing SQL statement: " + e.getMessage());
+		}
+
+		return transactionShouldContinue;
 	}
 
-	@Override
-	public boolean removeBook(String title, Pair<String, String> authors) {
-		// TODO Auto-generated method stub
-		return false;
-	}
+	
 
 	@Override
 	public boolean addBook(String title, String cover_location, Pair<String, String>[] authors) {
 		// TODO Auto-generated method stub
+		logger.error("addBook() was called but this function is currently a STUB");
+
 		return false;
 	}
 
 	@Override
 	public boolean editBook(BOOK_FIELD book_field, Object newVal) {
 		// TODO Auto-generated method stub
+		logger.error("editBook() was called but this function is currently a STUB");
+
 		return false;
 	}
 
@@ -378,7 +433,7 @@ public class BookDao implements BookDaoInterface {
 					Date publishDate = rs.getDate("publish_date");
 					String publisher = rs.getString("publisher");
 					long ratingCount = rs.getLong("rating_count");
-					int seriesID = rs.getInt("series_id");
+					int seriesID = rs.getInt("series_id"); // if it is null (the default) the field is set to 0
 					String title = rs.getString("title");
 
 					// 5. create our return object with the values

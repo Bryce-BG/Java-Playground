@@ -12,21 +12,18 @@ public interface BookDaoInterface {
 
 	public abstract ArrayList<Book> getAllBooks();
 
-	//TODO revise to take in long author_id instead of fName/lName
+	// TODO revise to take in long author_id instead of fName/lName
 	// non unique so may return many books
 	public abstract Book[] getBooksByAuthor(int author_id);
 
 	// Primary key so will return only one book
 	public abstract Book getBookByBookID(long bookID);
-	
+
 	// SHOULD be unique. However, as this field is not designed by me, if this
 	// assumption is violated only the first book that matches is returned.
 	public abstract Book getBookByIdentifier(String identifier_name, String identifier);
 
 	public abstract Book getRandomBook();
-
-
-
 
 	// non unique so may return many books
 	public abstract Book[] getBooksBySeries(Series series);
@@ -41,8 +38,8 @@ public interface BookDaoInterface {
 	public abstract boolean removeBook(long book_id);
 
 	// We assume this pairing constitutes a unique pairing. though our database will
-	// not enforce it due to the current design.
-	public abstract boolean removeBook(String title, Pair<String, String> authors);
+	// not enforce it due to the current design. (we will probably implement this at the controller level.
+//	public abstract boolean removeBook(String title, int[] authorIDs);
 
 	// should be broken down more extensively as some are modifications of existing
 	// values whereas the lists may be add/delete or modify for list

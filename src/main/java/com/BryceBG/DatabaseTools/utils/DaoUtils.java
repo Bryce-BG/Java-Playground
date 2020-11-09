@@ -14,7 +14,7 @@ public class DaoUtils {
 
 	/**
 	 * Small helper function to find the smallest value in an array. Used to break
-	 * ties and determine the "primary" author of a book/
+	 * ties and determine the "primary" author of a book and series
 	 * 
 	 * @param arrayToSearch The array to search for the smallest value in.
 	 * @return the smallestValue in the array.
@@ -28,6 +28,11 @@ public class DaoUtils {
 		return curBest;
 	}
 
+	/**
+	 * Given a list of author_ids this function will determine which is the "primary_author_id" of an object in our system.
+	 * @param authorIDs A list of authorIDs (we presume they are valid authorIDs and do not query the database to ensure this to reduce execution overhead.
+	 * @return the authorID from the list that is the primary author.
+	 */
 	public static int findPrimaryAuthor(int[] authorIDs) {
 		return findSmallest(authorIDs);
 	}

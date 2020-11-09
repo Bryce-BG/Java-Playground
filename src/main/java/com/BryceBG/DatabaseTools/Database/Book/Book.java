@@ -42,7 +42,7 @@ public class Book {
 	private String[] genres; // NOT initialized by constructor
 	private boolean has_identifiers;
 	private Pair<String, String>[] identifiers; // NOT initialized by constructor
-	int primary_author_id = -1;
+	private int primary_author_id = -1;
 	private java.sql.Date publish_date;
 	private String publisher = "NA";
 	private long rating_count = 0;
