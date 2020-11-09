@@ -38,7 +38,7 @@ VALUES ('Test', 'Author2', 'TEST AUTHOR');
 --use select to determine the one and only author we are assigning this series to
 --complex insertion relying on results from select query
 INSERT INTO series (series_name, primary_author_id, number_books_in_series, series_status)
-SELECT 'test series', authors.author_id, 1, 'COMPLETED'
+SELECT 'test series', authors.author_id, 3, 'COMPLETED'
 FROM authors
 WHERE authors.fname = 'James'
   AND authors.lname = 'Joyce';
