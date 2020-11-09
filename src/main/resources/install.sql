@@ -111,11 +111,11 @@ CREATE TABLE IF NOT EXISTS books
     publish_date         DATE,
     publisher            VARCHAR,
     rating_count         BIGINT                            DEFAULT 0,    -- number of votes taken for rating
-    series_id            INT                               DEFAULT NULL, --TODO is this legal? ON DELETE SET DEFAULT
+    series_id            INT                               DEFAULT NULL, 
     title                VARCHAR                           NOT NULL,
     PRIMARY KEY (book_id),
     FOREIGN KEY (series_id) REFERENCES series (series_id) ON DELETE SET DEFAULT,
-    UNIQUE (title, primary_author_id),
+    UNIQUE (title, primary_author_id, edition),
     CHECK (average_rating >= 0 AND average_rating <= 10),
     CHECK (count_authors > 0)
 );
