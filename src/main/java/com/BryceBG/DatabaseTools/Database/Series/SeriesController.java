@@ -2,6 +2,8 @@ package com.BryceBG.DatabaseTools.Database.Series;
 
 import static com.BryceBG.DatabaseTools.Database.DAORoot.userDao;
 
+import java.util.ArrayList;
+
 import org.javatuples.Pair;
 
 import com.BryceBG.DatabaseTools.Database.DAORoot;
@@ -41,7 +43,7 @@ public class SeriesController {
 					"No authors were included for the new series (required field).");
 		}
 		// 1.c. ensure authors that were passed in exist in our database.
-		int primary_author_id = Integer.MAX_VALUE;
+		ArrayList<Integer> authorIDstemp = new ArrayList<Integer>();
 		for (Pair<String, String> x : authorNames) {
 			if (x == null) {
 				return new Pair<Boolean, String>(Boolean.FALSE, "A null author was passed in");
@@ -51,10 +53,17 @@ public class SeriesController {
 				return new Pair<Boolean, String>(Boolean.FALSE,
 						String.format("Author - First Name: %s Last Name: %s - is not a valid author. Either add the author to the database or correct the spelling of the author", x.getValue0(), x.getValue1()));
 			} else {
-				if (authorX.getAuthorID() < primary_author_id)
-					primary_author_id = authorX.getAuthorID();
+				authorIDstemp.add(authorX.getAuthorID());
 			}
 		}
+		//1.d determine primary author 
+		    int[] authorIDstemp2 = new int[authorIDstemp.size()];
+		    for (int i=0; i < authorIDstemp2.length; i++)
+		    {
+		    	authorIDstemp2[i] = authorIDstemp.get(i).intValue();
+		    }
+		int primary_author_id = DaoUtils.findPrimaryAuthor(authorIDstemp2);
+		
 
 		// 2. format series_name
 		// TODO maybe Capitalize? but some series may have lowercase words

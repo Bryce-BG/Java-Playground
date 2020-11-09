@@ -19,7 +19,7 @@ public class DaoUtils {
 	 * @param arrayToSearch The array to search for the smallest value in.
 	 * @return the smallestValue in the array.
 	 */
-	public static int findSmallest(int[] arrayToSearch) {
+	private static int findSmallest(int[] arrayToSearch) {
 		int curBest = Integer.MAX_VALUE;
 		for (int t : arrayToSearch) {
 			if (t < curBest)
@@ -28,5 +28,8 @@ public class DaoUtils {
 		return curBest;
 	}
 
+	public static int findPrimaryAuthor(int[] authorIDs) {
+		return findSmallest(authorIDs);
+	}
 
 }

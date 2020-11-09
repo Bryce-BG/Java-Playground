@@ -247,6 +247,7 @@ public class SeriesDao {
 	 * 
 	 * @param seriesName The name of the series we are modifying.
 	 * @param authorID   The ID of the author who wrote the series.
+	 * @param updateType The type of update we are performing on our series (can be to increment or decrement the amount of books in the series).
 	 * @return True if update was successful. False otherwise.
 	 */
 	public boolean updateSeriesBookCount(String seriesName, int authorID, UpdateType updateType) {
