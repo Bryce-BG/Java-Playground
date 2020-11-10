@@ -98,7 +98,7 @@ CREATE TABLE IF NOT EXISTS books
 (
     average_rating       NUMERIC(2, 2)                     DEFAULT 0.0, /*2 places before decimal and 2 after the decimal*/
     book_id              BIGSERIAL,
-    book_index_in_series NUMERIC(2, 2)                     DEFAULT 0.0,
+    book_index_in_series NUMERIC(2, 2)                     DEFAULT -1,
     count_authors        INT                               DEFAULT 1,    --how many authors wrote the series if  more than 1, look in junction table <book_authors> for other author's ids
     cover_location       VARCHAR                           DEFAULT NULL,
     cover_name           VARCHAR                           DEFAULT NULL,
@@ -109,13 +109,13 @@ CREATE TABLE IF NOT EXISTS books
     has_identifiers      BOOLEAN                           DEFAULT FALSE,
     primary_author_id    INT     NOT NULL,                               --FOREIGN KEY references authors,
     publish_date         DATE,
-    publisher            VARCHAR,
+    publisher            VARCHAR						   DEFAULT NULL,
     rating_count         BIGINT                            DEFAULT 0,    -- number of votes taken for rating
     series_id            INT                               DEFAULT NULL, 
     title                VARCHAR                           NOT NULL,
     PRIMARY KEY (book_id),
     FOREIGN KEY (series_id) REFERENCES series (series_id) ON DELETE SET DEFAULT,
-    UNIQUE (title, primary_author_id, edition),
+    UNIQUE (title, primary_author_id, edition, publisher), --needs last 2 fields to deal with issues of multple editions and versions by different publishers for a book
     CHECK (average_rating >= 0 AND average_rating <= 10),
     CHECK (count_authors > 0)
 );
