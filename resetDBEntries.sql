@@ -29,6 +29,7 @@ WHERE username = 'admin';
 INSERT INTO users (username, hashedPassword, salt, first_name, last_name, email, is_admin)
 VALUES ('JamesJoyce', '$2a$10$D0uvz6/IgaKHVjV7zdlXAe8L92nEexa4gkNV7zyLtCRUTIyJEVKxy', '$2a$10$D0uvz6/IgaKHVjV7zdlXAe',
         'James', 'Joyce', 'jjoyce@email.com', false);
+
 INSERT INTO authors(fname, lname, author_bib)
 VALUES ('James', 'Joyce', 'TEST AUTHOR');
 INSERT INTO authors(fname, lname, author_bib)

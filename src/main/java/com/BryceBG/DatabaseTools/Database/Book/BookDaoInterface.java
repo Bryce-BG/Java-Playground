@@ -2,7 +2,6 @@ package com.BryceBG.DatabaseTools.Database.Book;
 
 import com.BryceBG.DatabaseTools.Database.Series.Series;
 
-import org.javatuples.Pair;
 
 import java.util.ArrayList;
 
@@ -33,7 +32,9 @@ public interface BookDaoInterface {
 
 	/* other functions such as add/remove/modify */
 
-	public abstract boolean addBook(String title, String cover_location, Pair<String, String>[] authors);
+	
+
+	public abstract boolean addBook(int[] authorIDs, String description, int edition, String title);
 
 	public abstract boolean removeBook(long book_id);
 

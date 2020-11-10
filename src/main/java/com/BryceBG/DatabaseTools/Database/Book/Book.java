@@ -48,7 +48,6 @@ public class Book {
 	private long rating_count = 0;
 	private int series_id = -1;
 	private String title;
-
 	// user related info on book. (if user is logged in and has added the book to
 	// their "read" selection).
 	// these fields are NOT set by constructor and also require initilization from

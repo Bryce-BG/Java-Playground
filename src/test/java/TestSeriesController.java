@@ -267,6 +267,7 @@ public class TestSeriesController {
 		// Test 7: decrement count and remove series
 		Author a = DAORoot.authorDao.getAuthor("James", "Joyce");
 		UpdateType updateType = UpdateType.DEC;
+		while(		DAORoot.seriesDao.updateSeriesBookCount(series_name, a.getAuthorID(), updateType)) {}//decrement count until we can delete series
 		DAORoot.seriesDao.updateSeriesBookCount(series_name, a.getAuthorID(), updateType);
 		rtnedVal = SeriesController.removeSeries(username, password, series_name, authorNames);
 
@@ -327,7 +328,11 @@ public class TestSeriesController {
 				expectedMsg, rtnedVal.getValue1());
 
 		// Test 2: perform invalid dec (count is already at 0)
-		rtnedVal = SeriesController.updateSeries(username, password, series_name, authorNames, updateType, null);
+		int count = 0;
+		while(count<3) { //decrement until we can't anymore (or timeout if it fails
+			count ++;
+			rtnedVal = SeriesController.updateSeries(username, password, series_name, authorNames, updateType, null);
+		}
 		assertFalse(rtnedVal.getValue0().booleanValue());
 
 		// Test 3: preform INC operation on series

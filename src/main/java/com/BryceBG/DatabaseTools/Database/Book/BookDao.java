@@ -81,7 +81,7 @@ public class BookDao implements BookDaoInterface {
 				Pair<Boolean, Book[]> temp = helperProcessBookResultSet(conn, rs);
 				if (temp.getValue0() == true || temp.getValue1().length != 1) {
 					if (temp.getValue1().length != 1)
-						logger.warn("unexpectedly no results were returned from query for book_id {}", bookID);
+						logger.info("No results were returned from query for book_id {}", bookID);
 					else
 						logger.warn("An error occured proccessing the results of the sql query");
 				} else {
@@ -323,19 +323,22 @@ public class BookDao implements BookDaoInterface {
 	}
 
 	/**
-	 * Function to remove a book from the database and update all related table entries which are referencing the book.
+	 * Function to remove a book from the database and update all related table
+	 * entries which are referencing the book.
 	 * 
 	 * @param bookID unique ID of the book which we are trying to remove.
-	 * @return true if the book was successfully removed and all other tables updated. False if the removal or update of other tables fails.
+	 * @return true if the book was successfully removed and all other tables
+	 *         updated. False if the removal or update of other tables fails.
 	 */
 	@Override
 	public boolean removeBook(long bookID) {
 		boolean transactionShouldContinue = true;
+		boolean rtVal = false;
 		String sql = "DELETE FROM books WHERE book_id=?;";
 		// 1. validate its a real book_id
 		Book bookToDelete = getBookByBookID(bookID);
 		if (bookToDelete == null) // book doesn't exist exit now
-			return false;
+			return rtVal;
 
 		// 2. start connection.
 		try (Connection conn = DAORoot.library.connectToDB(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -357,8 +360,7 @@ public class BookDao implements BookDaoInterface {
 					boolean rtnedVal = DAORoot.seriesDao.updateSeriesBookCount(theBookSeries.getSeriesName(),
 							bookToDelete.getPrimaryAuthorID(), SeriesDao.UpdateType.DEC);
 					transactionShouldContinue = transactionShouldContinue & rtnedVal;
-					if (!transactionShouldContinue) {
-						transactionShouldContinue = false;
+					if (!transactionShouldContinue) { // update failed
 						logger.info("The updateSeriesBookCount() failed");
 					}
 				}
@@ -366,29 +368,114 @@ public class BookDao implements BookDaoInterface {
 				logger.info("The removeBook() failed: the execute update returned: {}", rs);
 				transactionShouldContinue = false;
 			}
-			// 7. if all updates succeeded, commit and otherwise abort transaction.
-			if (transactionShouldContinue)
+			// 6. if all updates succeeded, commit and otherwise abort transaction.
+			if (transactionShouldContinue) {
 				conn.commit();
-			else
+				rtVal = true;
+			} else {
 				conn.rollback();
+				rtVal = false;
+			}
 		} catch (ClassNotFoundException e) {
 			logger.error("Exception occured during connectToDB: " + e.getMessage());
 		} catch (SQLException e) {
 			logger.error("Exception occured during executing SQL statement: " + e.getMessage());
 		}
 
-		return transactionShouldContinue;
+		return rtVal;
 	}
 
-	
-
+	/**
+	 * Function to add a book to our database.
+	 * @param authorIDs The IDs of the authors who have authored/co-authored the book.
+	 * @param description The blurb for what the book is about (can be left blank but NOT null if no such blurb exists)
+	 * @param edition The edition of the book. (if unknown set to -1)
+	 * @param title The title of our book.
+	 * @return returns true if book was successfully added. False if an error occurred
+	 */
 	@Override
-	public boolean addBook(String title, String cover_location, Pair<String, String>[] authors) {
-		// TODO Auto-generated method stub
-		logger.error("addBook() was called but this function is currently a STUB");
+	public boolean addBook(int[] authorIDs, String description, int edition, String title) {
 
-		return false;
+		long bookID = -1;
+		logger.error("addBook() was called but this function is currently a STUB");//TODO remove
+		boolean transactionShouldContinue = true;
+		boolean rtVal = false;
+		// 1. Perform very basic validation on input entries (more should be done at the
+		// controller level)
+		// 1 a. authorIDs are all greater than 0
+		for (int id : authorIDs)
+			if (id <= 0) {
+				logger.info("addBook failed because authorID {} was determined to be invalid", id);
+				return false;
+			}
+		// 1 b. title is not empty or null and description is not null (can be empty
+		// though)
+		if (!DaoUtils.stringIsOk(title) || description == null) {
+			logger.info("addBook failed because title: {} or description {} was determined to be invalid", title,
+					description);
+			return false;
+		}
+
+		String sql = "INSERT INTO books(count_authors, description, edition, primary_author_id, title) VALUES(?, ?, ?, ?, ?);";
+		String sqlGetBookID = "SELECT currval(pg_get_serial_sequence('books', 'book_id'));"; // book_id we just inserted
+																								// should be -1?
+		// 2. establish db connection
+		try (Connection conn = DAORoot.library.connectToDB();
+				PreparedStatement pstmt = conn.prepareStatement(sql);
+				PreparedStatement pstmtbID = conn.prepareStatement(sqlGetBookID);) {
+			// 3. disable auto-commit (so we can act like a transaction)
+			conn.setAutoCommit(false);
+
+			// set fields for inserting into books
+			pstmt.setInt(1, authorIDs.length);
+			pstmt.setString(2, description);
+			pstmt.setInt(3, edition);
+			pstmt.setInt(4, DaoUtils.findPrimaryAuthor(authorIDs));
+			pstmt.setString(5, title);
+
+			// 4. update books table and validate success
+			int rv = pstmt.executeUpdate();
+			if (rv == 1) {
+
+				// 5. get the book_id of new book we are adding.
+				try (ResultSet rs = pstmtbID.executeQuery()) {
+					if (rs.next()) {
+						bookID = rs.getLong("currval");
+					} else
+						transactionShouldContinue = false;
+				} // catch for getBookID try catch.
+				catch (Exception e) {
+					logger.error("Unexpected crash when querying for next serial from books table. {}", e.getMessage());
+					transactionShouldContinue = false;
+				}
+
+				// 6. update our book_authors table
+				rv = helperAddBookAuthors(conn, bookID, authorIDs);
+				if (rv != authorIDs.length) { // error occurred
+					logger.info("The addBook() failed: the execute update to book_authors table returned: {}, Expected: {}", rv, authorIDs.length);
+					transactionShouldContinue = false;
+				}
+			} else {
+				logger.info("The addBook() failed: the execute update to books table returned: {}", rv);
+				transactionShouldContinue = false;
+			}
+			// 6. if all updates succeeded, commit and otherwise abort transaction.
+			if (transactionShouldContinue) {
+				conn.commit();
+				rtVal = true;
+			} else {
+				conn.rollback();
+				rtVal = false;
+			}
+		} catch (ClassNotFoundException e) {
+			logger.error("Exception occured during connectToDB: " + e.getMessage());
+		} catch (SQLException e) {
+			logger.error("Exception occured during executing SQL statement: " + e.getMessage());
+		}
+		return rtVal;
 	}
+
+
 
 	@Override
 	public boolean editBook(BOOK_FIELD book_field, Object newVal) {
@@ -399,6 +486,7 @@ public class BookDao implements BookDaoInterface {
 	}
 
 	// Helpers
+	
 	/**
 	 * A function that takes the result set of a query for our "books" table and
 	 * then compiles all necessary data from other tables to construct an array of
@@ -485,11 +573,41 @@ public class BookDao implements BookDaoInterface {
 			errorsOccurred = Boolean.TRUE;
 			logger.error("Exception occured during executing SQL statement: " + e.getMessage());
 		}
-
 		return new Pair<Boolean, Book[]>(errorsOccurred, rtVal.toArray(new Book[rtVal.size()]));
-
 	}
 
+	/**
+	 * Helper function for book_authors table. Adds all authors provided paired with
+	 * the book_id to the table.
+	 * 
+	 * @param conn      An active connection to our database.
+	 * @param authorIDs IDs of the authors we want to set for a book
+	 * @param bookID    the id of the book we are adding authors to.
+	 * @return returns the numbers of rows in the database that the update
+	 *         modified/created
+	 */
+	private int helperAddBookAuthors(Connection conn, long bookID, int[] authorIDs) {
+		//https://www.postgresqltutorial.com/postgresql-jdbc/insert/
+		String sql = "INSERT into book_authors (book_id, author_id) VALUES (?,?);";
+		int rtVal = 0;
+		try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+			for (int author_id : authorIDs) {
+				pstmt.setLong(1, bookID);
+				pstmt.setInt(2, author_id);
+				pstmt.addBatch();
+			}
+            int[] rv = pstmt.executeBatch();  
+            //sum number of modified rows for all the statements in the batch (each should be "1")
+            for (int x : rv)
+            	rtVal += x;
+
+		} catch (SQLException e) {
+			logger.error("Exception occurred during attempt to add authors for a book to the book_authors table. Exception: {}", e.getMessage());
+		}
+
+		return rtVal;
+	}
+	
 	/**
 	 * Helper function for book_authors table. This function gets entries from the
 	 * database from the table book_authors (a supplementary "junction table" for
@@ -529,6 +647,7 @@ public class BookDao implements BookDaoInterface {
 		return authorIDs;
 	}
 
+	
 	/**
 	 * Helper function for book_authors table. Used to get all book_ids that an
 	 * author has either written or contributed to writing
@@ -569,6 +688,7 @@ public class BookDao implements BookDaoInterface {
 		return bookIDs;
 	}
 
+	
 	/**
 	 * Helper function for book_genres table. Gets the genres a book has listed from
 	 * the database
@@ -607,6 +727,7 @@ public class BookDao implements BookDaoInterface {
 		return genres;
 	}
 
+	
 	/**
 	 * Helper function book_identifiers table. Gets identifiers such as ASIN and
 	 * ISBN numbers for a book from the database.
@@ -652,6 +773,7 @@ public class BookDao implements BookDaoInterface {
 		return bookIdentifiers;
 	}
 
+	
 	/**
 	 * Helper function book_identifiers table. Gets a book id based on an identifier
 	 * passed in. If any such book is in the database with that identifier.

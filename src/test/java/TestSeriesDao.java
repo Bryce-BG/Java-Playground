@@ -51,7 +51,7 @@ public class TestSeriesDao {
 		// NOTE: we don't check series_id as other tests will remove it and as it is
 		// never reused, it is hard to statically determine what this value should be
 //		assertEquals(1, sO.getAuthorID());
-		assertEquals(1, sO.getNumberBooksInSeries());
+		assertEquals(3, sO.getNumberBooksInSeries());
 		assertEquals("test series", sO.getSeriesName());
 		assertEquals(Series.series_status_enum.COMPLETED, sO.getSeriesStatus());
 

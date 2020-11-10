@@ -103,7 +103,7 @@ CREATE TABLE IF NOT EXISTS books
     cover_location       VARCHAR                           DEFAULT NULL,
     cover_name           VARCHAR                           DEFAULT NULL,
     description          VARCHAR,
-    edition              INT                               DEFAULT 0,
+    edition              INT                               DEFAULT -1, -- -1 indicates unknown edition
     --     genres int[], --moved to a junction table <book_genres> to make this validated.
     --     identifiers identifier[], --moved to:book_identifier table
     has_identifiers      BOOLEAN                           DEFAULT FALSE,

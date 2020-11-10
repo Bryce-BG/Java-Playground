@@ -70,7 +70,7 @@ public class testBookDao {
 
 				assertEquals("This is a test book, it does not exist", bookX.getDescription());
 
-				assertEquals(0, bookX.getEdition());
+				assertEquals(-1, bookX.getEdition());
 
 				assertNull(bookX.getGenres());
 
@@ -91,7 +91,7 @@ public class testBookDao {
 				assertNull(bookX.getPublisher());
 				assertEquals(0, bookX.getRatingCount());
 
-				//TODO bookX.getSeriesID();
+				// TODO bookX.getSeriesID();
 //				bookX.getSmallCover();
 
 				assertEquals(titles.get(0), bookX.getTitle());
@@ -184,92 +184,128 @@ public class testBookDao {
 		assertTrue(books.size() > 1);
 	}
 
-	//DEPENDENCY 
+	// DEPENDENCY
 	@Test
-	public void testGetBookByIdentifier() {		
-		//Test 1: invalid isbn
+	public void testGetBookByIdentifier() {
+		// Test 1: invalid isbn
 		Book x = DAORoot.bookDao.getBookByIdentifier("isbn", "0199535570");
 		assertNull(x);
-		//Test 2: isbn not in our system.
+		// Test 2: isbn not in our system.
 		x = DAORoot.bookDao.getBookByIdentifier("isbn", "1905921055");
 		assertNull(x);
-		
-		//Test 3: valid isbn (except spaces)
+
+		// Test 3: valid isbn (except spaces)
 		x = DAORoot.bookDao.getBookByIdentifier("isbn", " 9780199535569");
 		assertNotNull(x);
-		
-		//Test 4: hyphens in isbn:
+
+		// Test 4: hyphens in isbn:
 		x = DAORoot.bookDao.getBookByIdentifier("isbn", " 9780-199-535-569");
 		assertNotNull(x);
-		
-		//Test 5: null identifier value
+
+		// Test 5: null identifier value
 		x = DAORoot.bookDao.getBookByIdentifier("isbn", null);
 		assertNull(x);
 	}
-	
+
 	@Test
 	public void testGetBooksBySeries() {
 		ArrayList<Series> series = DAORoot.seriesDao.getAllSeries();
 		assertEquals(1, series.size());
 		Book[] results = DAORoot.bookDao.getBooksBySeries(series.get(0));
-		assertEquals(3, results.length); //ensure there are correct amount of books returned
+		assertEquals(3, results.length); // ensure there are correct amount of books returned
 		ArrayList<String> titles = new ArrayList<String>();
-		for(Book x : results) {
+		for (Book x : results) {
 			titles.add(x.getTitle());
 		}
-		
-		//ensure that the titles are correct
+
+		// ensure that the titles are correct
 		ArrayList<String> titlesThatShouldBeInList = new ArrayList<String>();
-		for(int i =5; i<=7; i++) {
+		for (int i = 5; i <= 7; i++) {
 			titlesThatShouldBeInList.add(String.format("TestBook%d", i));
 		}
-		
+
 		assertTrue(titles.containsAll(titlesThatShouldBeInList));
 	}
-	
+
 	@Test
 	public void testGetBooksByTitle() {
-		//Test 1: check if we get book for one of titles exactly
+		// Test 1: check if we get book for one of titles exactly
 		Book[] t = DAORoot.bookDao.getBooksByTitle("TestBook1");
 		assertEquals(1, t.length);
-		
-		//Test 2: check if we get book even with bad casing.
+
+		// Test 2: check if we get book even with bad casing.
 		t = DAORoot.bookDao.getBooksByTitle("TESTBOOK1");
 		assertEquals(1, t.length);
-		
-		//Test 3: check book name not in database
+
+		// Test 3: check book name not in database
 		t = DAORoot.bookDao.getBooksByTitle("RandomBook");
 		assertEquals(0, t.length);
-		
-		//Test 4: null title
+
+		// Test 4: null title
 		t = DAORoot.bookDao.getBooksByTitle(null);
 		assertEquals(0, t.length);
-		//Test 5: partial title match. beginning missing
+		// Test 5: partial title match. beginning missing
 		t = DAORoot.bookDao.getBooksByTitle("Book1");
 		assertEquals(1, t.length);
-		
-		//Test 6: partial title match. end missing
+
+		// Test 6: partial title match. end missing
 		t = DAORoot.bookDao.getBooksByTitle("TestBoo");
 		assertEquals(7, t.length);
-		
+
 	}
 
-	//Dependencies getAllBooks()
+	// Dependencies getAllBooks()
 	@Test
 	public void testRemoveBookByBookID() {
-		//Test 1: try removing all the books currently in database.
+		// Test 1: try removing all the books currently in database.
 		ArrayList<Book> allBooks = DAORoot.bookDao.getAllBooks();
-		for(Book bookX : allBooks) {
-			assertTrue("failed to remove" + bookX.getTitle(),DAORoot.bookDao.removeBook(bookX.getBookID()));
+		for (Book bookX : allBooks) {
+			assertTrue("failed to remove" + bookX.getTitle(), DAORoot.bookDao.removeBook(bookX.getBookID()));
 		}
 		ArrayList<Book> allBooksAfter = DAORoot.bookDao.getAllBooks();
 		assertEquals(0, allBooksAfter.size());
-		
-		//Test 2: try removing invalid books.
+
+		// Test 2: try removing invalid books.
 		assertFalse(DAORoot.bookDao.removeBook(0));
 		assertFalse(DAORoot.bookDao.removeBook(-1));
 
+	}
+
+	// Dependencies getAllBooks()
+	@Test
+	public void testAddBook() {
+		ArrayList<Book> allBooks = DAORoot.bookDao.getAllBooks();
+		Author a1 = DAORoot.authorDao.getAuthor("James", "Joyce");
+		Author a2 = DAORoot.authorDao.getAuthor("Test", "Author2");
+		int[] authorIDs = new int[] {a1.getAuthorID()};
 		
+		//Test 1: add new book with single author.
+		assertTrue(DAORoot.bookDao.addBook(authorIDs, "THIS BOOK IS BORING BUT NEW", -1, "NEWBOOK4TW"));
+		ArrayList<Book> allBooksAfter = DAORoot.bookDao.getAllBooks();
+		assertEquals(allBooksAfter.size()-1, allBooks.size());
+		
+		//Test 2: null description
+		assertFalse(DAORoot.bookDao.addBook(authorIDs, null, -1, "NEWBOOK4TW2"));
+		
+		//Test 3: empty title
+		assertFalse(DAORoot.bookDao.addBook(authorIDs, "THIS BOOK IS BORING BUT NEW", -1, " "));
+		
+		//Test 4: null title
+		assertFalse(DAORoot.bookDao.addBook(authorIDs, "THIS BOOK IS BORING BUT NEW", -1, null));
+		
+		//Test 5: authorID not valid
+		assertFalse(DAORoot.bookDao.addBook(new int[] {999}, "THIS BOOK IS BORING BUT NEW", -1, "NEWBOOK4TW2"));
+
+		//Test 6: multiple authors
+		authorIDs = new int[] {a1.getAuthorID(), a2.getAuthorID()};
+		assertTrue(DAORoot.bookDao.addBook(authorIDs, "NEW book with multple authors", -1, "NEWBOOK4TW2"));
+
+		
+		//Test 7: pre-existing combo of author/title/edition of a book (fails due to DB constraint)
+		assertFalse(DAORoot.bookDao.addBook(authorIDs, "NEW book with multple authors", -1, "NEWBOOK4TW2"));
+
+		//Test 8: author/title combo already exists in db but new edition of the book
+		assertTrue(DAORoot.bookDao.addBook(authorIDs, "NEW book with multple authors", 1, "NEWBOOK4TW2"));
 		
 	}
 }
