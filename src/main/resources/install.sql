@@ -96,9 +96,9 @@ CREATE TABLE IF NOT EXISTS book_identifier
 
 CREATE TABLE IF NOT EXISTS books
 (
-    average_rating       NUMERIC(2, 2)                     DEFAULT 0.0, /*2 places before decimal and 2 after the decimal*/
+    average_rating       NUMERIC(4, 2)                     DEFAULT 0.0, /*2 places before decimal and 2 after the decimal*/
     book_id              BIGSERIAL,
-    book_index_in_series NUMERIC(2, 2)                     DEFAULT -1,
+    book_index_in_series NUMERIC(4, 2)                     DEFAULT -1,
     count_authors        INT                               DEFAULT 1,    --how many authors wrote the series if  more than 1, look in junction table <book_authors> for other author's ids
     cover_location       VARCHAR                           DEFAULT NULL,
     cover_name           VARCHAR                           DEFAULT NULL,
@@ -109,7 +109,7 @@ CREATE TABLE IF NOT EXISTS books
     has_identifiers      BOOLEAN                           DEFAULT FALSE,
     primary_author_id    INT     NOT NULL,                               --FOREIGN KEY references authors,
     publish_date         DATE,
-    publisher            VARCHAR						   DEFAULT NULL,
+    publisher            VARCHAR						   DEFAULT '', --can't be null as apparently null is unique: https://www.postgresqltutorial.com/postgresql-indexes/postgresql-unique-index/#:~:text=PostgreSQL%20treats%20NULL%20as%20distinct,creates%20a%20corresponding%20UNIQUE%20index.
     rating_count         BIGINT                            DEFAULT 0,    -- number of votes taken for rating
     series_id            INT                               DEFAULT NULL, 
     title                VARCHAR                           NOT NULL,
@@ -229,7 +229,7 @@ CREATE TABLE IF NOT EXISTS user_book_rating
     --this table is for users rating for books
     user_id BIGINT,
     book_id BIGINT,
-    rating  numeric(2, 2), /*2 places before decimal and 2 after the decimal (need to set range (FLOAT 0-10))*/
+    rating  NUMERIC(4, 2), /*2 places before decimal and 2 after the decimal (need to set range (FLOAT 0-10))*/
     PRIMARY KEY (user_id, book_id),
     CHECK ( rating > 0 AND rating >= 10),
     FOREIGN KEY (user_id) REFERENCES users (user_id),

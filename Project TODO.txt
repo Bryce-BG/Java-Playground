@@ -1,5 +1,7 @@
 ##app.java
 	2. check if database exists and if not create it?
+##AuthorDao.java
+add some tests for  getAuthor(int authorID) //newly implemented
 
 ##Book.java
 	1. Decide if we want to do something special for author aliases

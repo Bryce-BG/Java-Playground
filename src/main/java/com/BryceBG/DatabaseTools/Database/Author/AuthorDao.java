@@ -75,6 +75,46 @@ public class AuthorDao {
 		return rtVal;
 	}
 
+	/**
+	 * Gets an author using the author_ID from the database
+	 * @param authorID ID of an author we are looking to get the record of.
+	 * @return An author object if the author can be found in the database. Null if they don't exist
+	 */
+	public Author getAuthor(int authorID) {
+		Author rtVal = null;
+		String sql = "SELECT * FROM AUTHORS WHERE author_id=?";
+
+		// 1. establish connection to our database
+		try (Connection conn = DAORoot.library.connectToDB(); PreparedStatement pstmt = conn.prepareStatement(sql);) {
+			pstmt.setInt(1, authorID);
+			// 2. execute our query.
+			try (ResultSet rs = pstmt.executeQuery()) {
+				if (rs.next()) { // 3. check if sql query for author returned an answer.
+					// 4. extract results from result set needed to create Author object
+					String author_bib = rs.getString("author_bib");
+					int author_id = rs.getInt("author_id");
+					String fName2 = rs.getString("fname");
+					String lName2 = rs.getString("lname");
+					int verified_user_ID = rs.getInt("verified_user_ID");
+					// 5. create our return object with the values
+					rtVal = new Author(author_id, fName2, lName2, author_bib, verified_user_ID);
+				} else {
+					logger.info("The query for author {} returned null. I.e. no match was found in the database.",
+							authorID);
+				}
+
+			} // end of try-with-resources: result set
+		} // end of try-with-resources: connection
+			// catch blocks for try-with-resources: connection
+		catch (ClassNotFoundException e) {
+			logger.error("Exception occured during connectToDB: " + e.getMessage());
+		} catch (SQLException e) {
+			logger.error("Exception occured during executing SQL statement: " + e.getMessage());
+		}
+
+		return rtVal;
+	}
+
 	public ArrayList<Author> getAllAuthors() {
 		ArrayList<Author> rtVal = new ArrayList<Author>();
 		String sql = "SELECT * FROM authors";

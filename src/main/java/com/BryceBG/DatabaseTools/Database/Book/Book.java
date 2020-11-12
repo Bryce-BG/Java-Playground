@@ -21,17 +21,8 @@ import com.BryceBG.DatabaseTools.utils.Utils;
 
 public class Book {
 
-	// this enum is the fields that we allow to be modified post creation.
-	enum BOOK_FIELD {
-
-		TITLE, // maybe not let this get changed?
-		RATING_OVERALL, RATING_COUNT, SERIES_ID, NUMBER_IN_SERIES, EDITION, PUBLISHER, PUBLISH_DATE, COVER_LOCATION,
-		IDENTIFIERS, AVG_RATING,
-
-	}
-
 	private int[] authorIDs; // NOT initialized by constructor (ids if there is more than one author)
-	private float average_rating = -1;
+	private float average_rating = 0.0f;
 	private long book_id = -1; // used to uniquely identify book.
 	private float book_index_in_series = -1;
 	private int count_authors = 1;
@@ -44,13 +35,13 @@ public class Book {
 	private Pair<String, String>[] identifiers; // NOT initialized by constructor
 	private int primary_author_id = -1;
 	private java.sql.Date publish_date;
-	private String publisher = "NA";
+	private String publisher = null;
 	private long rating_count = 0;
 	private int series_id = -1;
 	private String title;
 	// user related info on book. (if user is logged in and has added the book to
 	// their "read" selection).
-	// these fields are NOT set by constructor and also require initilization from
+	// these fields are NOT set by constructor and also require initialization from
 	// drawing data from additional tables
 	private float personal_rating = -1;
 	private String[] personal_shelves;
@@ -419,6 +410,22 @@ public class Book {
 			return false;
 		return true;
 	}
+
+	
+	@Override
+	public String toString() {
+		return "Book [authorIDs=" + Arrays.toString(authorIDs) + ", average_rating=" + average_rating + ", book_id="
+				+ book_id + ", book_index_in_series=" + book_index_in_series + ", count_authors=" + count_authors
+				+ ", cover_location=" + cover_location + ", cover_name=" + cover_name + ", description=" + description
+				+ ", edition=" + edition + ", genres=" + Arrays.toString(genres) + ", has_identifiers="
+				+ has_identifiers + ", identifiers=" + Arrays.toString(identifiers) + ", primary_author_id="
+				+ primary_author_id + ", publish_date=" + publish_date + ", publisher=" + publisher + ", rating_count="
+				+ rating_count + ", series_id=" + series_id + ", title=" + title + ", personal_rating="
+				+ personal_rating + ", personal_shelves=" + Arrays.toString(personal_shelves) + ", personal_quotes="
+				+ Arrays.toString(personal_quotes) + ", personal_comment=" + personal_comment
+				+ ", personal_series_comment=" + personal_series_comment + "]";
+	}
+	
 	
 	
 }

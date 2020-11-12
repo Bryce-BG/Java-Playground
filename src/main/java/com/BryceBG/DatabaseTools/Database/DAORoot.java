@@ -26,7 +26,6 @@ public class DAORoot {
 	public static SeriesDao seriesDao;
 	public static AuthorDao authorDao;
 	public static LibraryDB library;
-
 	
 	private static final Logger logger = LogManager.getLogger(DAORoot.class.getName());
 

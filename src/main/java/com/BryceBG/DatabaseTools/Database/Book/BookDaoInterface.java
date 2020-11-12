@@ -2,8 +2,9 @@ package com.BryceBG.DatabaseTools.Database.Book;
 
 import com.BryceBG.DatabaseTools.Database.Series.Series;
 
-
 import java.util.ArrayList;
+
+import org.javatuples.Pair;
 
 public interface BookDaoInterface {
 
@@ -11,7 +12,6 @@ public interface BookDaoInterface {
 
 	public abstract ArrayList<Book> getAllBooks();
 
-	// TODO revise to take in long author_id instead of fName/lName
 	// non unique so may return many books
 	public abstract Book[] getBooksByAuthor(int author_id);
 
@@ -38,15 +38,45 @@ public interface BookDaoInterface {
 
 	public abstract boolean removeBook(long book_id);
 
-	// We assume this pairing constitutes a unique pairing. though our database will
-	// not enforce it due to the current design. (we will probably implement this at the controller level.
-//	public abstract boolean removeBook(String title, int[] authorIDs);
-
 	// should be broken down more extensively as some are modifications of existing
 	// values whereas the lists may be add/delete or modify for list
-	public abstract boolean editBook(Book.BOOK_FIELD book_field, Object newVal);
+	public abstract <T> boolean editBook(long bookID, BookDaoInterface.EDIT_TYPE editType, T newVal);
 
-	// https://docs.oracle.com/javase/tutorial/jdbc/basics/sqlcustommapping.html
-	// (have I been doing the reading/writing wrong?
-
+	
+	// this enum is the fields that we allow to be modified post creation.
+	public static enum EDIT_TYPE {
+		ADD_AUTHOR("Add an author to a book", Integer.class),
+		REMOVE_AUTHOR("Remove an author from a book", Integer.class),
+		SET_AVG_RATING("Set the rating of a book based on cumulative ratings", Float.class),
+		SET_BOOK_INDEX_IN_SERIES("Set the index the book occupies in the series", Float.class),
+		SET_COVER_LOCATION("Set the path for where the cover image for the book is located", String.class),
+		SET_COVER_NAME("Set the name of the file that is the cover image for the book", String.class),
+		SET_DESCRIPTION("Set the description of the book (the blurb)", String.class),
+		SET_EDITION("Set the edition of the book", Integer.class),
+		SET_GENRES ("Set the genres of the book", String[].class), //TODO this may cause errors as it as an array
+		SET_IDENTIFIERS("Set identifiers for the book (ISBN and the like)", Pair[].class),
+		SET_PUBLISH_DATE("Set the date for when the book was published", java.sql.Date.class),
+		SET_PUBLISHER("Set the field of who published the book", String.class),
+		SET_RATING_COUNT("Set the count for how many people have rated the book", Integer.class),
+		SET_SERIES_ID("Set the series that the book is in", Integer.class);
+		
+		private final String description;
+	    private final Class<?> requiredType;
+	    private EDIT_TYPE(String description, Class<?> required_class) {
+	        this.description = description;
+	        this.requiredType = required_class;
+	    }
+	    public String getRequiredType() {
+	    	return requiredType.getTypeName();	    	
+	    }
+	    public String getEditTypeDescription() {
+	    	return description;
+	    }
+	    public <T> boolean checkFitsRequiredType(T value) {
+	    	if (value == null)
+	    		return false;
+	    	else
+	    		return value.getClass().getTypeName().equals(requiredType.getTypeName());
+	    }
+	}
 }

@@ -13,7 +13,7 @@ import org.apache.logging.log4j.Logger;
 import org.javatuples.Pair;
 
 import com.BryceBG.DatabaseTools.Database.DAORoot;
-import com.BryceBG.DatabaseTools.Database.Book.Book.BOOK_FIELD;
+import com.BryceBG.DatabaseTools.Database.Author.Author;
 import com.BryceBG.DatabaseTools.Database.Series.Series;
 import com.BryceBG.DatabaseTools.Database.Series.SeriesDao;
 import com.BryceBG.DatabaseTools.utils.DaoUtils;
@@ -399,25 +399,26 @@ public class BookDao implements BookDaoInterface {
 	 */
 	@Override
 	public boolean addBook(int[] authorIDs, String description, int edition, String title) {
-		// used as a 1 way boolean to indicate if we should commit or abort the
-		// transaction
+		// a 1 way boolean to indicate if we should commit or abort the transaction
 		boolean transactionShouldContinue = true;
 		boolean rtVal = false; // indicate success or failure of adding a book to the system.
 		String sql = "INSERT INTO books(count_authors, description, edition, primary_author_id, title) VALUES(?, ?, ?, ?, ?);";
 
 		// 1. Perform very basic validation on input entries (more should be done at the
 		// controller level)
+		
 		// 1 a. authorIDs are all greater than 0
 		for (int id : authorIDs) {
 			if (id <= 0) {
-				logger.info("addBook failed because authorID {} was determined to be invalid", id);
+				logger.info("addBook failed because authorID \"{}\" was determined to be invalid", id);
 				return false;
 			}
 		}
-		// 1 b. title is not empty or null and description is not null (can be empty
+		
+		// 1 b. ensure title is not empty or null and description is not null (can be empty
 		// though)
 		if (!DaoUtils.stringIsOk(title) || description == null) {
-			logger.info("addBook failed because title: {} or description {} was determined to be invalid", title,
+			logger.info("addBook failed because title: \"{}\" or description \"{}\" was determined to be invalid", title,
 					description);
 			return false;
 		}
@@ -444,9 +445,9 @@ public class BookDao implements BookDaoInterface {
 				ResultSet rs_lastID = pstmt.getGeneratedKeys();
 
 				if (rs_lastID.next()) {
-					long bookID = rs_lastID.getLong("book_id"); 
+					long bookID = rs_lastID.getLong("book_id");
 					rs_lastID.close();
-					
+
 					// 6. update our book_authors table
 					rv = helperAddBookAuthors(conn, bookID, authorIDs);
 					// 7. check that we added the right amount of rows to the book_authors table
@@ -478,15 +479,218 @@ public class BookDao implements BookDaoInterface {
 		return rtVal;
 	}
 
+	/**
+	 * This function allows editing of a book's fields in our database.
+	 * 
+	 * @param <T>
+	 * @param bookID   The id of the book we are editing.
+	 * @param editType The type of edit we are performing to the book
+	 * @param newVal   This is the specific value required for the field. For
+	 *                 example if we are adding an author this should be a
+	 */
 	@Override
-	public boolean editBook(BOOK_FIELD book_field, Object newVal) {
+	public <T> boolean editBook(long bookID, EDIT_TYPE editType, T newVal) {
+		boolean rtnedVal = false;
 		// TODO Auto-generated method stub
 		logger.error("editBook() was called but this function is currently a STUB");
+		if (newVal == null)
+			return false;
 
-		return false;
+		switch (editType) {
+		case ADD_AUTHOR:
+			if (editType.checkFitsRequiredType(newVal)) // verify the class of the object isn't going to cause a crash
+				rtnedVal = bookAddAuthor(bookID, (Integer) newVal);
+			break;
+		case REMOVE_AUTHOR:
+			// TODO call helper
+			break;
+		case SET_AVG_RATING:
+			// TODO call helper
+			break;
+		case SET_BOOK_INDEX_IN_SERIES:
+			// TODO call helper
+			break;
+		case SET_COVER_LOCATION:
+			// TODO call helper
+			break;
+		case SET_COVER_NAME:
+			// TODO call helper
+			break;
+		case SET_DESCRIPTION:
+			// TODO call helper
+			break;
+		case SET_EDITION:
+			// TODO call helper
+			break;
+		case SET_GENRES:
+			// TODO call helper
+			break;
+		case SET_IDENTIFIERS:
+			// TODO call helper
+			break;
+		case SET_PUBLISH_DATE:
+			// TODO call helper
+			break;
+		case SET_PUBLISHER:
+			// TODO call helper
+			break;
+		case SET_RATING_COUNT:
+			// TODO call helper
+			break;
+		case SET_SERIES_ID:
+			// TODO call helper
+			break;
+
+		default: // was null
+		}
+
+		return rtnedVal;
 	}
 
 	// Helpers
+	/** Start helpers for editBook function */
+
+	/**
+	 * Helper function that allows the addition of authors to a book in the
+	 * database.
+	 * 
+	 * @param bookID      ID of the book in the database we are adding a new author
+	 *                    too.
+	 * @param newAuthorID ID of the new author for the book
+	 * @return true if update was successful. false if it failed.
+	 */
+	private boolean bookAddAuthor(long bookID, Integer newAuthorID) {
+		boolean rtVal = false;
+		// 1. validate bookID by querying book table.
+		Book bookX = getBookByBookID(bookID);
+		if (bookX == null) {
+			return false;	
+		}
+
+		// 2. validate new authorID? 
+		Author authorX = DAORoot.authorDao.getAuthor(newAuthorID.intValue());
+		if (authorX == null) {
+			return false;
+		}
+
+		int[] authorIDs = bookX.getAuthorIDs();
+		
+		// 3. ensure author not already in list of authorIDs.
+		for (int x : authorIDs) {
+			if (x == newAuthorID.intValue()) {
+				logger.info("new author id {} is already listed as an author for the book", newAuthorID.intValue());
+				return false;
+			}
+		}
+
+		// 4. check if primary_author_id in books table needs to be updated
+
+		// create array of author IDs from old + new
+
+		int[] newAuthorIDs = new int[authorIDs.length + 1];
+		for (int x = 0; x < authorIDs.length; x++) {
+			newAuthorIDs[x] = authorIDs[x];
+		}
+		newAuthorIDs[newAuthorIDs.length-1] = newAuthorID.intValue();
+		
+
+
+		//need to update book_authors table AND books count_authors so start at 2
+		int countNeededRowUpdates = 2; //how many rows we need to update in our database.
+		if (DaoUtils.findPrimaryAuthor(newAuthorIDs) != bookX.getPrimaryAuthorID()) {
+			// ALSO need to update books table primary_author_id row
+			countNeededRowUpdates++;
+		}
+
+		// establish connection
+		try (Connection conn = DAORoot.library.connectToDB();) {
+			conn.setAutoCommit(false); // disable auto-commit (transaction)
+			if (countNeededRowUpdates == 3) {
+				// call generic helper function that updates books table 
+				if (helperUpdateBooks(conn, bookID, "primary_author_id", newAuthorID) && 
+					helperUpdateBooks(conn, bookID, "count_authors", bookX.getCountAuthors()+1)) {
+					countNeededRowUpdates-=2;
+				}
+			}
+			else if(countNeededRowUpdates==2) {//just need to update count authors
+				// call generic helper function that updates books table 
+				if (helperUpdateBooks(conn, bookID, "count_authors", bookX.getCountAuthors()+1)) {
+					countNeededRowUpdates--;
+				}
+			}
+
+			// 5. update book_authors table. (if books update was successful or not needed)
+			// no need to query if first update failed.
+			if (countNeededRowUpdates == 1) {
+				countNeededRowUpdates -= helperAddBookAuthors(conn, bookID, new int[] { newAuthorID.intValue() });
+			}
+
+			// 6. commit/abort transaction
+			if (countNeededRowUpdates == 0) {
+				conn.commit();
+				rtVal = true;
+			} else {
+				conn.rollback();
+				rtVal = false;
+			}
+		} catch (ClassNotFoundException e) {
+			logger.error("Exception occured during connectToDB: " + e.getMessage());
+		} catch (SQLException e) {
+			logger.error("Exception occured during executing SQL statement: " + e.getMessage());
+		}
+		return rtVal;
+	}
+
+	/** end helpers for editBook function */
+	/**
+	 * Helper function for books table. Updates a field
+	 * 
+	 * @param <T>           The type of the new value (usually, String, Integer,
+	 * @param conn          An active connection to the database we are updating.
+	 * @param bookID        ID of the book we are updating in the books table.
+	 * @param fieldName     what field we are updating: for example
+	 *                      primary_author_id, or description (see install.sql books
+	 *                      table for full list of names)
+	 * @param newFieldValue The value we are replacing the field of the entry with.
+	 * @return True if update was successful, False if update failed.
+	 */
+	private <T> boolean helperUpdateBooks(Connection conn, long bookID, String fieldName, T newFieldValue) {
+		boolean rtnVal = false;
+		String sql = String.format("UPDATE books SET %s=? WHERE book_id=?", fieldName);
+		try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+			// 1. set our first parameter which has unknown type
+			// determine type of newFieldValue and appropriate jdbc setter for it.
+			String typeString = newFieldValue.getClass().getTypeName();
+			if ("java.lang.Integer".equals(typeString))
+				pstmt.setInt(1, ((Integer) newFieldValue).intValue());
+			else if ("java.lang.Float".equals(typeString))
+				pstmt.setFloat(1, ((Float) newFieldValue).floatValue());
+			else if ("java.lang.String".equals(typeString))
+				pstmt.setString(1, ((String) newFieldValue));
+			else if ("java.lang.Boolean".equals(typeString))
+				pstmt.setBoolean(1, ((Boolean) newFieldValue).booleanValue());
+			else if ("java.sql.Date".equals(typeString))
+				pstmt.setDate(1, ((java.sql.Date) newFieldValue));
+			else if ("java.lang.Long".equals(typeString))
+				pstmt.setLong(1, ((Long) newFieldValue).longValue());
+			else
+				throw new Exception("type was not a supported type for book table edits");
+
+			pstmt.setLong(2, bookID);
+			// perform update and determine success
+			int rv = pstmt.executeUpdate();
+			if (rv == 1)
+				rtnVal = true;
+
+		} catch (SQLException e) {
+			logger.error("An update to set book_id: {}, field: {}, to value: {} failed. Exception: {}", bookID,
+					fieldName, newFieldValue, e.getMessage());
+		} catch (Exception e) {
+			logger.info("Failed to update books table because: {}", e.getMessage());
+		}
+		return rtnVal;
+	}
 
 	/**
 	 * A function that takes the result set of a query for our "books" table and

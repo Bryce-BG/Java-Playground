@@ -1,8 +1,11 @@
 import static org.junit.Assert.*;
 
+import static com.BryceBG.DatabaseTools.Database.DAORoot.*;
+
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.javatuples.Pair;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -13,6 +16,7 @@ import org.junit.rules.Timeout;
 import com.BryceBG.DatabaseTools.Database.DAORoot;
 import com.BryceBG.DatabaseTools.Database.Author.Author;
 import com.BryceBG.DatabaseTools.Database.Book.Book;
+import com.BryceBG.DatabaseTools.Database.Book.BookDaoInterface;
 import com.BryceBG.DatabaseTools.Database.Series.Series;
 
 import testUtils.UtilsForTests;
@@ -57,7 +61,7 @@ public class testBookDao {
 				assertTrue(bookID > 0);
 
 				float bookIndex = bookX.getBookIndexInSeries();
-				assertEquals(0.0, bookIndex, 0.0f);
+				assertEquals(-1.0, bookIndex, 0.0f);
 
 				int countAuthors = bookX.getCountAuthors();
 				assertEquals(1, countAuthors);
@@ -151,7 +155,7 @@ public class testBookDao {
 		// Test 1: check for author 1
 		Book[] b1 = DAORoot.bookDao.getBooksByAuthor(author1.getAuthorID());
 		ArrayList<Book> books = DAORoot.bookDao.getAllBooks();
-		assertEquals(7, b1.length);// in our database "James Joyce" has authored or co-authored all 7 books.
+		assertEquals(6, b1.length);// in our database "James Joyce" has authored or co-authored all 6 books.
 		for (Book bookX : b1) {
 			assertTrue(books.contains(bookX));
 		}
@@ -161,7 +165,7 @@ public class testBookDao {
 		Author author2 = DAORoot.authorDao.getAuthor(a2.getValue0(), a2.getValue1());
 
 		Book[] b2 = DAORoot.bookDao.getBooksByAuthor(author2.getAuthorID());
-		assertEquals(1, b2.length); // of test entries he only wrote 1
+		assertEquals(2, b2.length); // of test entries he only wrote 2 (1 solo 1 co-authored)
 		for (Book bookX : b2) {
 			assertTrue(books.contains(bookX));
 		}
@@ -277,35 +281,99 @@ public class testBookDao {
 		ArrayList<Book> allBooks = DAORoot.bookDao.getAllBooks();
 		Author a1 = DAORoot.authorDao.getAuthor("James", "Joyce");
 		Author a2 = DAORoot.authorDao.getAuthor("Test", "Author2");
-		int[] authorIDs = new int[] {a1.getAuthorID()};
-		
-		//Test 1: add new book with single author.
+		int[] authorIDs = new int[] { a1.getAuthorID() };
+
+		// Test 1: add new book with single author.
 		assertTrue(DAORoot.bookDao.addBook(authorIDs, "THIS BOOK IS BORING BUT NEW", -1, "NEWBOOK4TW"));
 		ArrayList<Book> allBooksAfter = DAORoot.bookDao.getAllBooks();
-		assertEquals(allBooksAfter.size()-1, allBooks.size());
-		
-		//Test 2: null description
+		assertEquals(allBooksAfter.size() - 1, allBooks.size());
+
+		// Test 2: null description
 		assertFalse(DAORoot.bookDao.addBook(authorIDs, null, -1, "NEWBOOK4TW2"));
-		
-		//Test 3: empty title
+
+		// Test 3: empty title
 		assertFalse(DAORoot.bookDao.addBook(authorIDs, "THIS BOOK IS BORING BUT NEW", -1, " "));
-		
-		//Test 4: null title
+
+		// Test 4: null title
 		assertFalse(DAORoot.bookDao.addBook(authorIDs, "THIS BOOK IS BORING BUT NEW", -1, null));
+
+		// Test 5: authorID not valid (not in db)
+		assertFalse(DAORoot.bookDao.addBook(new int[] { 999 }, "THIS BOOK IS BORING BUT NEW", -1, "NEWBOOK4TW2"));
+		//Test 5.b: authorID is just invalid always
+		assertFalse(DAORoot.bookDao.addBook(new int[] { -1 }, "THIS BOOK IS BORING BUT NEW", -1, "NEWBOOK4TW2"));
+
+		// Test 6: multiple authors
+		authorIDs = new int[] { a1.getAuthorID(), a2.getAuthorID() };
+		int sizeBefore = bookDao.getAllBooks().size();
+		assertTrue(bookDao.addBook(authorIDs, "NEW book with multple authors", -1, "NEWBOOK4TW2"));
+		assertEquals(sizeBefore + 1, bookDao.getAllBooks().size()); //should have gone up 1
 		
-		//Test 5: authorID not valid
-		assertFalse(DAORoot.bookDao.addBook(new int[] {999}, "THIS BOOK IS BORING BUT NEW", -1, "NEWBOOK4TW2"));
+		// Test 7: pre-existing combo of author/title/edition of a book (fails due to DB
+		// constraint) 
+		assertFalse(DAORoot.bookDao.addBook(authorIDs, "book already exists", -1, "NEWBOOK4TW2"));
 
-		//Test 6: multiple authors
-		authorIDs = new int[] {a1.getAuthorID(), a2.getAuthorID()};
-		assertTrue(DAORoot.bookDao.addBook(authorIDs, "NEW book with multple authors", -1, "NEWBOOK4TW2"));
-
-		
-		//Test 7: pre-existing combo of author/title/edition of a book (fails due to DB constraint)
-		assertFalse(DAORoot.bookDao.addBook(authorIDs, "NEW book with multple authors", -1, "NEWBOOK4TW2"));
-
-		//Test 8: author/title combo already exists in db but new edition of the book
+		// Test 8: author/title combo already exists in db but new edition of the book
 		assertTrue(DAORoot.bookDao.addBook(authorIDs, "NEW book with multple authors", 1, "NEWBOOK4TW2"));
+
+	}
+
+	/**functions for testing editBook() function**/
+	//Dependencies getAllBooks(), getAllAuthors()
+	@Test
+	public void testEditBook_AddAuthor() {
+		ArrayList<Book> booksBefore = bookDao.getAllBooks();
+		ArrayList<Author> authors = authorDao.getAllAuthors();
+		
+		int[] possibleAuthorIDs = new int[authors.size()];
+		for(int i = 0; i<possibleAuthorIDs.length; i++) {
+			possibleAuthorIDs[i] = authors.get(i).getAuthorID();
+		}
+		
+		//TEST 1: add authors for all books in db (where we have to change primary_author_id and where we don't)
+		for(Book bookX : booksBefore) {
+			if(bookX.getCountAuthors() < authors.size()) { //can add authors
+				//determine which authors arn't already in the book
+				for (int authorXID : possibleAuthorIDs) {
+					if(ArrayUtils.contains(bookX.getAuthorIDs(), authorXID) ==false) //new author we can add to that book
+						assertTrue(bookDao.editBook(bookX.getBookID(), BookDaoInterface.EDIT_TYPE.ADD_AUTHOR, authorXID));
+				}
+			}//end if (adding more authors
+		}
+		
+		ArrayList<Book> booksAfter = bookDao.getAllBooks();
+		for (Book bookX : booksAfter) {
+			assertEquals(possibleAuthorIDs.length, bookX.getCountAuthors());
+		}
+			
+		//TEST 2: try to add authors to a book that doesn't exist (invalid book_id)
+		assertFalse(bookDao.editBook(-1, BookDaoInterface.EDIT_TYPE.ADD_AUTHOR, possibleAuthorIDs[0]));
+		
+		
+		
+		//TEST 3: try to add with null new authorID
+		runBeforeTest(); //reset DB as otherwise this could fail for other reasons 
+		booksBefore = bookDao.getAllBooks();
+		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), BookDaoInterface.EDIT_TYPE.ADD_AUTHOR, null));
+
+
+
+		//TEST 4: authorID not in DB
+		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), BookDaoInterface.EDIT_TYPE.ADD_AUTHOR, 50));
+
+		//TEST 5: try to add an authorID already used with book
+		authors = authorDao.getAllAuthors(); //need to reaquire this
+		possibleAuthorIDs = new int[authors.size()];
+		for(int i = 0; i<possibleAuthorIDs.length; i++) 
+			possibleAuthorIDs[i] = authors.get(i).getAuthorID();
+		
+		//try to add all authors and one (at least should fail)
+		boolean allSucceeded = true;
+		for(int authXID : possibleAuthorIDs) {
+			allSucceeded = allSucceeded & bookDao.editBook(booksBefore.get(0).getBookID(), BookDaoInterface.EDIT_TYPE.ADD_AUTHOR, authXID);
+		}
+		assertFalse(allSucceeded);
+		
 		
 	}
+
 }

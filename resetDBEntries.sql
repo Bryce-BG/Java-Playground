@@ -80,8 +80,8 @@ SELECT 'cover/1/2',
        null,
        'TestBook2'
 FROM authors
-WHERE authors.fname = 'James'
-  AND authors.lname = 'Joyce';
+WHERE authors.fname = 'Test'
+  AND authors.lname = 'Author2';
 --2. add our genre tag to the book_genres table
 INSERT INTO book_genres(book_id, genre_name)
 SELECT book_id, genres.genre_name
