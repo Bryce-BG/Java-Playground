@@ -8,6 +8,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.javatuples.Pair;
@@ -406,7 +407,7 @@ public class BookDao implements BookDaoInterface {
 
 		// 1. Perform very basic validation on input entries (more should be done at the
 		// controller level)
-		
+
 		// 1 a. authorIDs are all greater than 0
 		for (int id : authorIDs) {
 			if (id <= 0) {
@@ -414,12 +415,13 @@ public class BookDao implements BookDaoInterface {
 				return false;
 			}
 		}
-		
-		// 1 b. ensure title is not empty or null and description is not null (can be empty
+
+		// 1 b. ensure title is not empty or null and description is not null (can be
+		// empty
 		// though)
 		if (!DaoUtils.stringIsOk(title) || description == null) {
-			logger.info("addBook failed because title: \"{}\" or description \"{}\" was determined to be invalid", title,
-					description);
+			logger.info("addBook failed because title: \"{}\" or description \"{}\" was determined to be invalid",
+					title, description);
 			return false;
 		}
 
@@ -491,59 +493,73 @@ public class BookDao implements BookDaoInterface {
 	@Override
 	public <T> boolean editBook(long bookID, EDIT_TYPE editType, T newVal) {
 		boolean rtnedVal = false;
-		// TODO Auto-generated method stub
-		logger.error("editBook() was called but this function is currently a STUB");
+		// 1. ensure value isn't null before doing any querying.
 		if (newVal == null)
 			return false;
-
+		// 2. determine appropriate type to cast newVal as and which helper function to
+		// call.
 		switch (editType) {
 		case ADD_AUTHOR:
 			if (editType.checkFitsRequiredType(newVal)) // verify the class of the object isn't going to cause a crash
 				rtnedVal = bookAddAuthor(bookID, (Integer) newVal);
 			break;
 		case REMOVE_AUTHOR:
-			// TODO call helper
+			if (editType.checkFitsRequiredType(newVal))
+				rtnedVal = bookRemoveAuthor(bookID, (Integer) newVal);
 			break;
 		case SET_AVG_RATING:
+			logger.error("editBook() SET_AVG_RATING was called but this is currently a STUB");
 			// TODO call helper
 			break;
 		case SET_BOOK_INDEX_IN_SERIES:
+			logger.error("editBook() SET_BOOK_INDEX_IN_SERIES was called but this is currently a STUB");
 			// TODO call helper
 			break;
 		case SET_COVER_LOCATION:
+			logger.error("editBook() SET_COVER_LOCATION was called but this is currently a STUB");
 			// TODO call helper
 			break;
 		case SET_COVER_NAME:
+			logger.error("editBook() SET_COVER_NAME was called but this is currently a STUB");
 			// TODO call helper
 			break;
 		case SET_DESCRIPTION:
+			logger.error("editBook() SET_DESCRIPTION was called but this is currently a STUB");
 			// TODO call helper
 			break;
 		case SET_EDITION:
+			logger.error("editBook() SET_EDITION was called but this is currently a STUB");
 			// TODO call helper
 			break;
 		case SET_GENRES:
+			logger.error("editBook() SET_GENRES was called but this is currently a STUB");
 			// TODO call helper
 			break;
 		case SET_IDENTIFIERS:
+			logger.error("editBook() SET_IDENTIFIERS was called but this is currently a STUB");
 			// TODO call helper
 			break;
 		case SET_PUBLISH_DATE:
+			logger.error("editBook() SET_PUBLISH_DATE was called but this is currently a STUB");
 			// TODO call helper
 			break;
 		case SET_PUBLISHER:
+			logger.error("editBook() SET_PUBLISHER was called but this is currently a STUB");
 			// TODO call helper
 			break;
 		case SET_RATING_COUNT:
+			logger.error("editBook() SET_RATING_COUNT was called but this is currently a STUB");
 			// TODO call helper
 			break;
 		case SET_SERIES_ID:
+			logger.error("editBook() SET_SERIES_ID was called but this is currently a STUB");
 			// TODO call helper
 			break;
 
 		default: // was null
 		}
 
+		// 3. return whether updated succeeded or failed.
 		return rtnedVal;
 	}
 
@@ -564,18 +580,16 @@ public class BookDao implements BookDaoInterface {
 		// 1. validate bookID by querying book table.
 		Book bookX = getBookByBookID(bookID);
 		if (bookX == null) {
-			return false;	
+			return false;
 		}
 
-		// 2. validate new authorID? 
+		// 2. validate new authorID?
 		Author authorX = DAORoot.authorDao.getAuthor(newAuthorID.intValue());
 		if (authorX == null) {
 			return false;
 		}
-
-		int[] authorIDs = bookX.getAuthorIDs();
-		
 		// 3. ensure author not already in list of authorIDs.
+		int[] authorIDs = bookX.getAuthorIDs();
 		for (int x : authorIDs) {
 			if (x == newAuthorID.intValue()) {
 				logger.info("new author id {} is already listed as an author for the book", newAuthorID.intValue());
@@ -583,50 +597,110 @@ public class BookDao implements BookDaoInterface {
 			}
 		}
 
-		// 4. check if primary_author_id in books table needs to be updated
-
+		// 4. determine amount of updates needed.
+		int countUpdatesNeeded = 2; // how many updates we need to perform on our database.
 		// create array of author IDs from old + new
-
 		int[] newAuthorIDs = new int[authorIDs.length + 1];
 		for (int x = 0; x < authorIDs.length; x++) {
 			newAuthorIDs[x] = authorIDs[x];
 		}
-		newAuthorIDs[newAuthorIDs.length-1] = newAuthorID.intValue();
-		
-
-
-		//need to update book_authors table AND books count_authors so start at 2
-		int countNeededRowUpdates = 2; //how many rows we need to update in our database.
+		newAuthorIDs[newAuthorIDs.length - 1] = newAuthorID.intValue();
+		// Check if books.primary_author_id needs to be updated
 		if (DaoUtils.findPrimaryAuthor(newAuthorIDs) != bookX.getPrimaryAuthorID()) {
-			// ALSO need to update books table primary_author_id row
-			countNeededRowUpdates++;
+			countUpdatesNeeded++;
 		}
 
 		// establish connection
 		try (Connection conn = DAORoot.library.connectToDB();) {
 			conn.setAutoCommit(false); // disable auto-commit (transaction)
-			if (countNeededRowUpdates == 3) {
-				// call generic helper function that updates books table 
-				if (helperUpdateBooks(conn, bookID, "primary_author_id", newAuthorID) && 
-					helperUpdateBooks(conn, bookID, "count_authors", bookX.getCountAuthors()+1)) {
-					countNeededRowUpdates-=2;
+			if (countUpdatesNeeded == 3) { // need to update count_authors variable and primary_author_id
+				// call generic helper function that updates books table
+				if (helperUpdateBooks(conn, bookID, "primary_author_id", newAuthorID)
+						&& helperUpdateBooks(conn, bookID, "count_authors", bookX.getCountAuthors() + 1)) {
+					countUpdatesNeeded -= 2;
 				}
-			}
-			else if(countNeededRowUpdates==2) {//just need to update count authors
-				// call generic helper function that updates books table 
-				if (helperUpdateBooks(conn, bookID, "count_authors", bookX.getCountAuthors()+1)) {
-					countNeededRowUpdates--;
+			} // just update the count_authors variable (new author isn't primary)
+			else if (countUpdatesNeeded == 2) {
+				// call generic helper function that updates books table
+				if (helperUpdateBooks(conn, bookID, "count_authors", bookX.getCountAuthors() + 1)) {
+					countUpdatesNeeded--;
 				}
 			}
 
 			// 5. update book_authors table. (if books update was successful or not needed)
-			// no need to query if first update failed.
-			if (countNeededRowUpdates == 1) {
-				countNeededRowUpdates -= helperAddBookAuthors(conn, bookID, new int[] { newAuthorID.intValue() });
+			// no need to query if first update failed and the variable will be 2 or 3 if it
+			// failed
+			if (countUpdatesNeeded == 1) {
+				countUpdatesNeeded -= helperAddBookAuthors(conn, bookID, new int[] { newAuthorID.intValue() });
 			}
 
 			// 6. commit/abort transaction
-			if (countNeededRowUpdates == 0) {
+			if (countUpdatesNeeded == 0) {
+				conn.commit();
+				rtVal = true;
+			} else {
+				conn.rollback();
+				rtVal = false;
+			}
+		} catch (ClassNotFoundException e) {
+			logger.error("Exception occured during connectToDB: " + e.getMessage());
+		} catch (SQLException e) {
+			logger.error("Exception occured during executing SQL statement: " + e.getMessage());
+		}
+		return rtVal;
+	}
+
+	private boolean bookRemoveAuthor(long bookID, Integer authorToRemoveID) {
+
+		boolean rtVal = false;
+		// 1. validate bookID by querying book table.
+		Book bookX = getBookByBookID(bookID);
+		if (bookX == null) 
+			return false;
+		
+		// 2. ensure new authorID is in list of authorIDs for the book 
+		if (ArrayUtils.contains(bookX.getAuthorIDs(), authorToRemoveID.intValue()) == false)
+			return false;
+
+		// 3. ensure there is more than 1 author listed for the book.
+		if (bookX.getCountAuthors() == 1) {
+			logger.debug("can't remove author from book {} as book only has one author", bookID);
+			return false;
+		}
+
+		// 4. determine amount of updates needed.
+		int countUpdatesNeeded = 2; // how many updates we need to perform on our database.
+
+		// 5. Check if books.primary_author_id needs to be updated
+		if (authorToRemoveID.intValue() == bookX.getPrimaryAuthorID()) {
+			countUpdatesNeeded++;
+		}
+
+		// establish connection
+		try (Connection conn = DAORoot.library.connectToDB();) {
+			conn.setAutoCommit(false); // disable auto-commit (transaction)
+			if (countUpdatesNeeded == 3) { // need to update count_authors variable and primary_author_id
+				int newPrimaryAuthorID = DaoUtils
+						.findPrimaryAuthor(ArrayUtils.removeElement(bookX.getAuthorIDs(), authorToRemoveID.intValue()));
+				if (helperUpdateBooks(conn, bookID, "primary_author_id", newPrimaryAuthorID)
+						&& helperUpdateBooks(conn, bookID, "count_authors", bookX.getCountAuthors() - 1)) {
+					countUpdatesNeeded -= 2;
+				}
+			} // just update the count_authors variable (author removed wasn't primary)
+			else if (countUpdatesNeeded == 2) {
+				if (helperUpdateBooks(conn, bookID, "count_authors", bookX.getCountAuthors() - 1)) {
+					countUpdatesNeeded--;
+				}
+			}
+			// 6. update book_authors table. (if books update was successful or not needed)
+			// no need to query if first update failed and the variable will be 2 or 3 if it
+			// failed
+			if (countUpdatesNeeded == 1) {
+				countUpdatesNeeded -= helperRemoveBookAuthors(conn, bookID, authorToRemoveID.intValue());
+			}
+
+			// 7. commit/abort transaction
+			if (countUpdatesNeeded == 0) {
 				conn.commit();
 				rtVal = true;
 			} else {
@@ -642,10 +716,12 @@ public class BookDao implements BookDaoInterface {
 	}
 
 	/** end helpers for editBook function */
+
 	/**
 	 * Helper function for books table. Updates a field
 	 * 
 	 * @param <T>           The type of the new value (usually, String, Integer,
+	 *                      Boolean, Float)
 	 * @param conn          An active connection to the database we are updating.
 	 * @param bookID        ID of the book we are updating in the books table.
 	 * @param fieldName     what field we are updating: for example
@@ -810,6 +886,34 @@ public class BookDao implements BookDaoInterface {
 		} catch (SQLException e) {
 			logger.error(
 					"Exception occurred during attempt to add authors for a book to the book_authors table. Exception: {}",
+					e.getMessage());
+		}
+
+		return rtVal;
+	}
+
+	/**
+	 * Helper function for book_authors table. Removes an author provided paired
+	 * with the book_id from the table.
+	 * 
+	 * @param conn             An active connection to our database.
+	 * @param authorIDToRemove The ID of the author we want to remove from the book
+	 * @param bookID           The id of the book we are removing an author from.
+	 * @return returns The numbers of rows in the database that the update modified.
+	 */
+	private int helperRemoveBookAuthors(Connection conn, long bookID, int authorIDToRemove) {
+		String sql = "DELETE FROM book_authors WHERE book_id=? AND author_id=?;";
+		int rtVal = 0;
+		try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+			pstmt.setLong(1, bookID);
+			pstmt.setInt(2, authorIDToRemove);
+
+			int rv = pstmt.executeUpdate();
+			rtVal = rv;
+
+		} catch (SQLException e) {
+			logger.error(
+					"Exception occurred during attempt to remove authors for a book to the book_authors table. Exception: {}",
 					e.getMessage());
 		}
 

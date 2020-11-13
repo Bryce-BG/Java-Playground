@@ -347,33 +347,94 @@ public class testBookDao {
 			
 		//TEST 2: try to add authors to a book that doesn't exist (invalid book_id)
 		assertFalse(bookDao.editBook(-1, BookDaoInterface.EDIT_TYPE.ADD_AUTHOR, possibleAuthorIDs[0]));
-		
-		
-		
+			
 		//TEST 3: try to add with null new authorID
 		runBeforeTest(); //reset DB as otherwise this could fail for other reasons 
 		booksBefore = bookDao.getAllBooks();
 		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), BookDaoInterface.EDIT_TYPE.ADD_AUTHOR, null));
 
-
-
 		//TEST 4: authorID not in DB
 		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), BookDaoInterface.EDIT_TYPE.ADD_AUTHOR, 50));
 
 		//TEST 5: try to add an authorID already used with book
-		authors = authorDao.getAllAuthors(); //need to reaquire this
+		authors = authorDao.getAllAuthors(); //need to re-acquire this
 		possibleAuthorIDs = new int[authors.size()];
 		for(int i = 0; i<possibleAuthorIDs.length; i++) 
 			possibleAuthorIDs[i] = authors.get(i).getAuthorID();
 		
-		//try to add all authors and one (at least should fail)
+		//try to add all authors and one (at least should fail) for book as it already has an author
 		boolean allSucceeded = true;
 		for(int authXID : possibleAuthorIDs) {
 			allSucceeded = allSucceeded & bookDao.editBook(booksBefore.get(0).getBookID(), BookDaoInterface.EDIT_TYPE.ADD_AUTHOR, authXID);
 		}
 		assertFalse(allSucceeded);
 		
-		
+		//Test 5: pass in authorID to add as the wrong type
+		for(int authXID : possibleAuthorIDs) {
+			allSucceeded = allSucceeded & bookDao.editBook(booksBefore.get(0).getBookID(), BookDaoInterface.EDIT_TYPE.ADD_AUTHOR, Integer.toString(authXID));
+		}
+
 	}
 
+	//Dependencies getAllBooks(), getAllAuthors(), editBook().AddAuthors
+	@Test
+	public void testEditBook_RemoveAuthor() {
+		ArrayList<Book> booksBefore = bookDao.getAllBooks();
+		ArrayList<Author> authors = authorDao.getAllAuthors();
+		
+		int[] possibleAuthorIDs = new int[authors.size()];
+		for(int i = 0; i<possibleAuthorIDs.length; i++) {
+			possibleAuthorIDs[i] = authors.get(i).getAuthorID();
+		}
+		
+		//Test 1: remove_author invalid book_id
+		assertFalse(bookDao.editBook(-1, BookDaoInterface.EDIT_TYPE.REMOVE_AUTHOR, possibleAuthorIDs[0]));
+
+		//Test 2: remove_author with invalid author_ID (author exists but isn't listed for a book.
+		for(int potentialAuthor : possibleAuthorIDs) {
+			//find an author not in the current book's listing
+			if (ArrayUtils.contains(booksBefore.get(0).getAuthorIDs(), potentialAuthor) == false)
+				assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), BookDaoInterface.EDIT_TYPE.REMOVE_AUTHOR, potentialAuthor));
+		}
+		
+		//Test 3: remove_author  with author_id NOT in db
+		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), BookDaoInterface.EDIT_TYPE.REMOVE_AUTHOR, -1));
+
+		//Test 4: remove_author with a string author_ID
+		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), BookDaoInterface.EDIT_TYPE.REMOVE_AUTHOR, "3"));
+
+		//Test 5: remove_author with null author_ID
+		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), BookDaoInterface.EDIT_TYPE.REMOVE_AUTHOR, null));
+
+		//Test 6: remove_author with book only having 1 author.
+		for(Book bookX : booksBefore) {
+			if(bookX.getCountAuthors()==1) {
+				assertFalse(bookDao.editBook(bookX.getBookID(), BookDaoInterface.EDIT_TYPE.REMOVE_AUTHOR, bookX.getPrimaryAuthorID()));
+				break;
+			}
+		}
+		//Test 7: remove_author where author_removed is primary.
+		//make it so book 0 has 2 authors.
+		for(int authXID : possibleAuthorIDs) {
+			bookDao.editBook(booksBefore.get(0).getBookID(), BookDaoInterface.EDIT_TYPE.ADD_AUTHOR, authXID);
+		}				
+		assertTrue(bookDao.editBook(booksBefore.get(0).getBookID(), BookDaoInterface.EDIT_TYPE.REMOVE_AUTHOR, booksBefore.get(0).getPrimaryAuthorID()));
+
+		
+		//Test 8: remove_author where author removed is NOT primary.
+				//make it so book 0 has multiple authors.
+			for(int authXID : possibleAuthorIDs) {
+				bookDao.editBook(booksBefore.get(0).getBookID(), BookDaoInterface.EDIT_TYPE.ADD_AUTHOR, authXID);
+			}
+			
+			//have to get book again in case adding author changed primary.
+			booksBefore = bookDao.getAllBooks();
+			for(Book bookX : booksBefore) {
+				if (bookX.getCountAuthors()>1) {
+					int[] possibleNotPrimaryIDs = ArrayUtils.removeElement(bookX.getAuthorIDs(), bookX.getPrimaryAuthorID());
+					assertTrue(bookDao.editBook(bookX.getBookID(), BookDaoInterface.EDIT_TYPE.REMOVE_AUTHOR, possibleNotPrimaryIDs[0]));
+				}
+					
+			}		
+	}
 }
