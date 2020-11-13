@@ -508,8 +508,8 @@ public class BookDao implements BookDaoInterface {
 				rtnedVal = bookRemoveAuthor(bookID, (Integer) newVal);
 			break;
 		case SET_AVG_RATING:
-			logger.error("editBook() SET_AVG_RATING was called but this is currently a STUB");
-			// TODO call helper
+			if (editType.checkFitsRequiredType(newVal))
+				rtnedVal = bookSetAvgRating(bookID, (Float) newVal);
 			break;
 		case SET_BOOK_INDEX_IN_SERIES:
 			logger.error("editBook() SET_BOOK_INDEX_IN_SERIES was called but this is currently a STUB");
@@ -655,10 +655,10 @@ public class BookDao implements BookDaoInterface {
 		boolean rtVal = false;
 		// 1. validate bookID by querying book table.
 		Book bookX = getBookByBookID(bookID);
-		if (bookX == null) 
+		if (bookX == null)
 			return false;
-		
-		// 2. ensure new authorID is in list of authorIDs for the book 
+
+		// 2. ensure new authorID is in list of authorIDs for the book
 		if (ArrayUtils.contains(bookX.getAuthorIDs(), authorToRemoveID.intValue()) == false)
 			return false;
 
@@ -707,6 +707,31 @@ public class BookDao implements BookDaoInterface {
 				conn.rollback();
 				rtVal = false;
 			}
+		} catch (ClassNotFoundException e) {
+			logger.error("Exception occured during connectToDB: " + e.getMessage());
+		} catch (SQLException e) {
+			logger.error("Exception occured during executing SQL statement: " + e.getMessage());
+		}
+		return rtVal;
+	}
+
+	private boolean bookSetAvgRating(long bookID, Float newRating) {
+		boolean rtVal = false;
+
+		// 1. validate bookID by querying book table.
+		Book bookX = getBookByBookID(bookID);
+		if (bookX == null)
+			return false;
+
+		// 2. ensure float is in acceptable range (DB will throw an error and catch it
+		// but it is quicker to catch here)
+		if (newRating.floatValue() < 0 || newRating.floatValue() > 10)
+			return false;
+
+		// establish connection
+		try (Connection conn = DAORoot.library.connectToDB();) {
+			//3. update books entry
+			rtVal = helperUpdateBooks(conn, bookID, "average_rating", newRating);
 		} catch (ClassNotFoundException e) {
 			logger.error("Exception occured during connectToDB: " + e.getMessage());
 		} catch (SQLException e) {

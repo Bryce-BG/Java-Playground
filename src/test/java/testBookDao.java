@@ -17,6 +17,7 @@ import com.BryceBG.DatabaseTools.Database.DAORoot;
 import com.BryceBG.DatabaseTools.Database.Author.Author;
 import com.BryceBG.DatabaseTools.Database.Book.Book;
 import com.BryceBG.DatabaseTools.Database.Book.BookDaoInterface;
+import com.BryceBG.DatabaseTools.Database.Book.BookDaoInterface.EDIT_TYPE;
 import com.BryceBG.DatabaseTools.Database.Series.Series;
 
 import testUtils.UtilsForTests;
@@ -436,5 +437,31 @@ public class testBookDao {
 				}
 					
 			}		
+	}
+
+	//Dependencies getAllBooks()
+	@Test
+	public void testEditBook_SetAvgRating() {
+		ArrayList<Book> booksBefore = bookDao.getAllBooks();
+
+		//Test 1: bookID is not in DB
+		EDIT_TYPE editType = EDIT_TYPE.SET_AVG_RATING;
+		assertFalse(bookDao.editBook(-1, editType , 1.0f));
+		
+		//Test 2: null float
+		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType , null));
+
+		//Test 3: float with rating >10
+		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType , 10.1f));
+
+		//Test 4: float with value <0
+		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType , -0.01f));
+
+		
+		//Test 5: valid range to many decimals
+		assertTrue(bookDao.editBook(booksBefore.get(0).getBookID(), editType , 9.9999f));
+
+		//Test 6: 
+		
 	}
 }
