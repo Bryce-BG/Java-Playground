@@ -47,8 +47,8 @@ WHERE authors.fname = 'James'
 --for testing book genre parsing
 INSERT INTO genres (parent, genre_name, genre_description)
 VALUES (null, 'TestGenre1', 'this genre is all for tests');
-INSERT INTO genres (parent, genre_name, genre_description)
-VALUES (null, 'TestGenre2', 'this genre is all for testing');
+INSERT INTO genres (parent, genre_name, genre_description, keywords, mygdrds_equiv)
+VALUES (null, 'TestGenre2', '2this genre is all for testing', ARRAY['Keyword1', 'Keyword2'], 'test_genre2');
 
 --TASK1: create book with no genres tagged
 INSERT INTO books (cover_location, cover_name, description, has_identifiers, primary_author_id, publish_date, publisher,

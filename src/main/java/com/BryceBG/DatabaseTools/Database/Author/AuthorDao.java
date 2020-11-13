@@ -58,7 +58,7 @@ public class AuthorDao {
 						// 5. create our return object with the values
 						rtVal = new Author(author_id, fName2, lName2, author_bib, verified_user_ID);
 					} else {
-						logger.info(String.format(
+						logger.debug(String.format(
 								"The query for (fName: %s, lName: %s) returned null. I.e. no match was found in the database.",
 								fName, lName));
 					}

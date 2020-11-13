@@ -3,6 +3,7 @@ import static org.junit.Assert.*;
 import static com.BryceBG.DatabaseTools.Database.DAORoot.*;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 import org.apache.commons.lang.ArrayUtils;
@@ -300,17 +301,17 @@ public class testBookDao {
 
 		// Test 5: authorID not valid (not in db)
 		assertFalse(DAORoot.bookDao.addBook(new int[] { 999 }, "THIS BOOK IS BORING BUT NEW", -1, "NEWBOOK4TW2"));
-		//Test 5.b: authorID is just invalid always
+		// Test 5.b: authorID is just invalid always
 		assertFalse(DAORoot.bookDao.addBook(new int[] { -1 }, "THIS BOOK IS BORING BUT NEW", -1, "NEWBOOK4TW2"));
 
 		// Test 6: multiple authors
 		authorIDs = new int[] { a1.getAuthorID(), a2.getAuthorID() };
 		int sizeBefore = bookDao.getAllBooks().size();
 		assertTrue(bookDao.addBook(authorIDs, "NEW book with multple authors", -1, "NEWBOOK4TW2"));
-		assertEquals(sizeBefore + 1, bookDao.getAllBooks().size()); //should have gone up 1
-		
+		assertEquals(sizeBefore + 1, bookDao.getAllBooks().size()); // should have gone up 1
+
 		// Test 7: pre-existing combo of author/title/edition of a book (fails due to DB
-		// constraint) 
+		// constraint)
 		assertFalse(DAORoot.bookDao.addBook(authorIDs, "book already exists", -1, "NEWBOOK4TW2"));
 
 		// Test 8: author/title combo already exists in db but new edition of the book
@@ -318,150 +319,375 @@ public class testBookDao {
 
 	}
 
-	/**functions for testing editBook() function**/
-	//Dependencies getAllBooks(), getAllAuthors()
+	/** functions for testing editBook() function **/
+	// Dependencies getAllBooks(), getAllAuthors()
 	@Test
 	public void testEditBook_AddAuthor() {
 		ArrayList<Book> booksBefore = bookDao.getAllBooks();
 		ArrayList<Author> authors = authorDao.getAllAuthors();
-		
+
 		int[] possibleAuthorIDs = new int[authors.size()];
-		for(int i = 0; i<possibleAuthorIDs.length; i++) {
+		for (int i = 0; i < possibleAuthorIDs.length; i++) {
 			possibleAuthorIDs[i] = authors.get(i).getAuthorID();
 		}
-		
-		//TEST 1: add authors for all books in db (where we have to change primary_author_id and where we don't)
-		for(Book bookX : booksBefore) {
-			if(bookX.getCountAuthors() < authors.size()) { //can add authors
-				//determine which authors arn't already in the book
+
+		// TEST 1: add authors for all books in db (where we have to change
+		// primary_author_id and where we don't)
+		for (Book bookX : booksBefore) {
+			if (bookX.getCountAuthors() < authors.size()) { // can add authors
+				// determine which authors arn't already in the book
 				for (int authorXID : possibleAuthorIDs) {
-					if(ArrayUtils.contains(bookX.getAuthorIDs(), authorXID) ==false) //new author we can add to that book
-						assertTrue(bookDao.editBook(bookX.getBookID(), BookDaoInterface.EDIT_TYPE.ADD_AUTHOR, authorXID));
+					if (ArrayUtils.contains(bookX.getAuthorIDs(), authorXID) == false) // new author we can add to that
+																						// book
+						assertTrue(
+								bookDao.editBook(bookX.getBookID(), BookDaoInterface.EDIT_TYPE.ADD_AUTHOR, authorXID));
 				}
-			}//end if (adding more authors
+			} // end if (adding more authors
 		}
-		
+
 		ArrayList<Book> booksAfter = bookDao.getAllBooks();
 		for (Book bookX : booksAfter) {
 			assertEquals(possibleAuthorIDs.length, bookX.getCountAuthors());
 		}
-			
-		//TEST 2: try to add authors to a book that doesn't exist (invalid book_id)
+
+		// TEST 2: try to add authors to a book that doesn't exist (invalid book_id)
 		assertFalse(bookDao.editBook(-1, BookDaoInterface.EDIT_TYPE.ADD_AUTHOR, possibleAuthorIDs[0]));
-			
-		//TEST 3: try to add with null new authorID
-		runBeforeTest(); //reset DB as otherwise this could fail for other reasons 
+
+		// TEST 3: try to add with null new authorID
+		runBeforeTest(); // reset DB as otherwise this could fail for other reasons
 		booksBefore = bookDao.getAllBooks();
 		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), BookDaoInterface.EDIT_TYPE.ADD_AUTHOR, null));
 
-		//TEST 4: authorID not in DB
+		// TEST 4: authorID not in DB
 		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), BookDaoInterface.EDIT_TYPE.ADD_AUTHOR, 50));
 
-		//TEST 5: try to add an authorID already used with book
-		authors = authorDao.getAllAuthors(); //need to re-acquire this
+		// TEST 5: try to add an authorID already used with book
+		authors = authorDao.getAllAuthors(); // need to re-acquire this
 		possibleAuthorIDs = new int[authors.size()];
-		for(int i = 0; i<possibleAuthorIDs.length; i++) 
+		for (int i = 0; i < possibleAuthorIDs.length; i++)
 			possibleAuthorIDs[i] = authors.get(i).getAuthorID();
-		
-		//try to add all authors and one (at least should fail) for book as it already has an author
+
+		// try to add all authors and one (at least should fail) for book as it already
+		// has an author
 		boolean allSucceeded = true;
-		for(int authXID : possibleAuthorIDs) {
-			allSucceeded = allSucceeded & bookDao.editBook(booksBefore.get(0).getBookID(), BookDaoInterface.EDIT_TYPE.ADD_AUTHOR, authXID);
+		for (int authXID : possibleAuthorIDs) {
+			allSucceeded = allSucceeded
+					& bookDao.editBook(booksBefore.get(0).getBookID(), BookDaoInterface.EDIT_TYPE.ADD_AUTHOR, authXID);
 		}
 		assertFalse(allSucceeded);
-		
-		//Test 5: pass in authorID to add as the wrong type
-		for(int authXID : possibleAuthorIDs) {
-			allSucceeded = allSucceeded & bookDao.editBook(booksBefore.get(0).getBookID(), BookDaoInterface.EDIT_TYPE.ADD_AUTHOR, Integer.toString(authXID));
+
+		// Test 5: pass in authorID to add as the wrong type
+		for (int authXID : possibleAuthorIDs) {
+			allSucceeded = allSucceeded & bookDao.editBook(booksBefore.get(0).getBookID(),
+					BookDaoInterface.EDIT_TYPE.ADD_AUTHOR, Integer.toString(authXID));
 		}
 
 	}
 
-	//Dependencies getAllBooks(), getAllAuthors(), editBook().AddAuthors
+	// Dependencies getAllBooks(), getAllAuthors(), editBook().AddAuthors
 	@Test
 	public void testEditBook_RemoveAuthor() {
 		ArrayList<Book> booksBefore = bookDao.getAllBooks();
 		ArrayList<Author> authors = authorDao.getAllAuthors();
-		
+
 		int[] possibleAuthorIDs = new int[authors.size()];
-		for(int i = 0; i<possibleAuthorIDs.length; i++) {
+		for (int i = 0; i < possibleAuthorIDs.length; i++) {
 			possibleAuthorIDs[i] = authors.get(i).getAuthorID();
 		}
-		
-		//Test 1: remove_author invalid book_id
+
+		// Test 1: remove_author invalid book_id
 		assertFalse(bookDao.editBook(-1, BookDaoInterface.EDIT_TYPE.REMOVE_AUTHOR, possibleAuthorIDs[0]));
 
-		//Test 2: remove_author with invalid author_ID (author exists but isn't listed for a book.
-		for(int potentialAuthor : possibleAuthorIDs) {
-			//find an author not in the current book's listing
+		// Test 2: remove_author with invalid author_ID (author exists but isn't listed
+		// for a book.
+		for (int potentialAuthor : possibleAuthorIDs) {
+			// find an author not in the current book's listing
 			if (ArrayUtils.contains(booksBefore.get(0).getAuthorIDs(), potentialAuthor) == false)
-				assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), BookDaoInterface.EDIT_TYPE.REMOVE_AUTHOR, potentialAuthor));
+				assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), BookDaoInterface.EDIT_TYPE.REMOVE_AUTHOR,
+						potentialAuthor));
 		}
-		
-		//Test 3: remove_author  with author_id NOT in db
+
+		// Test 3: remove_author with author_id NOT in db
 		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), BookDaoInterface.EDIT_TYPE.REMOVE_AUTHOR, -1));
 
-		//Test 4: remove_author with a string author_ID
+		// Test 4: remove_author with a string author_ID
 		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), BookDaoInterface.EDIT_TYPE.REMOVE_AUTHOR, "3"));
 
-		//Test 5: remove_author with null author_ID
+		// Test 5: remove_author with null author_ID
 		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), BookDaoInterface.EDIT_TYPE.REMOVE_AUTHOR, null));
 
-		//Test 6: remove_author with book only having 1 author.
-		for(Book bookX : booksBefore) {
-			if(bookX.getCountAuthors()==1) {
-				assertFalse(bookDao.editBook(bookX.getBookID(), BookDaoInterface.EDIT_TYPE.REMOVE_AUTHOR, bookX.getPrimaryAuthorID()));
+		// Test 6: remove_author with book only having 1 author.
+		for (Book bookX : booksBefore) {
+			if (bookX.getCountAuthors() == 1) {
+				assertFalse(bookDao.editBook(bookX.getBookID(), BookDaoInterface.EDIT_TYPE.REMOVE_AUTHOR,
+						bookX.getPrimaryAuthorID()));
 				break;
 			}
 		}
-		//Test 7: remove_author where author_removed is primary.
-		//make it so book 0 has 2 authors.
-		for(int authXID : possibleAuthorIDs) {
+		// Test 7: remove_author where author_removed is primary.
+		// make it so book 0 has 2 authors.
+		for (int authXID : possibleAuthorIDs) {
 			bookDao.editBook(booksBefore.get(0).getBookID(), BookDaoInterface.EDIT_TYPE.ADD_AUTHOR, authXID);
-		}				
-		assertTrue(bookDao.editBook(booksBefore.get(0).getBookID(), BookDaoInterface.EDIT_TYPE.REMOVE_AUTHOR, booksBefore.get(0).getPrimaryAuthorID()));
+		}
+		assertTrue(bookDao.editBook(booksBefore.get(0).getBookID(), BookDaoInterface.EDIT_TYPE.REMOVE_AUTHOR,
+				booksBefore.get(0).getPrimaryAuthorID()));
 
-		
-		//Test 8: remove_author where author removed is NOT primary.
-				//make it so book 0 has multiple authors.
-			for(int authXID : possibleAuthorIDs) {
-				bookDao.editBook(booksBefore.get(0).getBookID(), BookDaoInterface.EDIT_TYPE.ADD_AUTHOR, authXID);
+		// Test 8: remove_author where author removed is NOT primary.
+		// make it so book 0 has multiple authors.
+		for (int authXID : possibleAuthorIDs) {
+			bookDao.editBook(booksBefore.get(0).getBookID(), BookDaoInterface.EDIT_TYPE.ADD_AUTHOR, authXID);
+		}
+
+		// have to get book again in case adding author changed primary.
+		booksBefore = bookDao.getAllBooks();
+		for (Book bookX : booksBefore) {
+			if (bookX.getCountAuthors() > 1) {
+				int[] possibleNotPrimaryIDs = ArrayUtils.removeElement(bookX.getAuthorIDs(),
+						bookX.getPrimaryAuthorID());
+				assertTrue(bookDao.editBook(bookX.getBookID(), BookDaoInterface.EDIT_TYPE.REMOVE_AUTHOR,
+						possibleNotPrimaryIDs[0]));
 			}
-			
-			//have to get book again in case adding author changed primary.
-			booksBefore = bookDao.getAllBooks();
-			for(Book bookX : booksBefore) {
-				if (bookX.getCountAuthors()>1) {
-					int[] possibleNotPrimaryIDs = ArrayUtils.removeElement(bookX.getAuthorIDs(), bookX.getPrimaryAuthorID());
-					assertTrue(bookDao.editBook(bookX.getBookID(), BookDaoInterface.EDIT_TYPE.REMOVE_AUTHOR, possibleNotPrimaryIDs[0]));
-				}
-					
-			}		
+
+		}
 	}
 
-	//Dependencies getAllBooks()
+	// Dependencies getAllBooks(), getBookByBookID()
 	@Test
 	public void testEditBook_SetAvgRating() {
 		ArrayList<Book> booksBefore = bookDao.getAllBooks();
 
-		//Test 1: bookID is not in DB
+		// Test 1: bookID is not in DB
 		EDIT_TYPE editType = EDIT_TYPE.SET_AVG_RATING;
-		assertFalse(bookDao.editBook(-1, editType , 1.0f));
-		
-		//Test 2: null float
-		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType , null));
+		assertFalse(bookDao.editBook(-1, editType, 1.0f));
 
-		//Test 3: float with rating >10
-		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType , 10.1f));
+		// Test 2: null float
+		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType, null));
 
-		//Test 4: float with value <0
-		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType , -0.01f));
+		// Test 3: not a float passed in.
+		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType, 9.9999));
 
-		
-		//Test 5: valid range to many decimals
-		assertTrue(bookDao.editBook(booksBefore.get(0).getBookID(), editType , 9.9999f));
+		// Test 4: float with rating >10
+		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType, 10.1f));
 
-		//Test 6: 
-		
+		// Test 5: float with value <0
+		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType, -0.01f));
+
+		// Test 6: valid range to many decimals
+		assertTrue(bookDao.editBook(booksBefore.get(0).getBookID(), editType, 9.9999f));
+		Book bookX = bookDao.getBookByBookID(booksBefore.get(0).getBookID());
+		assertEquals(10, bookX.getAvgRating(), 0.0f); // verify set worked
+
 	}
+
+	// Dependencies getAllBooks(), getBookByBookID()
+	@Test
+	public void testEditBook_SetBookIndexInSeries() {
+		EDIT_TYPE editType = EDIT_TYPE.SET_BOOK_INDEX_IN_SERIES;
+		ArrayList<Book> booksBefore = bookDao.getAllBooks();
+
+		// Test 1: bookID is not in DB
+		assertFalse(bookDao.editBook(-1, editType, 1.0f));
+
+		// Test 2: null value for new value
+		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType, null));
+
+		// Test 3: NOT the correct type for newVal
+		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType, "0.3"));
+
+		// Test 4: valid setting
+		float newVal = 1.5f;
+		assertTrue(bookDao.editBook(booksBefore.get(0).getBookID(), editType, newVal));
+		Book bookX = bookDao.getBookByBookID(booksBefore.get(0).getBookID());
+		assertEquals(newVal, bookX.getBookIndexInSeries(), 0.0f); // verify set worked
+
+	}
+
+	// Dependencies getAllBooks(), getBookByBookID()
+	@Test
+	public void testEditBook_SetCoverLocation() {
+		EDIT_TYPE editType = EDIT_TYPE.SET_COVER_LOCATION;
+		ArrayList<Book> booksBefore = bookDao.getAllBooks();
+
+		// Test 1: bookID is not in DB
+		assertFalse(bookDao.editBook(-1, editType, "1.0f"));
+
+		// Test 2: null value for new value
+		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType, null));
+
+		// Test 3: NOT the correct type for newVal
+		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType, 0.3));
+
+		// Test 4: valid setting
+		String newVal = "path/foo/bar";
+		assertTrue(bookDao.editBook(booksBefore.get(0).getBookID(), editType, newVal));
+		Book bookX = bookDao.getBookByBookID(booksBefore.get(0).getBookID());
+		assertEquals(newVal, bookX.getCoverLocation()); // verify set worked
+	}
+
+	// Dependencies getAllBooks(), getBookByBookID()
+	@Test
+	public void testEditBook_SetCoverName() {
+		EDIT_TYPE editType = EDIT_TYPE.SET_COVER_NAME;
+		ArrayList<Book> booksBefore = bookDao.getAllBooks();
+
+		// Test 1: bookID is not in DB
+		assertFalse(bookDao.editBook(-1, editType, "cover.jpg"));
+
+		// Test 2: null value for new value
+		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType, null));
+
+		// Test 3: NOT the correct type for newVal
+		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType, 0.3));
+
+		// Test 4: valid setting
+		String newVal = "23123.jpg";
+		assertTrue(bookDao.editBook(booksBefore.get(0).getBookID(), editType, newVal));
+		Book bookX = bookDao.getBookByBookID(booksBefore.get(0).getBookID());
+		assertEquals(newVal, bookX.getCoverName()); // verify set worked
+	}
+
+	// Dependencies getAllBooks(), getBookByBookID()
+	@Test
+	public void testEditBook_SetDescription() {
+		EDIT_TYPE editType = EDIT_TYPE.SET_DESCRIPTION;
+		ArrayList<Book> booksBefore = bookDao.getAllBooks();
+
+		// Test 1: bookID is not in DB
+		assertFalse(bookDao.editBook(-1, editType, "cover.jpg"));
+
+		// Test 2: null value for new value
+		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType, null));
+
+		// Test 3: NOT the correct type for newVal
+		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType, 0.3));
+
+		// Test 4: valid setting
+		String newVal = "this is a book";
+		assertTrue(bookDao.editBook(booksBefore.get(0).getBookID(), editType, newVal));
+		Book bookX = bookDao.getBookByBookID(booksBefore.get(0).getBookID());
+		assertEquals(newVal, bookX.getDescription());
+
+	}
+
+	// Dependencies getAllBooks(), getBookByBookID()
+	@Test
+	public void testEditBook_SetEdition() {
+		EDIT_TYPE editType = EDIT_TYPE.SET_EDITION;
+		ArrayList<Book> booksBefore = bookDao.getAllBooks();
+
+		// Test 1: bookID is not in DB
+		assertFalse(bookDao.editBook(-1, editType, 1));
+
+		// Test 2: null value for new value
+		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType, null));
+
+		// Test 3: NOT the correct type for newVal
+		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType, 0.3));
+
+		// Test 4: valid setting
+		int newVal = 4;
+		assertTrue(bookDao.editBook(booksBefore.get(0).getBookID(), editType, newVal));
+		Book bookX = bookDao.getBookByBookID(booksBefore.get(0).getBookID());
+		assertEquals(newVal, bookX.getEdition());
+
+	}
+
+	
+	// Dependencies getAllBooks(), getBookByBookID()
+		@Test
+		public void testEditBook_SetPublishDate() {
+			EDIT_TYPE editType = EDIT_TYPE.SET_PUBLISH_DATE;
+			ArrayList<Book> booksBefore = bookDao.getAllBooks();
+			
+			Calendar cal = Calendar.getInstance(); //This to obtain today's date in our Calendar var.
+	        java.sql.Timestamp validNewValue=new java.sql.Timestamp(cal.getTimeInMillis());
+	
+			// Test 1: bookID is not in DB
+			assertFalse(bookDao.editBook(-1, editType, validNewValue));
+
+			// Test 2: null value for new value
+			assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType, null));
+
+			// Test 3: NOT the correct type for newVal
+			assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType, 0.3));
+
+			// Test 4: valid setting
+			assertTrue(bookDao.editBook(booksBefore.get(0).getBookID(), editType, validNewValue));
+			Book bookX = bookDao.getBookByBookID(booksBefore.get(0).getBookID());
+			System.out.println(bookX.getPublishDate().toString());
+			assertEquals(validNewValue,bookX.getPublishDate());
+		}
+		
+	// Dependencies getAllBooks(), getBookByBookID()
+	@Test
+	public void testEditBook_SetPublisher() {
+		EDIT_TYPE editType = EDIT_TYPE.SET_PUBLISHER;
+		ArrayList<Book> booksBefore = bookDao.getAllBooks();
+		String validNewValue = "publishers inc.";
+		// Test 1: bookID is not in DB
+		assertFalse(bookDao.editBook(-1, editType, validNewValue));
+
+		// Test 2: null value for new value
+		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType, null));
+
+		// Test 3: NOT the correct type for newVal
+		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType, 0.3));
+
+		// Test 4: valid setting
+		assertTrue(bookDao.editBook(booksBefore.get(0).getBookID(), editType, validNewValue));
+		Book bookX = bookDao.getBookByBookID(booksBefore.get(0).getBookID());
+		assertEquals(validNewValue, bookX.getPublisher());
+	}
+
+	// Dependencies getAllBooks(), getBookByBookID()
+	@Test
+	public void testEditBook_SetRatingCount() {
+		EDIT_TYPE editType = EDIT_TYPE.SET_RATING_COUNT;
+		ArrayList<Book> booksBefore = bookDao.getAllBooks();
+		Integer validNewValue = 4;
+		// Test 1: bookID is not in DB
+		assertFalse(bookDao.editBook(-1, editType, validNewValue));
+
+		// Test 2: null value for new value
+		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType, null));
+
+		// Test 3: NOT the correct type for newVal
+		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType, 0.3));
+
+		//Test 4: not a valid value for field.
+		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType, -1));
+
+		//Test 5: valid setting
+		assertTrue(bookDao.editBook(booksBefore.get(0).getBookID(), editType, validNewValue));
+		Book bookX = bookDao.getBookByBookID(booksBefore.get(0).getBookID());
+		assertEquals(validNewValue.intValue(), bookX.getRatingCount());
+
+	}
+
+	// Dependencies getAllBooks(), getBookByBookID(), getAllSeries()
+		@Test
+		public void testEditBook_SetSeriesID() {
+			EDIT_TYPE editType = EDIT_TYPE.SET_SERIES_ID;
+			ArrayList<Book> booksBefore = bookDao.getAllBooks();
+			ArrayList<Series> series = seriesDao.getAllSeries();
+			Integer validNewValue = series.get(0).getSeriesID();
+			// Test 1: bookID is not in DB
+			assertFalse(bookDao.editBook(-1, editType, validNewValue));
+
+			// Test 2: null value for new value
+			assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType, null));
+
+			// Test 3: NOT the correct type for newVal
+			assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType, 0.3));
+
+			//Test 4: not a valid value for field.
+			assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType, -1));
+
+			//Test 5: valid setting
+			assertTrue(bookDao.editBook(booksBefore.get(0).getBookID(), editType, validNewValue));
+			Book bookX = bookDao.getBookByBookID(booksBefore.get(0).getBookID());
+			assertEquals(validNewValue.intValue(), bookX.getSeriesID());
+
+		}
+
 }

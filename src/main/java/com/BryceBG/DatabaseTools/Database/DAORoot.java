@@ -8,6 +8,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.BryceBG.DatabaseTools.Database.Author.AuthorDao;
 import com.BryceBG.DatabaseTools.Database.Book.BookDao;
+import com.BryceBG.DatabaseTools.Database.Genre.GenreDao;
 import com.BryceBG.DatabaseTools.Database.Series.SeriesDao;
 import com.BryceBG.DatabaseTools.Database.User.UserDao;
 import com.BryceBG.DatabaseTools.utils.Utils;
@@ -25,6 +26,7 @@ public class DAORoot {
 	public static UserDao userDao;
 	public static SeriesDao seriesDao;
 	public static AuthorDao authorDao;
+	public static GenreDao genreDao;
 	public static LibraryDB library;
 	
 	private static final Logger logger = LogManager.getLogger(DAORoot.class.getName());
@@ -42,6 +44,7 @@ public class DAORoot {
 		userDao = new UserDao();
 		seriesDao = new SeriesDao();
 		authorDao = new AuthorDao();
+		genreDao = new GenreDao();
 
 	}
 

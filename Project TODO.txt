@@ -11,8 +11,9 @@ add some tests for  getAuthor(int authorID) //newly implemented
 ##BookDao.java
 1. (OPTIMIZING) redesign our getBooksByAuthor() function to use IN or ANY pre-prepared statement with static counts of ids in the list to improve our query performance. There are multiple listed alternative ways listed in the function.
 2. (OPTIMIZING) re-implement our getRandomBook() function as our way has large overhead when used in a huge database.
-5. (IMPORTANT) there is a heisnburg bug in the getRandomBook. aproximantly 30% of the time it seems to fail to get a a book (not sure why)
 6. add getBookByTitleAndAuthor(String title, int[] author_ids) function.
+7. may want to merge functions: setBookField() and helperUpdateBooks() as the helper I believe is only used by setBookField() function. Nevermind the array functions use the function directly
+
 
 ##Database changes
 	(IMPORTANT) use pg_chron to make a periodic job that updates rating of a series? (since changing user ratings may or may not impact?
@@ -43,7 +44,7 @@ add some tests for  getAuthor(int authorID) //newly implemented
 (IMPORTANT) Create Genre inheritance tree and create SQL script to automatically generate them from our existing genre-types (like our install sql script)
 
 
-
+change alot of the logger info messages to debug so they don't show up in normal logs.
 
 
 ##project size tasks
@@ -62,6 +63,8 @@ delete(book) -> should update(series.number_books_in_series) + update(series.num
 
 Notes:
 For series. if the primary_author_id is deleted the series is deleted as well. However. Series is protected unless number_books_in_series==0. Thus to delete a series all books must be removed (or a manual update to number_books_in_series to make it seem like there are no more books
+when looking for a function that effects a junction table (for example book_authors). The function is usually located in the first table in the name (so for the example, to effect "book_authors" table look in the "books" table)
+
 
 to delete author(delete all books)
 
@@ -77,3 +80,7 @@ http://idpf.github.io/epub-registries/identifiers/
 ##functions i may want to add
 for seriesController we may want to add a function that forces series removal by decrementing count to 0 and deleting all the books in the series instead of manual book removal being required.
 
+
+
+################BUGS
+5. (IMPORTANT) there is a heisnburg bug in the getRandomBook. aproximantly 10% of the time it seems to fail to get a a book (not sure why)

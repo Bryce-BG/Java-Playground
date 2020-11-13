@@ -309,7 +309,7 @@ public class Utils {
 	 *                 https://logging.apache.org/log4j/2.x/manual/layouts.html#PatternLayout
 	 * 
 	 */
-	public static void initializeAppLogger(String fileName, String pattern) {
+	public static void initializeAppLogger(String fileName, String pattern, Level logLevel) {
 		// https://logging.apache.org/log4j/2.x/manual/appenders.html#ConsoleAppender
 		// https://logging.apache.org/log4j/2.x/manual/configuration.html
 		// https://www.studytonight.com/post/log4j2-programmatic-configuration-in-java-class#:~:text=Log4j2%20Programmatic%20Configuration%20for%20File,builder%20%3D%20ConfigurationBuilderFactory.
@@ -317,7 +317,10 @@ public class Utils {
 		ConfigurationBuilder<BuiltConfiguration> builder = ConfigurationBuilderFactory.newConfigurationBuilder();
 
 		Level ourLoggingLevel = Level.DEBUG; // level our logging system runs at (i.e it should report all messages of
-												// equal or higher priority
+		// equal or higher priority
+
+		if(logLevel != null) //override our level we are using to log
+		 ourLoggingLevel = logLevel;
 
 //        builder.setStatusLevel(Level.DEBUG);//status logger is events that occur IN the actual logging system (so we don't want this to be low)
 		builder.setConfigurationName("DefaultLogger");

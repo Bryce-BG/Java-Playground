@@ -11,6 +11,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -41,7 +42,7 @@ public class App {
 	 */
 	public static void main(String[] args) {
 		
-        Utils.initializeAppLogger("app.log",GlobalConstants.APP_LOGGER_PATTERN); //sets up our logger instance for the program
+        Utils.initializeAppLogger("app.log",GlobalConstants.APP_LOGGER_PATTERN, Level.INFO); //sets up our logger instance for the program
 		logger.info("Loaded app version: " + Utils.getThisJarVersion());
 
 		// Schedule a job for the event-dispatching thread:

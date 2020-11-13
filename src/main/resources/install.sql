@@ -108,7 +108,7 @@ CREATE TABLE IF NOT EXISTS books
     --     identifiers identifier[], --moved to:book_identifier table
     has_identifiers      BOOLEAN                           DEFAULT FALSE,
     primary_author_id    INT     NOT NULL,                               --FOREIGN KEY references authors,
-    publish_date         DATE,
+    publish_date         TIMESTAMP,
     publisher            VARCHAR						   DEFAULT '', --can't be null as apparently null is unique: https://www.postgresqltutorial.com/postgresql-indexes/postgresql-unique-index/#:~:text=PostgreSQL%20treats%20NULL%20as%20distinct,creates%20a%20corresponding%20UNIQUE%20index.
     rating_count         BIGINT                            DEFAULT 0,    -- number of votes taken for rating
     series_id            INT                               DEFAULT NULL, 
@@ -145,10 +145,11 @@ CREATE TABLE IF NOT EXISTS book_genres
 
 CREATE TABLE IF NOT EXISTS genres
 (
-    parent            VARCHAR, /*references to the overarching theme/genre that this class extends*/
-    genre_name        VARCHAR UNIQUE, /*name associated with this genre*/
-    genre_description VARCHAR(300), /*a description on what kind of classifications exist*/
-
+    parent              VARCHAR     DEFAULT NULL, /*references to the overarching theme/genre that this class extends*/
+    genre_name          VARCHAR, /*name associated with this genre*/
+    genre_description   VARCHAR, /*a description on what kind of classifications exist*/
+	keywords		    VARCHAR[],
+	mygdrds_equiv	    VARCHAR,
     /*
       main_char_genres: genres that apply directly to the main character (for example is the main character a witch?)
       overall_world_genres: general all purpose genres (for example are there witches in the book even if the main character isn't one?)

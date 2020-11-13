@@ -95,7 +95,7 @@ public class LibraryDB {
 			List<String> dbNames = listAllDatabases(); // get names of current databases
 			for (String x : dbNames) {
 				if (libraryName.equalsIgnoreCase(x)) {
-					logger.info("Existing database was found with name {}. (and then dropped).", libraryName);
+					logger.debug("Existing database was found with name {}.", libraryName);
 					// Drop database so we can recreate it
 					stmt.executeUpdate(sql);
 					break;

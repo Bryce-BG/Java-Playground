@@ -5,6 +5,7 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -82,7 +83,7 @@ public class BookDao implements BookDaoInterface {
 				Pair<Boolean, Book[]> temp = helperProcessBookResultSet(conn, rs);
 				if (temp.getValue0() == true || temp.getValue1().length != 1) {
 					if (temp.getValue1().length != 1)
-						logger.info("No results were returned from query for book_id {}", bookID);
+						logger.debug("No results were returned from query for book_id {}", bookID);
 					else
 						logger.warn("An error occured proccessing the results of the sql query");
 				} else {
@@ -411,7 +412,7 @@ public class BookDao implements BookDaoInterface {
 		// 1 a. authorIDs are all greater than 0
 		for (int id : authorIDs) {
 			if (id <= 0) {
-				logger.info("addBook failed because authorID \"{}\" was determined to be invalid", id);
+				logger.debug("addBook failed because authorID \"{}\" was determined to be invalid", id);
 				return false;
 			}
 		}
@@ -420,7 +421,7 @@ public class BookDao implements BookDaoInterface {
 		// empty
 		// though)
 		if (!DaoUtils.stringIsOk(title) || description == null) {
-			logger.info("addBook failed because title: \"{}\" or description \"{}\" was determined to be invalid",
+			logger.debug("addBook failed because title: \"{}\" or description \"{}\" was determined to be invalid",
 					title, description);
 			return false;
 		}
@@ -509,27 +510,27 @@ public class BookDao implements BookDaoInterface {
 			break;
 		case SET_AVG_RATING:
 			if (editType.checkFitsRequiredType(newVal))
-				rtnedVal = bookSetAvgRating(bookID, (Float) newVal);
+				rtnedVal = setBookAvgRating(bookID, (Float) newVal);
 			break;
 		case SET_BOOK_INDEX_IN_SERIES:
-			logger.error("editBook() SET_BOOK_INDEX_IN_SERIES was called but this is currently a STUB");
-			// TODO call helper
+			if (editType.checkFitsRequiredType(newVal))
+				rtnedVal = setBookIndexInSeries(bookID, (Float) newVal);
 			break;
 		case SET_COVER_LOCATION:
-			logger.error("editBook() SET_COVER_LOCATION was called but this is currently a STUB");
-			// TODO call helper
+			if (editType.checkFitsRequiredType(newVal))
+				rtnedVal = setBookCoverLocation(bookID, (String) newVal);
 			break;
 		case SET_COVER_NAME:
-			logger.error("editBook() SET_COVER_NAME was called but this is currently a STUB");
-			// TODO call helper
+			if (editType.checkFitsRequiredType(newVal))
+				rtnedVal = setBookCoverName(bookID, (String) newVal);
 			break;
 		case SET_DESCRIPTION:
-			logger.error("editBook() SET_DESCRIPTION was called but this is currently a STUB");
-			// TODO call helper
+			if (editType.checkFitsRequiredType(newVal))
+				rtnedVal = setBookDescription(bookID, (String) newVal);
 			break;
 		case SET_EDITION:
-			logger.error("editBook() SET_EDITION was called but this is currently a STUB");
-			// TODO call helper
+			if (editType.checkFitsRequiredType(newVal))
+				rtnedVal = setBookEdition(bookID, (Integer) newVal);
 			break;
 		case SET_GENRES:
 			logger.error("editBook() SET_GENRES was called but this is currently a STUB");
@@ -540,31 +541,31 @@ public class BookDao implements BookDaoInterface {
 			// TODO call helper
 			break;
 		case SET_PUBLISH_DATE:
-			logger.error("editBook() SET_PUBLISH_DATE was called but this is currently a STUB");
-			// TODO call helper
+			if (editType.checkFitsRequiredType(newVal))
+				rtnedVal = setBookPublishDate(bookID, (java.sql.Timestamp) newVal);
 			break;
 		case SET_PUBLISHER:
-			logger.error("editBook() SET_PUBLISHER was called but this is currently a STUB");
-			// TODO call helper
+			if (editType.checkFitsRequiredType(newVal))
+				rtnedVal = setBookPublisher(bookID, (String) newVal);
 			break;
 		case SET_RATING_COUNT:
-			logger.error("editBook() SET_RATING_COUNT was called but this is currently a STUB");
-			// TODO call helper
+			if (editType.checkFitsRequiredType(newVal))
+				rtnedVal = setBookRatingCount(bookID, (Integer) newVal);
 			break;
 		case SET_SERIES_ID:
-			logger.error("editBook() SET_SERIES_ID was called but this is currently a STUB");
-			// TODO call helper
+			if (editType.checkFitsRequiredType(newVal))
+				rtnedVal = setBookSeriesID(bookID, (Integer) newVal);
 			break;
 
 		default: // was null
 		}
-
 		// 3. return whether updated succeeded or failed.
 		return rtnedVal;
 	}
 
 	// Helpers
-	/** Start helpers for editBook function */
+	/** Start functions for editBook function */
+
 
 	/**
 	 * Helper function that allows the addition of authors to a book in the
@@ -592,7 +593,7 @@ public class BookDao implements BookDaoInterface {
 		int[] authorIDs = bookX.getAuthorIDs();
 		for (int x : authorIDs) {
 			if (x == newAuthorID.intValue()) {
-				logger.info("new author id {} is already listed as an author for the book", newAuthorID.intValue());
+				logger.debug("new author id {} is already listed as an author for the book", newAuthorID.intValue());
 				return false;
 			}
 		}
@@ -650,6 +651,14 @@ public class BookDao implements BookDaoInterface {
 		return rtVal;
 	}
 
+	/**
+	 * Helper function that allows an author of a book to be removed (as long as
+	 * more than one author is set for the book)
+	 * 
+	 * @param bookID           ID of the book we are setting info on.
+	 * @param authorToRemoveID id of the author we are removing from the book
+	 * @return True if the update was successful. False if update failed.
+	 */
 	private boolean bookRemoveAuthor(long bookID, Integer authorToRemoveID) {
 
 		boolean rtVal = false;
@@ -715,23 +724,139 @@ public class BookDao implements BookDaoInterface {
 		return rtVal;
 	}
 
-	private boolean bookSetAvgRating(long bookID, Float newRating) {
-		boolean rtVal = false;
+	/**
+	 * Helper function that allows the setting of the average_rating field of a book
+	 * in the database.
+	 * 
+	 * @param bookID    ID of the book we are setting info on.
+	 * @param newRating the rating we are setting the field to for the book
+	 * @return True if the update was successful. False if update failed.
+	 */
+	private boolean setBookAvgRating(long bookID, Float newRating) {
+		// 2. ensure float is in acceptable range (DB will throw an error and catch it
+		// but it is quicker to catch here)
+		if (newRating.floatValue() < 0 || newRating.floatValue() > 10)
+			return false;
+		return setBookField(bookID, "average_rating", newRating);
+	}
 
+	/**
+	 * Function that allows the book_index_in_series field for a book to be set.
+	 * 
+	 * @param bookID ID of the book we are setting info on.
+	 * @param newVal the index we are setting the book to in the series.
+	 * @return True if the update was successful. False if update failed.
+	 */
+	private boolean setBookIndexInSeries(long bookID, Float newVal) {
+		return setBookField(bookID, "book_index_in_series", newVal);
+	}
+	/**
+	 * Function that allows the cover location for a book to be set
+	 * 
+	 * @param bookID ID of the book we are setting info on.
+	 * @param newVal the coverLocation we are setting the book's coverPage to.
+	 * @return True if the update was successful. False if update failed.
+	 */
+	private boolean setBookCoverLocation(long bookID, String newVal) {
+		return setBookField(bookID, "cover_location", newVal);
+	}
+
+	/**
+	 * Function that allows the cover name for a book to be set
+	 * 
+	 * @param bookID ID of the book we are setting info on.
+	 * @param newVal the name of the file for the coverpage we are setting the
+	 *               book's coverPage to.
+	 * @return True if the update was successful. False if update failed.
+	 */
+	private boolean setBookCoverName(long bookID, String newVal) {
+		return setBookField(bookID, "cover_name", newVal);
+	}
+
+	/**
+	 * Function that allows the description for a book to be set
+	 * 
+	 * @param bookID ID of the book we are setting info on.
+	 * @param newVal the description we are setting for the book.
+	 * @return True if the update was successful. False if update failed.
+	 */
+	private boolean setBookDescription(long bookID, String newVal) {
+		return setBookField(bookID, "description", newVal);
+	}
+
+	/**
+	 * Function that allows the edition of a book to be set.
+	 * @param bookID ID of the book we are setting info on.
+	 * @param newVal The edition we want to set for the book
+	 * @return True if the update was successful. False if update failed.
+	 */
+	private boolean setBookEdition(long bookID, Integer newVal) {
+		return setBookField(bookID, "edition", newVal);
+	}
+	
+	/**
+	 * Function that allows the publisher of a book to be set
+	 * @param bookID ID of the book we are setting info on.
+	 * @param newVal The string representing the publisher for the book.
+	 * @return True if the update was successful. False if update failed.
+	 */
+	private boolean setBookPublishDate(long bookID, Timestamp newVal) {
+		//https://stackoverflow.com/questions/9112770/how-to-convert-calendar-to-java-sql-date-in-java
+		return setBookField(bookID, "publish_date", newVal);
+	}
+	
+	/**
+	 * Function that allows the publisher of a book to be set
+	 * @param bookID ID of the book we are setting info on.
+	 * @param newVal The string representing the publisher for the book.
+	 * @return True if the update was successful. False if update failed.
+	 */
+	private boolean setBookPublisher(long bookID, String newVal) {
+		return setBookField(bookID, "publisher", newVal);
+	}
+	
+	/**
+	 * Function that allows the amount of users who have rated a book to be set
+	 * @param bookID ID of the book we are setting info on.
+	 * @param newVal The integer representing the count of users who have rated the book.
+	 * @return True if the update was successful. False if update failed.
+	 */
+	private boolean setBookRatingCount(long bookID, Integer newVal) {
+		if(newVal.intValue() < 0)
+			return false;
+		return setBookField(bookID, "rating_count", newVal);
+	}
+	
+	/**
+	 * Function that allows the series_id (the series for the book) field for a book to be set 
+	 * @param bookID ID of the book we are setting info on.
+	 * @param newVal The integer representing ID of the series we are setting for the series
+	 * @return True if the update was successful. False if update failed.
+	 */
+	private boolean setBookSeriesID(long bookID, Integer newVal) {
+		//not validating series with getSeries() here because it actually increases our overhead 
+		return setBookField(bookID, "series_id", newVal);
+	}
+	
+	/**
+	 * helper to the helpers. Since there is no filter for strings this function is a helper to the
+	 * setBook_____ functions that just outsources the generic set code
+	 * @param bookID ID of the book we are setting info on.
+	 * @param fieldName what field we are setting in the book.
+	 * @param newVal The value we are setting the book field to
+	 * @return True if the update was successful. False if update failed.
+	 */
+	private <T> boolean setBookField(long bookID, String fieldName, T newVal) {
+		boolean rtVal = false;
 		// 1. validate bookID by querying book table.
 		Book bookX = getBookByBookID(bookID);
 		if (bookX == null)
 			return false;
 
-		// 2. ensure float is in acceptable range (DB will throw an error and catch it
-		// but it is quicker to catch here)
-		if (newRating.floatValue() < 0 || newRating.floatValue() > 10)
-			return false;
-
 		// establish connection
 		try (Connection conn = DAORoot.library.connectToDB();) {
-			//3. update books entry
-			rtVal = helperUpdateBooks(conn, bookID, "average_rating", newRating);
+			// 2. update books entry
+			rtVal = helperUpdateBooks(conn, bookID, fieldName, newVal);
 		} catch (ClassNotFoundException e) {
 			logger.error("Exception occured during connectToDB: " + e.getMessage());
 		} catch (SQLException e) {
@@ -740,6 +865,7 @@ public class BookDao implements BookDaoInterface {
 		return rtVal;
 	}
 
+	
 	/** end helpers for editBook function */
 
 	/**
@@ -771,8 +897,8 @@ public class BookDao implements BookDaoInterface {
 				pstmt.setString(1, ((String) newFieldValue));
 			else if ("java.lang.Boolean".equals(typeString))
 				pstmt.setBoolean(1, ((Boolean) newFieldValue).booleanValue());
-			else if ("java.sql.Date".equals(typeString))
-				pstmt.setDate(1, ((java.sql.Date) newFieldValue));
+			else if ("java.sql.Timestamp".equals(typeString))
+				pstmt.setTimestamp(1, ((java.sql.Timestamp) newFieldValue));
 			else if ("java.lang.Long".equals(typeString))
 				pstmt.setLong(1, ((Long) newFieldValue).longValue());
 			else
@@ -793,6 +919,7 @@ public class BookDao implements BookDaoInterface {
 		return rtnVal;
 	}
 
+	
 	/**
 	 * A function that takes the result set of a query for our "books" table and
 	 * then compiles all necessary data from other tables to construct an array of
@@ -824,7 +951,7 @@ public class BookDao implements BookDaoInterface {
 					int edition = rs.getInt("edition");
 					boolean has_identifiers = rs.getBoolean("has_identifiers");
 					int primaryAuthorID = rs.getInt("primary_author_id");
-					Date publishDate = rs.getDate("publish_date");
+					Timestamp publishDate = rs.getTimestamp("publish_date");
 					String publisher = rs.getString("publisher");
 					long ratingCount = rs.getLong("rating_count");
 					int seriesID = rs.getInt("series_id"); // if it is null (the default) the field is set to 0
@@ -882,6 +1009,7 @@ public class BookDao implements BookDaoInterface {
 		return new Pair<Boolean, Book[]>(errorsOccurred, rtVal.toArray(new Book[rtVal.size()]));
 	}
 
+	
 	/**
 	 * Helper function for book_authors table. Adds all authors provided paired with
 	 * the book_id to the table.
@@ -917,6 +1045,7 @@ public class BookDao implements BookDaoInterface {
 		return rtVal;
 	}
 
+	
 	/**
 	 * Helper function for book_authors table. Removes an author provided paired
 	 * with the book_id from the table.
@@ -945,6 +1074,7 @@ public class BookDao implements BookDaoInterface {
 		return rtVal;
 	}
 
+	
 	/**
 	 * Helper function for book_authors table. This function gets entries from the
 	 * database from the table book_authors (a supplementary "junction table" for
@@ -984,6 +1114,7 @@ public class BookDao implements BookDaoInterface {
 		return authorIDs;
 	}
 
+	
 	/**
 	 * Helper function for book_authors table. Used to get all book_ids that an
 	 * author has either written or contributed to writing
@@ -1024,6 +1155,7 @@ public class BookDao implements BookDaoInterface {
 		return bookIDs;
 	}
 
+	
 	/**
 	 * Helper function for book_genres table. Gets the genres a book has listed from
 	 * the database
@@ -1062,6 +1194,7 @@ public class BookDao implements BookDaoInterface {
 		return genres;
 	}
 
+	
 	/**
 	 * Helper function book_identifiers table. Gets identifiers such as ASIN and
 	 * ISBN numbers for a book from the database.
@@ -1107,6 +1240,7 @@ public class BookDao implements BookDaoInterface {
 		return bookIdentifiers;
 	}
 
+	
 	/**
 	 * Helper function book_identifiers table. Gets a book id based on an identifier
 	 * passed in. If any such book is in the database with that identifier.

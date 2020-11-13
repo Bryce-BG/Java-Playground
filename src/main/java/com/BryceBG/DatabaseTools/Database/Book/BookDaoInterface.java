@@ -56,7 +56,7 @@ public interface BookDaoInterface {
 		SET_EDITION("Set the edition of the book", Integer.class),
 		SET_GENRES("Set the genres of the book", String[].class), 
 		SET_IDENTIFIERS("Set identifiers for the book (ISBN and the like)", Pair[].class),
-		SET_PUBLISH_DATE("Set the date for when the book was published", java.sql.Date.class),
+		SET_PUBLISH_DATE("Set the date for when the book was published", java.sql.Timestamp.class),
 		SET_PUBLISHER("Set the field of who published the book", String.class),
 		SET_RATING_COUNT("Set the count for how many people have rated the book", Integer.class),
 		SET_SERIES_ID("Set the series that the book is in", Integer.class);

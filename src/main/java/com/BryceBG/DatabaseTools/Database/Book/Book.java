@@ -3,6 +3,7 @@ package com.BryceBG.DatabaseTools.Database.Book;
 
 import java.io.File;
 import java.sql.Date;
+import java.sql.Timestamp;
 import java.util.Arrays;
 
 import org.javatuples.Pair;
@@ -34,7 +35,7 @@ public class Book {
 	private boolean has_identifiers;
 	private Pair<String, String>[] identifiers; // NOT initialized by constructor
 	private int primary_author_id = -1;
-	private java.sql.Date publish_date;
+	private java.sql.Timestamp publish_date;
 	private String publisher = null;
 	private long rating_count = 0;
 	private int series_id = -1;
@@ -80,7 +81,7 @@ public class Book {
 	 */
 	public Book(float avgRating, long bookID, float bookIndexInSeries, int countAuthors, String coverLocation,
 			String coverName, String description, int edition, boolean has_identifiers, int primaryAuthorID,
-			Date publishDate, String publisher, long ratingCount, int seriesID, String title) {
+			Timestamp publishDate, String publisher, long ratingCount, int seriesID, String title) {
 		this.setAvgRating(avgRating);
 		this.setBookID(bookID);
 		this.setBookIndexInSeries(bookIndexInSeries);
@@ -162,11 +163,11 @@ public class Book {
 		this.publisher = publisher;
 	}
 
-	public Date getPublishDate() {
+	public Timestamp getPublishDate() {
 		return publish_date;
 	}
 
-	public void setPublishDate(Date publishDate) {
+	public void setPublishDate(Timestamp publishDate) {
 		this.publish_date = publishDate;
 	}
 

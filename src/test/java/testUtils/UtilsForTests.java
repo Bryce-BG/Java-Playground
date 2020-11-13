@@ -10,6 +10,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 import org.apache.ibatis.jdbc.ScriptRunner;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -21,8 +22,8 @@ public class UtilsForTests {
 	private static final Logger logger = LogManager.getLogger(UtilsForTests.class.getName());
 
 	public static void setupForTests() {
-		// set up our logger
-		com.BryceBG.DatabaseTools.utils.Utils.initializeAppLogger(TEST_LOGGER_OUT_FILE_NAME, TEST_LOGGER_PATTERN);
+		// set up our logger (can change last param to Level.Debug for more information
+		com.BryceBG.DatabaseTools.utils.Utils.initializeAppLogger(TEST_LOGGER_OUT_FILE_NAME, TEST_LOGGER_PATTERN, Level.INFO);
 		//run our createTestDB script
 		UtilsForTests.createTestDB(); //set our tests to run on the mock database
 
@@ -57,6 +58,7 @@ public class UtilsForTests {
 	 * This method resets our TEST database to restore the table entries to the very
 	 * limited initial state with just a few test entries. It should be only run on
 	 * the test database as it deletes all entries in the database.
+	 * @param showExecution Indicates if we should show the results of running the script as it is being executed.
 	 * 
 	 */
 	public static void resetDB(boolean showExecution) {
