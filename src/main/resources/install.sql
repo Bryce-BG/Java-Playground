@@ -145,18 +145,13 @@ CREATE TABLE IF NOT EXISTS book_genres
 
 CREATE TABLE IF NOT EXISTS genres
 (
-    parent              VARCHAR     DEFAULT NULL, /*references to the overarching theme/genre that this class extends*/
+    genre_description   VARCHAR     DEFAULT NULL, /*a description on what kind of classifications exist*/
     genre_name          VARCHAR, /*name associated with this genre*/
-    genre_description   VARCHAR, /*a description on what kind of classifications exist*/
-	keywords		    VARCHAR[],
+	keywords		    VARCHAR[]   DEFAULT ARRAY[]::VARCHAR[],
 	mygdrds_equiv	    VARCHAR,
-    /*
-      main_char_genres: genres that apply directly to the main character (for example is the main character a witch?)
-      overall_world_genres: general all purpose genres (for example are there witches in the book even if the main character isn't one?)
-      setting_genre: basic setting (is it fantasy or science fiction)
-      */
+	parent              VARCHAR     DEFAULT NULL, /*references to the overarching theme/genre that this class extends*/
     PRIMARY KEY (genre_name),
-    FOREIGN KEY (parent) REFERENCES genres (genre_name)
+    FOREIGN KEY (parent) REFERENCES genres (genre_name) ON DELETE SET NULL 
 
 );
 
@@ -248,7 +243,7 @@ ALTER TABLE series
 ALTER TABLE book_genres
     ADD FOREIGN KEY (book_id) REFERENCES books (book_id) ON DELETE CASCADE; --cascade so entries are removed if book is deleted
 ALTER TABLE book_genres
-    ADD FOREIGN KEY (genre_name) REFERENCES genres (genre_name) ON DELETE CASCADE;
+    ADD FOREIGN KEY (genre_name) REFERENCES genres (genre_name) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --book table
 ALTER TABLE books
