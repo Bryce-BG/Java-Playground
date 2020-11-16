@@ -592,32 +592,31 @@ public class testBookDao {
 
 	}
 
-	
 	// Dependencies getAllBooks(), getBookByBookID()
-		@Test
-		public void testEditBook_SetPublishDate() {
-			EDIT_TYPE editType = EDIT_TYPE.SET_PUBLISH_DATE;
-			ArrayList<Book> booksBefore = bookDao.getAllBooks();
-			
-			Calendar cal = Calendar.getInstance(); //This to obtain today's date in our Calendar var.
-	        java.sql.Timestamp validNewValue=new java.sql.Timestamp(cal.getTimeInMillis());
-	
-			// Test 1: bookID is not in DB
-			assertFalse(bookDao.editBook(-1, editType, validNewValue));
+	@Test
+	public void testEditBook_SetPublishDate() {
+		EDIT_TYPE editType = EDIT_TYPE.SET_PUBLISH_DATE;
+		ArrayList<Book> booksBefore = bookDao.getAllBooks();
 
-			// Test 2: null value for new value
-			assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType, null));
+		Calendar cal = Calendar.getInstance(); // This to obtain today's date in our Calendar var.
+		java.sql.Timestamp validNewValue = new java.sql.Timestamp(cal.getTimeInMillis());
 
-			// Test 3: NOT the correct type for newVal
-			assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType, 0.3));
+		// Test 1: bookID is not in DB
+		assertFalse(bookDao.editBook(-1, editType, validNewValue));
 
-			// Test 4: valid setting
-			assertTrue(bookDao.editBook(booksBefore.get(0).getBookID(), editType, validNewValue));
-			Book bookX = bookDao.getBookByBookID(booksBefore.get(0).getBookID());
-			System.out.println(bookX.getPublishDate().toString());
-			assertEquals(validNewValue,bookX.getPublishDate());
-		}
-		
+		// Test 2: null value for new value
+		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType, null));
+
+		// Test 3: NOT the correct type for newVal
+		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType, 0.3));
+
+		// Test 4: valid setting
+		assertTrue(bookDao.editBook(booksBefore.get(0).getBookID(), editType, validNewValue));
+		Book bookX = bookDao.getBookByBookID(booksBefore.get(0).getBookID());
+		System.out.println(bookX.getPublishDate().toString());
+		assertEquals(validNewValue, bookX.getPublishDate());
+	}
+
 	// Dependencies getAllBooks(), getBookByBookID()
 	@Test
 	public void testEditBook_SetPublisher() {
@@ -654,10 +653,10 @@ public class testBookDao {
 		// Test 3: NOT the correct type for newVal
 		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType, 0.3));
 
-		//Test 4: not a valid value for field.
+		// Test 4: not a valid value for field.
 		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType, -1));
 
-		//Test 5: valid setting
+		// Test 5: valid setting
 		assertTrue(bookDao.editBook(booksBefore.get(0).getBookID(), editType, validNewValue));
 		Book bookX = bookDao.getBookByBookID(booksBefore.get(0).getBookID());
 		assertEquals(validNewValue.intValue(), bookX.getRatingCount());
@@ -665,29 +664,65 @@ public class testBookDao {
 	}
 
 	// Dependencies getAllBooks(), getBookByBookID(), getAllSeries()
-		@Test
-		public void testEditBook_SetSeriesID() {
-			EDIT_TYPE editType = EDIT_TYPE.SET_SERIES_ID;
-			ArrayList<Book> booksBefore = bookDao.getAllBooks();
-			ArrayList<Series> series = seriesDao.getAllSeries();
-			Integer validNewValue = series.get(0).getSeriesID();
-			// Test 1: bookID is not in DB
-			assertFalse(bookDao.editBook(-1, editType, validNewValue));
+	@Test
+	public void testEditBook_SetSeriesID() {
+		EDIT_TYPE editType = EDIT_TYPE.SET_SERIES_ID;
+		ArrayList<Book> booksBefore = bookDao.getAllBooks();
+		ArrayList<Series> series = seriesDao.getAllSeries();
+		Integer validNewValue = series.get(0).getSeriesID();
+		// Test 1: bookID is not in DB
+		assertFalse(bookDao.editBook(-1, editType, validNewValue));
 
-			// Test 2: null value for new value
-			assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType, null));
+		// Test 2: null value for new value
+		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType, null));
 
-			// Test 3: NOT the correct type for newVal
-			assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType, 0.3));
+		// Test 3: NOT the correct type for newVal
+		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType, 0.3));
 
-			//Test 4: not a valid value for field.
-			assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType, -1));
+		// Test 4: not a valid value for field.
+		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType, -1));
 
-			//Test 5: valid setting
-			assertTrue(bookDao.editBook(booksBefore.get(0).getBookID(), editType, validNewValue));
-			Book bookX = bookDao.getBookByBookID(booksBefore.get(0).getBookID());
-			assertEquals(validNewValue.intValue(), bookX.getSeriesID());
+		// Test 5: valid setting
+		assertTrue(bookDao.editBook(booksBefore.get(0).getBookID(), editType, validNewValue));
+		Book bookX = bookDao.getBookByBookID(booksBefore.get(0).getBookID());
+		assertEquals(validNewValue.intValue(), bookX.getSeriesID());
 
-		}
+	}
+
+	// Dependencies getAllBooks(), getBookByBookID(), getAllGenres()
+	@Test
+	public void testEditBook_SetGenres() {
+		EDIT_TYPE editType = EDIT_TYPE.SET_GENRES;
+		ArrayList<Book> booksBefore = bookDao.getAllBooks();
+		ArrayList<String> genreNames = genreDao.getAllGenreNames();
+		String[] validNewValue = new String[] {genreNames.get(0)};
+		// Test 1: bookID is not in DB
+		assertFalse(bookDao.editBook(-1, editType, validNewValue));
+
+		// Test 2: null value for new value
+		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType, null));
+
+		// Test 3: NOT the correct type for newVal
+		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType, 0.3));
+
+		// Test 4: not a valid value for field.
+		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType, "HelloWorld"));
+
+		// Test 5: valid setting
+		assertTrue(bookDao.editBook(booksBefore.get(0).getBookID(), editType, validNewValue));
+		Book bookX = bookDao.getBookByBookID(booksBefore.get(0).getBookID());
+		assertEquals(validNewValue[0], bookX.getGenres()[0]);
+		
+		//Test 6: setting multiple genres
+		assertTrue(bookDao.editBook(booksBefore.get(0).getBookID(), editType, new String[] {genreNames.get(0), genreNames.get(1)}));
+		bookX = bookDao.getBookByBookID(booksBefore.get(0).getBookID());
+		assertEquals(genreNames.get(0), bookX.getGenres()[0]);
+		assertEquals(genreNames.get(1), bookX.getGenres()[1]);
+
+
+		//TODO test setting partially incorrect arrays for newValue
+		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType, new String[] {genreNames.get(0), " ", " Hi"}));
+
+	}
 
 }

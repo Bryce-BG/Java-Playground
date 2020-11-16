@@ -1,7 +1,6 @@
 package com.BryceBG.DatabaseTools.Database.Book;
 
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -533,8 +532,8 @@ public class BookDao implements BookDaoInterface {
 				rtnedVal = setBookEdition(bookID, (Integer) newVal);
 			break;
 		case SET_GENRES:
-			logger.error("editBook() SET_GENRES was called but this is currently a STUB");
-			// TODO call helper
+			if (editType.checkFitsRequiredType(newVal))
+				rtnedVal = setBookGenres(bookID, (String[]) newVal);
 			break;
 		case SET_IDENTIFIERS:
 			logger.error("editBook() SET_IDENTIFIERS was called but this is currently a STUB");
@@ -565,7 +564,6 @@ public class BookDao implements BookDaoInterface {
 
 	// Helpers
 	/** Start functions for editBook function */
-
 
 	/**
 	 * Helper function that allows the addition of authors to a book in the
@@ -750,6 +748,7 @@ public class BookDao implements BookDaoInterface {
 	private boolean setBookIndexInSeries(long bookID, Float newVal) {
 		return setBookField(bookID, "book_index_in_series", newVal);
 	}
+
 	/**
 	 * Function that allows the cover location for a book to be set
 	 * 
@@ -786,6 +785,7 @@ public class BookDao implements BookDaoInterface {
 
 	/**
 	 * Function that allows the edition of a book to be set.
+	 * 
 	 * @param bookID ID of the book we are setting info on.
 	 * @param newVal The edition we want to set for the book
 	 * @return True if the update was successful. False if update failed.
@@ -793,20 +793,55 @@ public class BookDao implements BookDaoInterface {
 	private boolean setBookEdition(long bookID, Integer newVal) {
 		return setBookField(bookID, "edition", newVal);
 	}
-	
+
+	/**
+	 * Function that allows the genres of a book to be set.
+	 * 
+	 * @param bookID ID of the book we are editing the genres on.
+	 * @param newVal The string[] of genre names for the book
+	 * @return true if update succeeded. False if update failed.
+	 */
+	private boolean setBookGenres(long bookID, String[] newVal) {
+		boolean rtVal = false;
+
+		if (getBookByBookID(bookID) == null)
+			return rtVal;
+
+		try (Connection conn = DAORoot.library.connectToDB();) {
+
+			conn.setAutoCommit(false);
+
+			int rtnedVal = helperSetBookGenres(conn, bookID, newVal);
+			if (rtnedVal == newVal.length) {
+				conn.commit();
+				rtVal = true;
+			} else {
+				conn.rollback();
+				rtVal = false;
+			}
+		} catch (SQLException e) {
+			logger.error("Exception occured during executing SQL statement: " + e.getMessage());
+		} catch (ClassNotFoundException e) {
+			logger.error("Exception occured during connectToDB: " + e.getMessage());
+		}
+		return rtVal;
+	}
+
 	/**
 	 * Function that allows the publisher of a book to be set
+	 * 
 	 * @param bookID ID of the book we are setting info on.
 	 * @param newVal The string representing the publisher for the book.
 	 * @return True if the update was successful. False if update failed.
 	 */
 	private boolean setBookPublishDate(long bookID, Timestamp newVal) {
-		//https://stackoverflow.com/questions/9112770/how-to-convert-calendar-to-java-sql-date-in-java
+		// https://stackoverflow.com/questions/9112770/how-to-convert-calendar-to-java-sql-date-in-java
 		return setBookField(bookID, "publish_date", newVal);
 	}
-	
+
 	/**
 	 * Function that allows the publisher of a book to be set
+	 * 
 	 * @param bookID ID of the book we are setting info on.
 	 * @param newVal The string representing the publisher for the book.
 	 * @return True if the update was successful. False if update failed.
@@ -814,36 +849,44 @@ public class BookDao implements BookDaoInterface {
 	private boolean setBookPublisher(long bookID, String newVal) {
 		return setBookField(bookID, "publisher", newVal);
 	}
-	
+
 	/**
 	 * Function that allows the amount of users who have rated a book to be set
+	 * 
 	 * @param bookID ID of the book we are setting info on.
-	 * @param newVal The integer representing the count of users who have rated the book.
+	 * @param newVal The integer representing the count of users who have rated the
+	 *               book.
 	 * @return True if the update was successful. False if update failed.
 	 */
 	private boolean setBookRatingCount(long bookID, Integer newVal) {
-		if(newVal.intValue() < 0)
+		if (newVal.intValue() < 0)
 			return false;
 		return setBookField(bookID, "rating_count", newVal);
 	}
-	
+
 	/**
-	 * Function that allows the series_id (the series for the book) field for a book to be set 
+	 * Function that allows the series_id (the series for the book) field for a book
+	 * to be set
+	 * 
 	 * @param bookID ID of the book we are setting info on.
-	 * @param newVal The integer representing ID of the series we are setting for the series
+	 * @param newVal The integer representing ID of the series we are setting for
+	 *               the series
 	 * @return True if the update was successful. False if update failed.
 	 */
 	private boolean setBookSeriesID(long bookID, Integer newVal) {
-		//not validating series with getSeries() here because it actually increases our overhead 
+		// not validating series with getSeries() here because it actually increases our
+		// overhead
 		return setBookField(bookID, "series_id", newVal);
 	}
-	
+
 	/**
-	 * helper to the helpers. Since there is no filter for strings this function is a helper to the
-	 * setBook_____ functions that just outsources the generic set code
-	 * @param bookID ID of the book we are setting info on.
+	 * helper to the helpers. Since there is no filter for strings this function is
+	 * a helper to the setBook_____ functions that just outsources the generic set
+	 * code
+	 * 
+	 * @param bookID    ID of the book we are setting info on.
 	 * @param fieldName what field we are setting in the book.
-	 * @param newVal The value we are setting the book field to
+	 * @param newVal    The value we are setting the book field to
 	 * @return True if the update was successful. False if update failed.
 	 */
 	private <T> boolean setBookField(long bookID, String fieldName, T newVal) {
@@ -865,7 +908,6 @@ public class BookDao implements BookDaoInterface {
 		return rtVal;
 	}
 
-	
 	/** end helpers for editBook function */
 
 	/**
@@ -919,7 +961,6 @@ public class BookDao implements BookDaoInterface {
 		return rtnVal;
 	}
 
-	
 	/**
 	 * A function that takes the result set of a query for our "books" table and
 	 * then compiles all necessary data from other tables to construct an array of
@@ -1009,7 +1050,6 @@ public class BookDao implements BookDaoInterface {
 		return new Pair<Boolean, Book[]>(errorsOccurred, rtVal.toArray(new Book[rtVal.size()]));
 	}
 
-	
 	/**
 	 * Helper function for book_authors table. Adds all authors provided paired with
 	 * the book_id to the table.
@@ -1045,7 +1085,36 @@ public class BookDao implements BookDaoInterface {
 		return rtVal;
 	}
 
-	
+	private int helperSetBookGenres(Connection conn, long bookID, String[] genreNames) {
+		String sqlDrop = "DELETE from book_genres WHERE book_id=?;";
+		String sql = "INSERT into book_genres(book_id, genre_name) VALUES (?,?);";
+		int rtVal = 0;
+		try (PreparedStatement pstmtDrop = conn.prepareStatement(sqlDrop);
+				PreparedStatement pstmt = conn.prepareStatement(sql);) {
+			pstmtDrop.setLong(1, bookID);
+			pstmtDrop.executeUpdate(); // drop current entries
+
+			for (String genreName : genreNames) {
+				pstmt.setLong(1, bookID);
+				pstmt.setString(2, genreName);
+				pstmt.addBatch();
+			}
+
+			int[] rv = pstmt.executeBatch();
+			// sum number of modified rows for all the statements in the batch (each should
+			// be "1")
+			for (int x : rv)
+				rtVal += x;
+
+		} catch (SQLException e) {
+			logger.error(
+					"Exception occurred during attempt to add genres for a book in the book_genres table. Exception: {}",
+					e.getMessage());
+		}
+
+		return rtVal;
+	}
+
 	/**
 	 * Helper function for book_authors table. Removes an author provided paired
 	 * with the book_id from the table.
@@ -1074,7 +1143,6 @@ public class BookDao implements BookDaoInterface {
 		return rtVal;
 	}
 
-	
 	/**
 	 * Helper function for book_authors table. This function gets entries from the
 	 * database from the table book_authors (a supplementary "junction table" for
@@ -1114,7 +1182,6 @@ public class BookDao implements BookDaoInterface {
 		return authorIDs;
 	}
 
-	
 	/**
 	 * Helper function for book_authors table. Used to get all book_ids that an
 	 * author has either written or contributed to writing
@@ -1155,7 +1222,6 @@ public class BookDao implements BookDaoInterface {
 		return bookIDs;
 	}
 
-	
 	/**
 	 * Helper function for book_genres table. Gets the genres a book has listed from
 	 * the database
@@ -1194,7 +1260,6 @@ public class BookDao implements BookDaoInterface {
 		return genres;
 	}
 
-	
 	/**
 	 * Helper function book_identifiers table. Gets identifiers such as ASIN and
 	 * ISBN numbers for a book from the database.
@@ -1240,7 +1305,6 @@ public class BookDao implements BookDaoInterface {
 		return bookIdentifiers;
 	}
 
-	
 	/**
 	 * Helper function book_identifiers table. Gets a book id based on an identifier
 	 * passed in. If any such book is in the database with that identifier.
