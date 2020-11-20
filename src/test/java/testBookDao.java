@@ -125,13 +125,13 @@ public class testBookDao {
 			} else if (bookX.getTitle().equals(titles.get(5))) {
 				// TASK6: book with 1 identifier
 				assertEquals(1, bookX.getIdentifiers().length);
-				assertEquals("ISBN", bookX.getIdentifiers()[0].getValue0());
+				assertEquals("isbn", bookX.getIdentifiers()[0].getValue0());
 				assertEquals("9780199535569", bookX.getIdentifiers()[0].getValue1());
 			} else {
 				// TASK7: book with 2 identifiers
-				assertEquals("ISBN", bookX.getIdentifiers()[0].getValue0());
+				assertEquals("isbn", bookX.getIdentifiers()[0].getValue0());
 				assertEquals("0143105426", bookX.getIdentifiers()[0].getValue1());
-				assertEquals("UUID", bookX.getIdentifiers()[1].getValue0());
+				assertEquals("uuid", bookX.getIdentifiers()[1].getValue0());
 				assertEquals("50f9f8b1-8a81-4dd5-b104-0766188d7d2c", bookX.getIdentifiers()[1].getValue1());
 			}
 		}
@@ -286,36 +286,38 @@ public class testBookDao {
 		int[] authorIDs = new int[] { a1.getAuthorID() };
 
 		// Test 1: add new book with single author.
-		assertTrue(DAORoot.bookDao.addBook(authorIDs, "THIS BOOK IS BORING BUT NEW", -1, "NEWBOOK4TW"));
+		assertTrue(DAORoot.bookDao.insertBookIntoDB(authorIDs, "THIS BOOK IS BORING BUT NEW", -1, "NEWBOOK4TW"));
 		ArrayList<Book> allBooksAfter = DAORoot.bookDao.getAllBooks();
 		assertEquals(allBooksAfter.size() - 1, allBooks.size());
 
 		// Test 2: null description
-		assertFalse(DAORoot.bookDao.addBook(authorIDs, null, -1, "NEWBOOK4TW2"));
+		assertFalse(DAORoot.bookDao.insertBookIntoDB(authorIDs, null, -1, "NEWBOOK4TW2"));
 
 		// Test 3: empty title
-		assertFalse(DAORoot.bookDao.addBook(authorIDs, "THIS BOOK IS BORING BUT NEW", -1, " "));
+		assertFalse(DAORoot.bookDao.insertBookIntoDB(authorIDs, "THIS BOOK IS BORING BUT NEW", -1, " "));
 
 		// Test 4: null title
-		assertFalse(DAORoot.bookDao.addBook(authorIDs, "THIS BOOK IS BORING BUT NEW", -1, null));
+		assertFalse(DAORoot.bookDao.insertBookIntoDB(authorIDs, "THIS BOOK IS BORING BUT NEW", -1, null));
 
 		// Test 5: authorID not valid (not in db)
-		assertFalse(DAORoot.bookDao.addBook(new int[] { 999 }, "THIS BOOK IS BORING BUT NEW", -1, "NEWBOOK4TW2"));
+		assertFalse(
+				DAORoot.bookDao.insertBookIntoDB(new int[] { 999 }, "THIS BOOK IS BORING BUT NEW", -1, "NEWBOOK4TW2"));
 		// Test 5.b: authorID is just invalid always
-		assertFalse(DAORoot.bookDao.addBook(new int[] { -1 }, "THIS BOOK IS BORING BUT NEW", -1, "NEWBOOK4TW2"));
+		assertFalse(
+				DAORoot.bookDao.insertBookIntoDB(new int[] { -1 }, "THIS BOOK IS BORING BUT NEW", -1, "NEWBOOK4TW2"));
 
 		// Test 6: multiple authors
 		authorIDs = new int[] { a1.getAuthorID(), a2.getAuthorID() };
 		int sizeBefore = bookDao.getAllBooks().size();
-		assertTrue(bookDao.addBook(authorIDs, "NEW book with multple authors", -1, "NEWBOOK4TW2"));
+		assertTrue(bookDao.insertBookIntoDB(authorIDs, "NEW book with multple authors", -1, "NEWBOOK4TW2"));
 		assertEquals(sizeBefore + 1, bookDao.getAllBooks().size()); // should have gone up 1
 
 		// Test 7: pre-existing combo of author/title/edition of a book (fails due to DB
 		// constraint)
-		assertFalse(DAORoot.bookDao.addBook(authorIDs, "book already exists", -1, "NEWBOOK4TW2"));
+		assertFalse(DAORoot.bookDao.insertBookIntoDB(authorIDs, "book already exists", -1, "NEWBOOK4TW2"));
 
 		// Test 8: author/title combo already exists in db but new edition of the book
-		assertTrue(DAORoot.bookDao.addBook(authorIDs, "NEW book with multple authors", 1, "NEWBOOK4TW2"));
+		assertTrue(DAORoot.bookDao.insertBookIntoDB(authorIDs, "NEW book with multple authors", 1, "NEWBOOK4TW2"));
 
 	}
 
@@ -695,7 +697,7 @@ public class testBookDao {
 		EDIT_TYPE editType = EDIT_TYPE.SET_GENRES;
 		ArrayList<Book> booksBefore = bookDao.getAllBooks();
 		ArrayList<String> genreNames = genreDao.getAllGenreNames();
-		String[] validNewValue = new String[] {genreNames.get(0)};
+		String[] validNewValue = new String[] { genreNames.get(0) };
 		// Test 1: bookID is not in DB
 		assertFalse(bookDao.editBook(-1, editType, validNewValue));
 
@@ -712,16 +714,81 @@ public class testBookDao {
 		assertTrue(bookDao.editBook(booksBefore.get(0).getBookID(), editType, validNewValue));
 		Book bookX = bookDao.getBookByBookID(booksBefore.get(0).getBookID());
 		assertEquals(validNewValue[0], bookX.getGenres()[0]);
-		
-		//Test 6: setting multiple genres
-		assertTrue(bookDao.editBook(booksBefore.get(0).getBookID(), editType, new String[] {genreNames.get(0), genreNames.get(1)}));
+
+		// Test 6: setting multiple genres
+		assertTrue(bookDao.editBook(booksBefore.get(0).getBookID(), editType,
+				new String[] { genreNames.get(0), genreNames.get(1) }));
 		bookX = bookDao.getBookByBookID(booksBefore.get(0).getBookID());
 		assertEquals(genreNames.get(0), bookX.getGenres()[0]);
 		assertEquals(genreNames.get(1), bookX.getGenres()[1]);
 
+		// TODO test setting partially incorrect arrays for newValue
+		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType,
+				new String[] { genreNames.get(0), " ", " Hi" }));
 
-		//TODO test setting partially incorrect arrays for newValue
-		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType, new String[] {genreNames.get(0), " ", " Hi"}));
+	}
+
+	// Dependencies getAllBooks(), getBookByBookID(),
+	@Test
+	public void testEditBook_SetIdentifiers() {
+		EDIT_TYPE editType = EDIT_TYPE.SET_IDENTIFIERS;
+		ArrayList<Book> booksBefore = bookDao.getAllBooks();
+		@SuppressWarnings("unchecked")
+		Pair<String, String>[] validNewValue = new Pair[1];
+		validNewValue[0] = new Pair<String, String>("isbn", "98292921939");
+
+		// Test 1: bookID is not in DB
+		assertFalse(bookDao.editBook(-1, editType, validNewValue));
+
+		System.out.println("TEST DEBUG: booksBefore[0].bookID = " + booksBefore.get(0).getBookID());
+		// Test 2: null value for new value
+		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType, null));
+
+		// Test 3: NOT the correct type for newVal
+		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType, 0.3));
+
+		// Test 4: not a valid value for field. (PARTIALLY null identifier or fully null
+		// identifier
+
+		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType,
+				new Pair[] { new Pair<String, String>(null, "98292921939") }));
+		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType,
+				new Pair[] { new Pair<String, String>("isbn", null) }));
+		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType,
+				new Pair[] { new Pair<String, String>("isbn", "98292921939"), null }));
+
+		// Test 5: valid setting
+		assertTrue(bookDao.editBook(booksBefore.get(0).getBookID(), editType, validNewValue));
+		Book bookX = bookDao.getBookByBookID(booksBefore.get(0).getBookID());
+		assertTrue(bookX.getHasIdentifiers()); // field should be set.
+		assertEquals(1, bookX.getIdentifiers().length);
+		assertEquals(validNewValue[0], bookX.getIdentifiers()[0]);
+
+		// Test 6: setting multiple identifiers (identical value) --violates primary key
+		// constraint
+		int idCountBefore = bookX.getIdentifiers().length;
+		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType, new Pair[] {
+				new Pair<String, String>("isbn", "98292921939"), new Pair<String, String>("isbn", "98292921939") }));
+		bookX = bookDao.getBookByBookID(booksBefore.get(0).getBookID());
+		assertEquals(idCountBefore, bookX.getIdentifiers().length); //make sure the update rolled back correctly
+
+		// Test 7 set multiple identifiers
+		@SuppressWarnings("unchecked")
+		Pair<String, String>[] ids = new Pair[] { new Pair<String, String>("isbn", "98292921939"),
+				new Pair<String, String>("isbn", "98292921940") };
+		assertTrue(bookDao.editBook(booksBefore.get(0).getBookID(), editType, ids));
+		bookX = bookDao.getBookByBookID(booksBefore.get(0).getBookID());
+		assertEquals(ids.length, bookX.getIdentifiers().length);
+
+		//Test 8: remove all identifiers
+		ids = new Pair[0];
+		assertTrue(bookDao.editBook(booksBefore.get(0).getBookID(), editType, ids));
+		bookX = bookDao.getBookByBookID(booksBefore.get(0).getBookID());
+		assertFalse(bookX.getHasIdentifiers());
+		assertNull(bookX.getIdentifiers());
+
+		// TODO test setting partially incorrect arrays for newValue
+//			assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType, new String[] {genreNames.get(0), " ", " Hi"}));
 
 	}
 

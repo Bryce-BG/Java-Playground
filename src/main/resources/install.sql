@@ -89,7 +89,8 @@ CREATE TABLE IF NOT EXISTS book_identifier
 (
     book_id          BIGINT, --FOREIGN KEY altered below
     identifier_type  VARCHAR NOT NULL,
-    identifier_value VARCHAR NOT NULL
+    identifier_value VARCHAR NOT NULL,
+    PRIMARY KEY (book_id, identifier_type, identifier_value)
 );
 
 
@@ -102,7 +103,7 @@ CREATE TABLE IF NOT EXISTS books
     count_authors        INT                               DEFAULT 1,    --how many authors wrote the series if  more than 1, look in junction table <book_authors> for other author's ids
     cover_location       VARCHAR                           DEFAULT NULL,
     cover_name           VARCHAR                           DEFAULT NULL,
-    description          VARCHAR,
+    description          VARCHAR						   DEFAULT '',
     edition              INT                               DEFAULT -1, -- -1 indicates unknown edition
     --     genres int[], --moved to a junction table <book_genres> to make this validated.
     --     identifiers identifier[], --moved to:book_identifier table

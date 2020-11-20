@@ -1,12 +1,12 @@
 package com.BryceBG.DatabaseTools.Database.User;
 
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.javatuples.Pair;
 import org.mindrot.jbcrypt.BCrypt;
 
 import com.BryceBG.DatabaseTools.Database.DAORoot;
+import com.BryceBG.DatabaseTools.utils.DaoUtils;
 
 /**
  * This class acts as a thin wrapper and provides higher level functionality to
@@ -33,7 +33,7 @@ public class UserController {
 	 *         False otherwise.
 	 */
 	public static boolean authenticate(String username, String password) {
-		if (username == null || username.isBlank() || username.isEmpty() || password == null) {
+		if (DaoUtils.stringIsOk(username) == false || password == null) {
 			return false;
 		}
 		User user = DAORoot.userDao.getUserByUsername(username);
@@ -47,30 +47,31 @@ public class UserController {
 	/**
 	 * Set a new password for the provided username.
 	 * 
-	 * @param username    The username for the account whose password we are changing.
+	 * @param username    The username for the account whose password we are
+	 *                    changing.
 	 * @param oldPassword The current password in the system
 	 * @param newPassword The replacement password for the account.
 	 */
 	public static Pair<Boolean, String> setPassword(String username, String oldPassword, String newPassword) {
 		if (authenticate(username, oldPassword)) {
-			if(is_valid_password(newPassword))
-			{
+			if (is_valid_password(newPassword)) {
 				String newSalt = BCrypt.gensalt();
 				String newHashedPassword = BCrypt.hashpw(newPassword, newSalt);
-						
+
 				boolean rtnedVal = DAORoot.userDao.changeUserPassword(username, newSalt, newHashedPassword);
 				if (rtnedVal == false) {
-					return new Pair<Boolean, String>(Boolean.FALSE, "Password change unexpectedly failed. Please try again.");
+					return new Pair<Boolean, String>(Boolean.FALSE,
+							"Password change unexpectedly failed. Please try again.");
 				} else {
 					return new Pair<Boolean, String>(Boolean.TRUE, "SUCCESS!");
-				}			}
-			else {
-				//invalid new password
+				}
+			} else {
+				// invalid new password
 				return new Pair<Boolean, String>(Boolean.FALSE, "New password does not meet required specifications");
 			}
-		}
-		else {
-			//logged just so we can see theoretically if people are trying to guess a password
+		} else {
+			// logged just so we can see theoretically if people are trying to guess a
+			// password
 			logger.info(String.format("Password attempt change was made on account %s with invalid combo", username));
 			return new Pair<Boolean, String>(Boolean.FALSE, "OLD password/username is an invalid combo");
 		}
@@ -105,14 +106,15 @@ public class UserController {
 			return new Pair<Boolean, String>(Boolean.FALSE,
 					"Invalid user performing Create User action (no account creation permission)");
 		}
-		// 3.a. format strings to deal with any minor issue that will mess up our regular expressions (and ensures consistency in DB)
-		username = username.strip().toLowerCase(); 
-		email = email.strip().toLowerCase(); //email ignores casing
-		fName = fName.substring(0, 1).toUpperCase() + fName.substring(1); // Capitalize first letter everything else is small
-		lName = lName.substring(0, 1).toUpperCase() + lName.substring(1); 
-		
+		// 3.a. format strings to deal with any minor issue that will mess up our
+		// regular expressions (and ensures consistency in DB)
+		username = username.strip().toLowerCase();
+		email = email.strip().toLowerCase(); // email ignores casing
+		fName = fName.substring(0, 1).toUpperCase() + fName.substring(1); // Capitalize first letter everything else is
+																			// small
+		lName = lName.substring(0, 1).toUpperCase() + lName.substring(1);
 
-		//3.b. validate all required fields for new user meet specifications
+		// 3.b. validate all required fields for new user meet specifications
 		if (!validateUserFields(username, password, fName, lName, email).getValue0().booleanValue()) {
 			return validateUserFields(username, password, fName, lName, email);
 		}
@@ -164,7 +166,7 @@ public class UserController {
 
 		// 3. delete account
 		logger.info(String.format("User: %s performed delete on User: %s", deleteAuthorizingUsername, userToRemove));
-		boolean rtnedVal = DAORoot.userDao.removeUser( userToRemove);
+		boolean rtnedVal = DAORoot.userDao.removeUser(userToRemove);
 		if (rtnedVal == false) {
 			return new Pair<Boolean, String>(Boolean.FALSE, "Account deletion unexpectedly failed. Please try again.");
 		} else {
@@ -222,24 +224,24 @@ public class UserController {
 	 */
 	private static boolean is_valid_email(String email) {
 		String regex = "^[\\w-_\\.+]*[\\w-_\\.]\\@([\\w]+\\.)+[\\w]+[\\w]$";
-		if(email == null || email.isBlank() || email.isEmpty())
+		if (email == null || email.isBlank() || email.isEmpty())
 			return false;
 		else
 			return email.matches(regex);
 	}
-	
+
 	/**
-	 * Our helper function is used to ensure our username meets the requirements
-	 * 1. username is 5-30 characters long
-	 * 2. first character is lowercase a-z
-	 * 3. username contains only a-z, 0-9 and _ - chars
+	 * Our helper function is used to ensure our username meets the requirements 1.
+	 * username is 5-30 characters long 2. first character is lowercase a-z 3.
+	 * username contains only a-z, 0-9 and _ - chars
+	 * 
 	 * @param username user to check
 	 * @return true if it matches the above constraints
 	 */
-    private static boolean is_valid_username(String username) {
- 		String regex = "^[a-z][a-z0-9_-]{4,29}$";
- 		return (username != null && !username.isBlank() && !username.isEmpty() && username.matches(regex));
- 	}
+	private static boolean is_valid_username(String username) {
+		String regex = "^[a-z][a-z0-9_-]{4,29}$";
+		return (username != null && !username.isBlank() && !username.isEmpty() && username.matches(regex));
+	}
 
 	/**
 	 * Helper function that is used to ensure password meets specifications.
@@ -249,10 +251,10 @@ public class UserController {
 	 * @return: true if password meets all requirements. false otherwise
 	 */
 	private static boolean is_valid_password(String password) {
-		if (password == null || password.isBlank()  || password.length() < 8)
+		if (password == null || password.isBlank() || password.length() < 8)
 			return false;
-		if (password.toLowerCase().equals(password) || password.toUpperCase().equals(password)) 
-			// was all uppercase or	all lowercase
+		if (password.toLowerCase().equals(password) || password.toUpperCase().equals(password))
+			// was all uppercase or all lowercase
 			return false;
 		String n = ".*[0-9].*"; // contains numeric characters regex
 		String a = ".*[Aa-zZ].*"; // contains alpha characters regex
@@ -264,15 +266,15 @@ public class UserController {
 
 	private static boolean is_valid_fName(String fName) {
 		String regex = "[A-Z][a-z]{2,30}";
-		if(fName == null || fName.isBlank() || fName.isEmpty())
+		if (fName == null || fName.isBlank() || fName.isEmpty())
 			return false;
 		else
 			return fName.matches(regex);
 	}
-	
+
 	private static boolean is_valid_lName(String lName) {
-		String regex = "[a-zA-z]+([ '-][a-zA-Z]+)*"; //TODO implement design better regex here
-		if(lName == null || lName.isBlank() || lName.isEmpty() || lName.length()>30 || lName.length()<4)
+		String regex = "[a-zA-z]+([ '-][a-zA-Z]+)*"; // TODO implement design better regex here
+		if (lName == null || lName.isBlank() || lName.isEmpty() || lName.length() > 30 || lName.length() < 4)
 			return false;
 		else
 			return lName.matches(regex);

@@ -10,7 +10,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 import org.apache.ibatis.jdbc.ScriptRunner;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -23,7 +22,7 @@ public class UtilsForTests {
 
 	public static void setupForTests() {
 		// set up our logger (can change last param to Level.Debug for more information
-		com.BryceBG.DatabaseTools.utils.Utils.initializeAppLogger(TEST_LOGGER_OUT_FILE_NAME, TEST_LOGGER_PATTERN, Level.INFO);
+		com.BryceBG.DatabaseTools.utils.Utils.initializeAppLogger(TEST_LOGGER_OUT_FILE_NAME, TEST_LOGGER_PATTERN, TEST_LOGGER_LEVEL);
 		//run our createTestDB script
 		UtilsForTests.createTestDB(); //set our tests to run on the mock database
 

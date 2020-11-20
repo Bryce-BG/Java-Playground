@@ -32,7 +32,7 @@ public interface BookDaoInterface {
 
 	/* other functions such as add/remove/modify */
 
-	public abstract boolean addBook(int[] authorIDs, String description, int edition, String title);
+	public abstract boolean insertBookIntoDB(int[] authorIDs, String description, int edition, String title);
 
 	public abstract boolean removeBook(long book_id);
 

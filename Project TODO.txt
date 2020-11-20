@@ -19,6 +19,9 @@ add some tests for  getAuthor(int authorID) //newly implemented
 	(IMPORTANT) use pg_chron to make a periodic job that updates rating of a series? (since changing user ratings may or may not impact?
 	Add indexes to the tables
 	
+##GenresDao
+1. for set keywords() it currently filters and sets only the valid keywords. We may want to change this as the user will just see the update was successful and not that only part of thier update succeeded. We may want to implement it so it performs a rollback and returns false rather than doing a parial update.
+
 ##IdentifierUtils.java
 3. extend formatAndValidateIdentifiers() to allow more identifier schemes than just ISBN
 

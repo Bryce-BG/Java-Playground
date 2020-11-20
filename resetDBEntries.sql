@@ -145,9 +145,6 @@ WHERE books.title = 'TestBook4';
 --should add 2 rows as two authors exist currently
 
 
---For testing identifiers
---TODO create book with 1 identifiers
---TODO create book with 2 identifiers
 
 --TASK5 create book in series
 INSERT INTO books (count_authors, cover_location, cover_name, description, has_identifiers, primary_author_id,
@@ -200,7 +197,7 @@ WHERE authors.fname = 'James'
 
 -- 2. insert identifier for book
 INSERT INTO book_identifier (book_id, identifier_type, identifier_value)
-SELECT book_id, 'ISBN', '9780199535569'
+SELECT book_id, 'isbn', '9780199535569'
 FROM books
 WHERE books.title = 'TestBook6';
 
@@ -234,12 +231,12 @@ WHERE authors.fname = 'James'
 
 -- 2. insert identifier for book
 INSERT INTO book_identifier (book_id, identifier_type, identifier_value)
-SELECT book_id, 'ISBN', '0143105426'
+SELECT book_id, 'isbn', '0143105426'
 FROM books
 WHERE books.title = 'TestBook7';
 
 INSERT INTO book_identifier (book_id, identifier_type, identifier_value)
-SELECT book_id, 'UUID', '50f9f8b1-8a81-4dd5-b104-0766188d7d2c'
+SELECT book_id, 'uuid', '50f9f8b1-8a81-4dd5-b104-0766188d7d2c'
 FROM books
 WHERE books.title = 'TestBook7';
 
