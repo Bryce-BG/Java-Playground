@@ -10,6 +10,7 @@ import com.BryceBG.DatabaseTools.Database.DAORoot;
 import com.BryceBG.DatabaseTools.Database.Author.Author;
 import com.BryceBG.DatabaseTools.Database.User.UserController;
 import com.BryceBG.DatabaseTools.utils.DaoUtils;
+import com.BryceBG.DatabaseTools.utils.GlobalConstants;
 
 public class SeriesController {
 	/**
@@ -26,11 +27,15 @@ public class SeriesController {
 	 */
 	public static Pair<Boolean, String> createSeries(String username, String password, String series_name,
 			Pair<String, String>[] authorNames) {
-		// 0. authenticate user performing modification
-		if (!(DaoUtils.stringIsOk(username) && DaoUtils.stringIsOk(password)
-				&& UserController.authenticate(username, password) && userDao.getUserByUsername(username).isAdmin())) {
-			return new Pair<Boolean, String>(Boolean.FALSE, "User performing createSeries is invalid");
-		}
+		Pair<Boolean, String> rtVal = new Pair<Boolean, String>(Boolean.FALSE, "");
+
+		// 0. ensure user exists and has correct password
+		if (!UserController.authenticate(username, password))
+			return rtVal.setAt1(GlobalConstants.MSG_INVALID_USER);
+
+		// 0.b ensure user has permission to perform operation
+		if (userDao.getUserByUsername(username).isAdmin() == false)
+			return rtVal.setAt1(GlobalConstants.MSG_INVALID_USER_PERMISSIONS);
 
 		// 1. validate inputs
 		// 1.a. validate series name
@@ -50,20 +55,19 @@ public class SeriesController {
 			}
 			Author authorX = DAORoot.authorDao.getAuthor(x.getValue0(), x.getValue1());
 			if (authorX == null) { // author doesn't exist
-				return new Pair<Boolean, String>(Boolean.FALSE,
-						String.format("Author - First Name: %s Last Name: %s - is not a valid author. Either add the author to the database or correct the spelling of the author", x.getValue0(), x.getValue1()));
+				return new Pair<Boolean, String>(Boolean.FALSE, String.format(
+						"Author - First Name: %s Last Name: %s - is not a valid author. Either add the author to the database or correct the spelling of the author",
+						x.getValue0(), x.getValue1()));
 			} else {
 				authorIDstemp.add(authorX.getAuthorID());
 			}
 		}
-		//1.d determine primary author 
-		    int[] authorIDstemp2 = new int[authorIDstemp.size()];
-		    for (int i=0; i < authorIDstemp2.length; i++)
-		    {
-		    	authorIDstemp2[i] = authorIDstemp.get(i).intValue();
-		    }
+		// 1.d determine primary author
+		int[] authorIDstemp2 = new int[authorIDstemp.size()];
+		for (int i = 0; i < authorIDstemp2.length; i++) {
+			authorIDstemp2[i] = authorIDstemp.get(i).intValue();
+		}
 		int primary_author_id = DaoUtils.findPrimaryAuthor(authorIDstemp2);
-		
 
 		// 2. format series_name
 		// TODO maybe Capitalize? but some series may have lowercase words
@@ -78,7 +82,7 @@ public class SeriesController {
 
 		// 5. check returned value to determine if series addition was successful
 		if (rtnedVal)
-			return new Pair<Boolean, String>(Boolean.TRUE, "Success!");
+			return new Pair<Boolean, String>(Boolean.TRUE, GlobalConstants.MSG_SUCCESS);
 		else
 			return new Pair<Boolean, String>(Boolean.FALSE, "Series addition unexpectedly failed. Please try again.");
 	}
@@ -97,11 +101,16 @@ public class SeriesController {
 	 */
 	public static Pair<Boolean, String> removeSeries(String username, String password, String series_name,
 			Pair<String, String>[] authorNames) {
-		// 0. authenticate user performing modification
-		if (!(DaoUtils.stringIsOk(username) && DaoUtils.stringIsOk(password)
-				&& UserController.authenticate(username, password) && userDao.getUserByUsername(username).isAdmin())) {
-			return new Pair<Boolean, String>(Boolean.FALSE, "User performing removeSeries is invalid");
-		}
+		Pair<Boolean, String> rtVal = new Pair<Boolean, String>(Boolean.FALSE, "");
+
+		// 0. ensure user exists and has correct password
+		if (!UserController.authenticate(username, password))
+			return rtVal.setAt1(GlobalConstants.MSG_INVALID_USER);
+
+		// 0.b ensure user has permission to perform operation
+		if (userDao.getUserByUsername(username).isAdmin() == false)
+			return rtVal.setAt1(GlobalConstants.MSG_INVALID_USER_PERMISSIONS);
+
 		// 1. validate inputs
 		// 1.a. Validate series name
 		if (!DaoUtils.stringIsOk(series_name)) {
@@ -139,7 +148,7 @@ public class SeriesController {
 		boolean rtnedVal = DAORoot.seriesDao.removeSeries(series_name, primary_author_id);
 		// 5. check returned value to determine if series addition was successful
 		if (rtnedVal)
-			return new Pair<Boolean, String>(Boolean.TRUE, "Success!");
+			return new Pair<Boolean, String>(Boolean.TRUE, GlobalConstants.MSG_SUCCESS);
 		else {
 			if (DAORoot.seriesDao.getSeriesByNameAndAuthorID(series_name, primary_author_id)
 					.getNumberBooksInSeries() > 0) {
@@ -154,31 +163,38 @@ public class SeriesController {
 		}
 	}
 
-
 	/**
 	 * This function is designed to allow updates to be applied to a series. For
 	 * example, Incrementing or Decrementing the numbers off books associated with a
-	 * series to be updated (when a new book is added for example). Or performing updates like changing the series status.
+	 * series to be updated (when a new book is added for example). Or performing
+	 * updates like changing the series status.
 	 * 
-	 * @param username        The username of an admin user who is calling this
-	 *                        function
-	 * @param password        The password for the admin attempting to execute this
-	 *                        function
-	 * @param series_name     The name for the series we are changing.
-	 * @param authorNames     An array of pairs where each pair a tuple of form:
-	 *                        (author_first_name, author_last_name)
+	 * @param username      The username of an admin user who is calling this
+	 *                      function
+	 * @param password      The password for the admin attempting to execute this
+	 *                      function
+	 * @param series_name   The name for the series we are changing.
+	 * @param authorNames   An array of pairs where each pair a tuple of form:
+	 *                      (author_first_name, author_last_name)
 	 * @param newUpdateType This parameter is used to indicate if you are either
-	 *                        incrementing or decrementing the numbers of books in
-	 *                        a series. Or changing the status of the series.
-	 * @param newStatus This is what (if the update type is STATUS_CHANGE) to set the series status to. It can be left null otherwise
+	 *                      incrementing or decrementing the numbers of books in a
+	 *                      series. Or changing the status of the series.
+	 * @param newStatus     This is what (if the update type is STATUS_CHANGE) to
+	 *                      set the series status to. It can be left null otherwise
 	 */
 	public static Pair<Boolean, String> updateSeries(String username, String password, String series_name,
-			Pair<String, String>[] authorNames, SeriesDao.UpdateType newUpdateType, Series.series_status_enum newSeriesStatus) {
-		// 0. authenticate user performing modification
-		if (!(DaoUtils.stringIsOk(username) && DaoUtils.stringIsOk(password)
-				&& UserController.authenticate(username, password) && userDao.getUserByUsername(username).isAdmin())) {
-			return new Pair<Boolean, String>(Boolean.FALSE, "User performing update is invalid");
-		}
+			Pair<String, String>[] authorNames, SeriesDao.UpdateType newUpdateType,
+			Series.series_status_enum newSeriesStatus) {
+		Pair<Boolean, String> rtVal = new Pair<Boolean, String>(Boolean.FALSE, "");
+
+		// 0. ensure user exists and has correct password
+		if (!UserController.authenticate(username, password))
+			return rtVal.setAt1(GlobalConstants.MSG_INVALID_USER);
+
+		// 0.b ensure user has permission to perform operation
+		if (userDao.getUserByUsername(username).isAdmin() == false)
+			return rtVal.setAt1(GlobalConstants.MSG_INVALID_USER_PERMISSIONS);
+
 		// 1. validate inputs
 		// 1.a. validate series_name
 		if (!DaoUtils.stringIsOk(series_name)) {
@@ -186,8 +202,7 @@ public class SeriesController {
 		}
 		// 1.b ensure type of update is not null
 		if (newUpdateType == null) {
-			return new Pair<Boolean, String>(Boolean.FALSE,
-					"Indicator for type of series update is invalid.");
+			return new Pair<Boolean, String>(Boolean.FALSE, "Indicator for type of series update is invalid.");
 		}
 		// 1.c ensure at least 1 author for the series was passed in
 		if (authorNames == null || authorNames.length == 0) {
@@ -197,13 +212,14 @@ public class SeriesController {
 		// 1.d. Ensure authors that were passed in exist in our database.
 		int primary_author_id = Integer.MAX_VALUE;
 		for (Pair<String, String> x : authorNames) {
-			if(x==null) {
+			if (x == null) {
 				return new Pair<Boolean, String>(Boolean.FALSE, "A null author was passed in");
 			}
 			Author authorX = DAORoot.authorDao.getAuthor(x.getValue0(), x.getValue1());
 			if (authorX == null) { // author doesn't exist
-				return new Pair<Boolean, String>(Boolean.FALSE,
-						String.format("Author - First Name: %s Last Name: %s - is not a valid author. Either add the author to the database or correct the spelling of the author",x.getValue0(), x.getValue1()));
+				return new Pair<Boolean, String>(Boolean.FALSE, String.format(
+						"Author - First Name: %s Last Name: %s - is not a valid author. Either add the author to the database or correct the spelling of the author",
+						x.getValue0(), x.getValue1()));
 			} else {
 				if (authorX.getAuthorID() < primary_author_id)
 					primary_author_id = authorX.getAuthorID();
@@ -218,24 +234,24 @@ public class SeriesController {
 			return new Pair<Boolean, String>(Boolean.FALSE, "No series from database matches passed in criteria.");
 		}
 
-		// 4. call appropriate function to apply selected type of update to series 
+		// 4. call appropriate function to apply selected type of update to series
 		boolean rtnedVal = false;
 
-		//changing book count for series
-		if(newUpdateType.equals(SeriesDao.UpdateType.DEC) || newUpdateType.equals(SeriesDao.UpdateType.INC))
+		// changing book count for series
+		if (newUpdateType.equals(SeriesDao.UpdateType.DEC) || newUpdateType.equals(SeriesDao.UpdateType.INC))
 			rtnedVal = DAORoot.seriesDao.updateSeriesBookCount(series_name, primary_author_id, newUpdateType);
-		else {//changing series status
+		else {// changing series status
 			if (newSeriesStatus == null) {
-				return new Pair<Boolean, String>(Boolean.FALSE, "New series status is invalid (required field for this type of update).");
+				return new Pair<Boolean, String>(Boolean.FALSE,
+						"New series status is invalid (required field for this type of update).");
 			}
 			rtnedVal = DAORoot.seriesDao.setSeriesStatus(series_name, primary_author_id, newSeriesStatus);
 		}
-		
-			
+
 		// 5. check returned value to determine if series book count was updated
 		// successfully
 		if (rtnedVal)
-			return new Pair<Boolean, String>(Boolean.TRUE, "Success!");
+			return new Pair<Boolean, String>(Boolean.TRUE, GlobalConstants.MSG_SUCCESS);
 		else
 			return new Pair<Boolean, String>(Boolean.FALSE,
 					"Series update has unexpectedly failed to be updated. Please try again.");

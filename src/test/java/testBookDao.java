@@ -291,7 +291,7 @@ public class testBookDao {
 		assertEquals(allBooksAfter.size() - 1, allBooks.size());
 
 		// Test 2: null description
-		assertFalse(DAORoot.bookDao.insertBookIntoDB(authorIDs, null, -1, "NEWBOOK4TW2"));
+		assertTrue(DAORoot.bookDao.insertBookIntoDB(authorIDs, null, -1, "NEWBOOK4TW2"));
 
 		// Test 3: empty title
 		assertFalse(DAORoot.bookDao.insertBookIntoDB(authorIDs, "THIS BOOK IS BORING BUT NEW", -1, " "));
@@ -309,7 +309,7 @@ public class testBookDao {
 		// Test 6: multiple authors
 		authorIDs = new int[] { a1.getAuthorID(), a2.getAuthorID() };
 		int sizeBefore = bookDao.getAllBooks().size();
-		assertTrue(bookDao.insertBookIntoDB(authorIDs, "NEW book with multple authors", -1, "NEWBOOK4TW2"));
+		assertTrue(bookDao.insertBookIntoDB(authorIDs, "NEW book with multple authors", -1, "NEWBOOK4THREE"));
 		assertEquals(sizeBefore + 1, bookDao.getAllBooks().size()); // should have gone up 1
 
 		// Test 7: pre-existing combo of author/title/edition of a book (fails due to DB

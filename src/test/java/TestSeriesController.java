@@ -14,6 +14,7 @@ import com.BryceBG.DatabaseTools.Database.Series.Series;
 import com.BryceBG.DatabaseTools.Database.Series.Series.series_status_enum;
 import com.BryceBG.DatabaseTools.Database.Series.SeriesController;
 import com.BryceBG.DatabaseTools.Database.Series.SeriesDao.UpdateType;
+import com.BryceBG.DatabaseTools.utils.GlobalConstants;
 
 import testUtils.UtilsForTests;
 
@@ -130,7 +131,7 @@ public class TestSeriesController {
 
 		rtnedVal = SeriesController.createSeries(username, "wrong password", series_name, authorNames);
 		assertFalse(rtnedVal.getValue0().booleanValue());
-		String expectedMsg = "User performing createSeries is invalid";
+		String expectedMsg = GlobalConstants.MSG_INVALID_USER;
 		assertEquals("method returned but not with the expected message.", expectedMsg, rtnedVal.getValue1());
 
 		// Test 8: null authorlist
@@ -291,7 +292,7 @@ public class TestSeriesController {
 		Pair<Boolean, String> rtnedVal = SeriesController.removeSeries(username, "wrong password", series_name,
 				authorNames);
 		assertFalse(rtnedVal.getValue0().booleanValue());
-		String expectedMsg = "User performing removeSeries is invalid";
+		String expectedMsg = GlobalConstants.MSG_INVALID_USER;
 		assertEquals(
 				String.format("method returned but not with the expected message.", expectedMsg, rtnedVal.getValue1()),
 				expectedMsg, rtnedVal.getValue1());
@@ -345,7 +346,7 @@ public class TestSeriesController {
 		rtnedVal = SeriesController.updateSeries(username, "password wrong", series_name, authorNames, updateType,
 				null);
 		assertFalse(rtnedVal.getValue0().booleanValue());
-		expectedMsg = "User performing update is invalid";
+		expectedMsg = GlobalConstants.MSG_INVALID_USER;
 		assertEquals(expectedMsg, rtnedVal.getValue1());
 
 		// TESTS RELATING TO CHANGING SERIES STATUS
@@ -388,7 +389,7 @@ public class TestSeriesController {
 		s = DAORoot.seriesDao.getSeriesByNameAndAuthorID(series_name, author.getAuthorID());
 		assertEquals(Series.series_status_enum.UNDETERMINED, s.getSeriesStatus());
 
-		// Test 5: invalid user to perform update
+		// Test 5: invalid user to perform update (bad password
 		series_name = "test series";
 		authorNames = new Pair[1];
 		authorNames[0] = authorName;
@@ -396,7 +397,7 @@ public class TestSeriesController {
 		rtnedVal = SeriesController.updateSeries(username, "wrong password", series_name, authorNames, updateType,
 				series_status_enum.ONGOING);
 		assertFalse(rtnedVal.getValue0().booleanValue());
-		expectedMsg = "User performing update is invalid";
+		expectedMsg = GlobalConstants.MSG_INVALID_USER;
 		assertEquals("method returned but not with the expected message.", expectedMsg, rtnedVal.getValue1());
 
 		// Test 8: null authorlist
