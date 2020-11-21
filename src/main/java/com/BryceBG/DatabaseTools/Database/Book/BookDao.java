@@ -6,10 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
@@ -423,9 +420,11 @@ public class BookDao implements BookDaoInterface {
 		}
 		
 		//protect against null value being inserted into database for description (ensuring consistency)
-		if (description == null) 
+		if (description == null || description.isBlank()) 
 			description = "";
 
+		if(edition<0)
+			edition = -1; //just ensure the default is followed for nonsensical edition values
 
 		// 2. establish db connection
 		try (Connection conn = DAORoot.library.connectToDB();

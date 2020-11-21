@@ -729,11 +729,11 @@ public class testBookDao {
 	}
 
 	// Dependencies getAllBooks(), getBookByBookID(),
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testEditBook_SetIdentifiers() {
 		EDIT_TYPE editType = EDIT_TYPE.SET_IDENTIFIERS;
 		ArrayList<Book> booksBefore = bookDao.getAllBooks();
-		@SuppressWarnings("unchecked")
 		Pair<String, String>[] validNewValue = new Pair[1];
 		validNewValue[0] = new Pair<String, String>("isbn", "98292921939");
 
@@ -773,7 +773,6 @@ public class testBookDao {
 		assertEquals(idCountBefore, bookX.getIdentifiers().length); //make sure the update rolled back correctly
 
 		// Test 7 set multiple identifiers
-		@SuppressWarnings("unchecked")
 		Pair<String, String>[] ids = new Pair[] { new Pair<String, String>("isbn", "98292921939"),
 				new Pair<String, String>("isbn", "98292921940") };
 		assertTrue(bookDao.editBook(booksBefore.get(0).getBookID(), editType, ids));
