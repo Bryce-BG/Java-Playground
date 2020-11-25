@@ -24,10 +24,16 @@ add some tests for  getAuthor(int authorID) //newly implemented
 
 ##IdentifierUtils.java
 3. extend formatAndValidateIdentifiers() to allow more identifier schemes than just ISBN
+	//also extend it so it can be used in BookControler to validate the identifiers before being passed to the database
 
 
 ##LibraryDB.java
 	1. add getGenres(); to grab all genre titles and create and push to global constants a list of potential genres (for quick book adding suggestions)
+
+
+##seriesDao && bookController
+1. add support to search by seriesString
+
 
 ##UserController.java
 	1. add adjust_user_book_rating() function

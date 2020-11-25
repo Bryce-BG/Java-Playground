@@ -1,6 +1,5 @@
 package com.BryceBG.DatabaseTools.Database.Book;
 
-import com.BryceBG.DatabaseTools.Database.Series.Series;
 
 import java.util.ArrayList;
 
@@ -25,7 +24,7 @@ public interface BookDaoInterface {
 	public abstract Book getRandomBook();
 
 	// non unique so may return many books
-	public abstract Book[] getBooksBySeries(Series series);
+	public abstract Book[] getBooksBySeries(int seriesID);
 
 	// non unique so may return many books
 	public abstract Book[] getBooksByTitle(String title);

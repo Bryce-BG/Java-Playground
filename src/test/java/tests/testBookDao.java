@@ -1,3 +1,4 @@
+package tests;
 import static org.junit.Assert.*;
 
 import static com.BryceBG.DatabaseTools.Database.DAORoot.*;
@@ -217,7 +218,7 @@ public class testBookDao {
 	public void testGetBooksBySeries() {
 		ArrayList<Series> series = DAORoot.seriesDao.getAllSeries();
 		assertEquals(1, series.size());
-		Book[] results = DAORoot.bookDao.getBooksBySeries(series.get(0));
+		Book[] results = DAORoot.bookDao.getBooksBySeries(series.get(0).getSeriesID());
 		assertEquals(3, results.length); // ensure there are correct amount of books returned
 		ArrayList<String> titles = new ArrayList<String>();
 		for (Book x : results) {
@@ -719,8 +720,8 @@ public class testBookDao {
 		assertTrue(bookDao.editBook(booksBefore.get(0).getBookID(), editType,
 				new String[] { genreNames.get(0), genreNames.get(1) }));
 		bookX = bookDao.getBookByBookID(booksBefore.get(0).getBookID());
-		assertEquals(genreNames.get(0), bookX.getGenres()[0]);
-		assertEquals(genreNames.get(1), bookX.getGenres()[1]);
+		assertEquals(genreNames.get(0), bookX.getGenres()[1]);
+		assertEquals(genreNames.get(1), bookX.getGenres()[0]);
 
 		// TODO test setting partially incorrect arrays for newValue
 		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType,
@@ -765,12 +766,11 @@ public class testBookDao {
 		assertEquals(validNewValue[0], bookX.getIdentifiers()[0]);
 
 		// Test 6: setting multiple identifiers (identical value) --violates primary key
-		// constraint
-		int idCountBefore = bookX.getIdentifiers().length;
-		assertFalse(bookDao.editBook(booksBefore.get(0).getBookID(), editType, new Pair[] {
+		// constraint but SHOULD be fixed because of our removal of dublicates from the list
+		assertTrue(bookDao.editBook(booksBefore.get(0).getBookID(), editType, new Pair[] {
 				new Pair<String, String>("isbn", "98292921939"), new Pair<String, String>("isbn", "98292921939") }));
 		bookX = bookDao.getBookByBookID(booksBefore.get(0).getBookID());
-		assertEquals(idCountBefore, bookX.getIdentifiers().length); //make sure the update rolled back correctly
+		assertEquals(1, bookX.getIdentifiers().length); //make sure the update rolled back correctly
 
 		// Test 7 set multiple identifiers
 		Pair<String, String>[] ids = new Pair[] { new Pair<String, String>("isbn", "98292921939"),

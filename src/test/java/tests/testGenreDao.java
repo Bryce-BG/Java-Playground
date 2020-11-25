@@ -1,3 +1,4 @@
+package tests;
 import static com.BryceBG.DatabaseTools.Database.DAORoot.*;
 import static org.junit.Assert.*;
 

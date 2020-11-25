@@ -6,7 +6,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
@@ -240,14 +243,15 @@ public class BookDao implements BookDaoInterface {
 	/**
 	 * Gets all the books in the database that the series passed in contains.
 	 * 
-	 * @param series The series we want to inquire for.
+	 * @param seriesID The ID of the series we want to inquire for.
 	 * @return null if an error occurred otherwise returns all books which have the
 	 *         series_id = to the id of the series passed in.
 	 */
 	@Override
-	public Book[] getBooksBySeries(Series series) {
+	public Book[] getBooksBySeries(int seriesID) {
 		// Template after getAllBooks()
 		Book[] rtVal = new Book[0];
+		Series series = DAORoot.seriesDao.getSeriesBySeriesID(seriesID); //TODO?
 		if (series != null) {
 			String sql = "SELECT * FROM books WHERE series_id=?";
 
@@ -387,8 +391,8 @@ public class BookDao implements BookDaoInterface {
 	 * 
 	 * @param authorIDs   The IDs of the authors who have authored/co-authored the
 	 *                    book.
-	 * @param description The blurb for what the book is about (can be left blank
-	 *                    or null if no such blurb exists)
+	 * @param description The blurb for what the book is about (can be left blank or
+	 *                    null if no such blurb exists)
 	 * @param edition     The edition of the book. (if unknown set to -1)
 	 * @param title       The title of our book.
 	 * @return returns true if book was successfully added. False if an error
@@ -414,17 +418,17 @@ public class BookDao implements BookDaoInterface {
 
 		// 1 b. ensure title is not empty or null
 		if (!DaoUtils.stringIsOk(title)) {
-			logger.debug("addBook failed because title: \"{}\" was determined to be invalid",
-					title, description);
+			logger.debug("addBook failed because title: \"{}\" was determined to be invalid", title, description);
 			return false;
 		}
-		
-		//protect against null value being inserted into database for description (ensuring consistency)
-		if (description == null || description.isBlank()) 
+
+		// protect against null value being inserted into database for description
+		// (ensuring consistency)
+		if (description == null || description.isBlank())
 			description = "";
 
-		if(edition<0)
-			edition = -1; //just ensure the default is followed for nonsensical edition values
+		if (edition < 0)
+			edition = -1; // just ensure the default is followed for nonsensical edition values
 
 		// 2. establish db connection
 		try (Connection conn = DAORoot.library.connectToDB();
@@ -495,6 +499,10 @@ public class BookDao implements BookDaoInterface {
 	@Override
 	public <T> boolean editBook(long bookID, EDIT_TYPE editType, T newVal) {
 		boolean rtnedVal = false;
+
+		if (editType == null) // protects against switch crashing
+			return false;
+
 		// 1. ensure value isn't null before doing any querying.
 		if (newVal == null)
 			return false;
@@ -573,50 +581,59 @@ public class BookDao implements BookDaoInterface {
 	 * @param bookID ID of the book we are setting identifiers for.
 	 * @param newVal An array of identifiers where each entry consists of
 	 *               <identifier_scheme, identifier_value>
-	 * @return true if update to books table and book_identifier table was successful.
+	 * @return true if update to books table and book_identifier table was
+	 *         successful.
 	 */
+	@SuppressWarnings("unchecked")
 	private boolean setBookIdentifiers(long bookID, Pair<String, String>[] newVal) {
 		boolean rtVal = false;
-		boolean hasIdentifiers = true;
+		boolean newHasIdentifiersValue = true;
 		boolean transactionShouldContinue = true;
 		if (newVal.length == 0)
-			hasIdentifiers = false;
-		else { 
-			//validate no null values in pair will cause a crash (DB will reject them anyway with NOT NULL constraint)
+			newHasIdentifiersValue = false;
+		else {
+			// validate no null values in pair will cause a crash (DB will reject them
+			// anyway with NOT NULL constraint)
 			for (Pair<String, String> idPair : newVal) {
-				if(idPair == null) {
+				if (idPair == null) {
 					logger.debug("Attempting to set bookIdentifier with a null identifier so update failed");
-					//TODO just remove null identifier.
+					// TODO just remove null identifier.
 					return false;
-				}
-				else if (idPair.getValue0()==null || idPair.getValue1()==null) {
-					logger.debug("Attempting to set bookIdentifier with a partially null identifier <{}, {}> so update failed");
+				} else if (idPair.getValue0() == null || idPair.getValue1() == null) {
+					logger.debug(
+							"Attempting to set bookIdentifier with a partially null identifier <{}, {}> so update failed");
 					return false;
 				}
 			}
-			//0. call formatter to format our identifiers.
-			newVal = IdentifierUtils.formatIdentifiers(newVal); 
+			// 1. call formatter to format our identifiers.
+			newVal = IdentifierUtils.formatIdentifiers(newVal);
+			
+			// 2. remove possible duplicates from our identifier list 
+			// strip out duplicate entries (which violates primary key constraint)
+			 Set<Pair<String,String>> mySet = new
+			 HashSet<Pair<String,String>>(Arrays.asList(newVal));
+			 newVal = mySet.toArray(new Pair[mySet.size()]);
 		}
-		
-		// 1. establish connection
+
+		// 3. establish connection
 		try (Connection conn = DAORoot.library.connectToDB();) {
-			// 2. set auto-commit false as we are updating multiple tables and need a
+			// 4. set auto-commit false as we are updating multiple tables and need a
 			// transaction
 			conn.setAutoCommit(false);
 
-			// 3. update books entry to indicate if the book has identifiers or not.
+			// 5. update books entry to indicate if the book has identifiers or not.
 			transactionShouldContinue = transactionShouldContinue
-					& helperUpdateBooks(conn, bookID, "has_identifiers", hasIdentifiers);
+					& helperUpdateBooks(conn, bookID, "has_identifiers", newHasIdentifiersValue);
 
-			// 3. update book_identifiers table
-			if (transactionShouldContinue) { 
+			// 6. update book_identifiers table
+			if (transactionShouldContinue) {
 				int rv = helperSetBookIdentifiers(conn, bookID, newVal);
 				// check if it updated expected amount of rows
-				//TODO check if hasIdentifiers = false case?
+				// TODO check if hasIdentifiers = false case?
 				transactionShouldContinue = transactionShouldContinue & (rv == newVal.length);
 			}
 
-			// 4. determine if we should commit or rollback changes;
+			// 7. determine if we should commit or rollback changes;
 			if (transactionShouldContinue) {
 				rtVal = true;
 				conn.commit();
@@ -874,6 +891,12 @@ public class BookDao implements BookDaoInterface {
 
 		if (getBookByBookID(bookID) == null)
 			return rtVal;
+
+		// strip out duplicate entries (which violates primary key constraint)
+		Set<String> mySet = new HashSet<String>(Arrays.asList(newVal));
+		newVal = mySet.toArray(new String[mySet.size()]);
+		// this actually also reverses the order of the array. so
+		// {TestGenre1,TestGenre2} -> {TestGenre2,TestGenre1}
 
 		try (Connection conn = DAORoot.library.connectToDB();) {
 

@@ -75,6 +75,47 @@ public class AuthorDao {
 		return rtVal;
 	}
 
+	public Author getAuthor(String name) {
+		Author rtVal = null;
+		String sql = "SELECT * FROM authors WHERE concat(fname , ' ' , lname) ILIKE ?;";
+		// protect against null values
+		if (DaoUtils.stringIsOk(name)) {
+			// 0. format author fields passed in
+			name = WordUtils.capitalizeFully(name.strip());
+
+			// 1. establish connection to our database
+			try (Connection conn = DAORoot.library.connectToDB();
+					PreparedStatement pstmt = conn.prepareStatement(sql);) {
+				pstmt.setString(1, name);
+				// 2. execute our query.
+				try (ResultSet rs = pstmt.executeQuery()) {
+					if (rs.next()) { // 3. check if sql query for author returned an answer.
+						// 4. extract results from result set needed to create Author object
+						String author_bib = rs.getString("author_bib");
+						int author_id = rs.getInt("author_id");
+						String fName2 = rs.getString("fname");// Redundant as we have it.
+						String lName2 = rs.getString("lname");
+						//TODO add fullname?
+						int verified_user_ID = rs.getInt("verified_user_ID");
+						// 5. create our return object with the values
+						rtVal = new Author(author_id, fName2, lName2, author_bib, verified_user_ID);
+					} else {
+						logger.debug(String.format(
+								"The query for (%s) returned null. I.e. no match was found in the database.",
+								name));
+					}
+
+				} // end of try-with-resources: result set
+			} // end of try-with-resources: connection
+				// catch blocks for try-with-resources: connection
+			catch (ClassNotFoundException e) {
+				logger.error("Exception occured during connectToDB: " + e.getMessage());
+			} catch (SQLException e) {
+				logger.error("Exception occured during executing SQL statement: " + e.getMessage());
+			}
+		}
+		return rtVal;
+	}
 	/**
 	 * Gets an author using the author_ID from the database
 	 * @param authorID ID of an author we are looking to get the record of.

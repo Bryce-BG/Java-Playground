@@ -14,7 +14,7 @@ UserDao -> user table
 These classes provide an interface to add, delete, modify and get entries from their table. However, there is very little validation in these classes which could lead to illegal additions and deletions in the database (for example deleting an author when they have books that reference them (through book.author) in the database which would lead to an unwanted cascade delete to ensure consistency). As such, they have their respective: ___Controller classes.
 
 ##Controller classes
-There classes are designed to provide a higher level access to the system to information. Any of the tables that have more complex systems (Users who must provide authentication, Authors who also are authenticated, Books where adding one cascades across other entries) will have an controller class used to protect our DB from items being added that are incorrect but not defined as such by the DB schema.
+There classes are designed to provide a higher level access to the system to information. Any frontend for this app should ONLY interface with the database through the controller classes (instead of dao classes). These classes provide authentication for users modifying the database and also protect against some invalid changes.
 
 
 allowed:

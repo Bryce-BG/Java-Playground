@@ -1,3 +1,4 @@
+package tests;
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
@@ -52,6 +53,21 @@ public class TestAuthorDao {
 		String lName = "Joyce";
 		// Test 1: get user inserted with mock data at DB creation.
 		Author t = DAORoot.authorDao.getAuthor(fName, lName);
+		assertNotNull(t);
+		assertEquals("First name obtained was not the correct value", fName, t.getFirstName());
+		assertEquals("Last name obtained was not the correct value", lName, t.getLastName());
+		assertEquals("Author bib was not what it should have been", "TEST AUTHOR", t.getAuthorBib());
+	}
+
+	
+	
+	@Test
+	public void testGetAuthor_FULLNAME() {
+		// pre-inserted entry as mock data
+		String fName = "James";
+		String lName = "Joyce";
+		// Test 1: get user inserted with mock data at DB creation.
+		Author t = DAORoot.authorDao.getAuthor(fName + " " + lName);
 		assertNotNull(t);
 		assertEquals("First name obtained was not the correct value", fName, t.getFirstName());
 		assertEquals("Last name obtained was not the correct value", lName, t.getLastName());
